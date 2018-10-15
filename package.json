@@ -1,0 +1,24 @@
+{
+	"name": "Swagrid2",
+	"version": "0.0.1",
+	"description": "Swag + Hagrid = Swagrid",
+	"scripts": {
+		"start": "node server.js"
+	},
+	"dependencies": {
+		"discord.js": "^11.3.2",
+		"express": "^4.16.3",
+		"node-opus": "*",
+		"request": "^2.87.0",
+		"request-promise-native": "^1.0.5",
+		"sequelize": "*",
+		"sqlite3": "*",
+		"ytdl-core": "^0.24.0",
+		"youtube-api-v3-search": "^1.0.2"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/aliegeois/swagrid2.git"
+	},
+	"private": true
+}
