@@ -423,8 +423,8 @@ Command.add('listplaylist', Permission.expert, (message, args) => {
 });
 
 Command.add('r34', Permission.expert, (message, args) => {
-    return new Promise((resolve, reject) => {
-		let init = {
+	return new Promise((resolve, reject) => {
+		/*let init = {
 			method: 'GET',
 			mode: 'cors'
 		};
@@ -434,9 +434,19 @@ Command.add('r34', Permission.expert, (message, args) => {
 			message.reply(`doc: ${doc}`);
 			resolve();
 		}).catch(err => {
-			message/reply(`error: ${err}`);
+			message.reply(`error: ${err}`);
 			reject(err);
-		});
+		});*/
+		let req = new XMLHttpRequest();
+		req.onreadystatechange = function(event) {
+			if(this.readyState === XMLHttpRequest.DONE && this.status == 200) {
+				console.log(`réponse: ${this.responseXML}`);
+			}
+		}
+		
+		req.open('GET', `https://rule34.xxx/index.php?page=dapi&s=post&q=index&limit=1&tags=${args.join('_')}`);
+		req.send(null);
+		
     });
 });
 
