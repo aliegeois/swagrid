@@ -6,6 +6,7 @@ const Discord = require('discord.js'),
 	  env = local ? require('./env.json') : {},
 	  search = require('youtube-api-v3-search'),
 	  request = require('request-promise-native'),
+	  parseString = require('xml2js').parseString,
 	  ytdl = require('ytdl-core'),
 	  express = require('express'),
 	  app = express(),
@@ -454,10 +455,17 @@ Command.add('r34', Permission.expert, (message, args) => {
 			resolve();
 		}*/
 		request(`https://rule34.xxx/index.php?page=dapi&s=post&q=index&limit=1&tags=${args.join('_')}`).then(data => {
-			message.reply(data);
+			parseString(data, (err, result) => {
+				if(err) {
+					reject(err);
+				} else {
+					console.dir(result);
+					resolve();
+				}
+			});
 		}).catch(err => {
 			reject(err);
-		})
+		});
     });
 });
 
