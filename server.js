@@ -1,28 +1,27 @@
 var local = typeof process.env.TOKEN === 'undefined';
 
-var Discord = require('discord.js'),
-    config = require('./config.json'),
-    Sequelize = require('sequelize'),
-	env = local ? require('./env.json') : null,
-    search = require('youtube-api-v3-search'),
-	ytdl = require('ytdl-core'),
-	express = require('express'),
-    client = new Discord.Client();
+const Discord = require('discord.js'),
+	  config = require('./config.json'),
+	  Sequelize = require('sequelize'),
+	  env = local ? require('./env.json') : {},
+	  search = require('youtube-api-v3-search'),
+	  ytdl = require('ytdl-core'),
+	  express = require('express'),
+	  app = express(),
+	  client = new Discord.Client();
 
 var poudlard,
-    surveillants,
-    env,
-    sequelize,
-	app = express(),
+	surveillants,
+	prefets,
+	sequelize,
+	
 	voiceChannel = null,
 	voiceConnection = null,
-	//dispatcher = null,
-	ytKey = (local ? env : process.env).YT/*,
-    music_list = []*/;
+	ytKey = (local ? env : process.env).YT;
 
 var User,
-    Playlist,
-    Link;
+	Playlist,
+	Link;
 
 var Permission = {
 	basic: {
@@ -35,20 +34,17 @@ var Permission = {
 			return surveillants.members.find(e => e.user.id == userID);
 		}
 	},
+	dj: {
+		check_permission: (userID) => { // Surveillants ou préfets
+			return surveillants.members.find(e => e.user.id == userID) || prefets.members.find(e => e.user.id == userID);
+		}
+	},
 	expert: {
 		check_permission: (userID) => { // Nero
 			return userID == config.owner;
 		}
 	}
 };
-
-/* Exemple
-Command.add('dbar', Permission.advanced, (message, args) => {
-    return new Promise((resolve, reject) => {
-        resolve();
-    });
-});
-*/
 
 var Music = {
 	musics: [],
@@ -88,13 +84,20 @@ var Music = {
 			}
 		}
 	},
+	skip: () => {
+		if(Music.musics.length)
+			Music.play();
+	},
 	stop: () => {
 		Music.status = 'stop';
 		Music.playing = '';
 		Music.dispatcher.end();
 		Music.musics = [];
+	},
+	playlist: () => {
+		return Music.musics;
 	}
-}
+};
 
 class Command {
     constructor(permission, fct) {
@@ -144,7 +147,7 @@ Command.add('tts', Permission.advanced, (message, args) => {
     });
 });
 
-Command.add('join', Permission.advanced, (message, args) => {
+Command.add('join', Permission.dj, (message, args) => {
     return new Promise((resolve, reject) => {
         voiceChannel = poudlard.channels.get(message.member.voiceChannelID);
 		voiceChannel.join().then(connection => {
@@ -158,7 +161,7 @@ Command.add('join', Permission.advanced, (message, args) => {
     });
 });
 
-Command.add('leave', Permission.advanced, (message, args) => {
+Command.add('leave', Permission.dj, (message, args) => {
     return new Promise((resolve, reject) => {
         voiceChannel.leave();
 		voiceChannel = null;
@@ -167,14 +170,21 @@ Command.add('leave', Permission.advanced, (message, args) => {
     });
 });
 
-Command.add('stop', Permission.advanced, (message, args) => {
+Command.add('stop', Permission.dj, (message, args) => {
     return new Promise((resolve, reject) => {
         Music.stop();
 		resolve();
     });
 });
 
-Command.add('playing', Permission.advanced, (message, args) => {
+Command.add('skip', Permission.dj, (message, args) => {
+    return new Promise((resolve, reject) => {
+        Music.skip();
+		resolve();
+    });
+});
+
+Command.add('playing', Permission.basic, (message, args) => {
     return new Promise((resolve, reject) => {
         if(Music.playing == '') {
 			message.reply('Aucune musique en cours de lecture');
@@ -184,7 +194,7 @@ Command.add('playing', Permission.advanced, (message, args) => {
     });
 });
 
-Command.add('play', Permission.advanced, (message, args) => {
+Command.add('play', Permission.dj, (message, args) => {
     return new Promise((resolve, reject) => {
         if(voiceConnection == null) {
 			reject('Swagrid n\'est pas dans un channel');
@@ -218,7 +228,7 @@ Command.add('play', Permission.advanced, (message, args) => {
     });
 });
 
-Command.add('cancel', Permission.advanced, (message, args) => {
+Command.add('cancel', Permission.dj, (message, args) => {
     return new Promise((resolve, reject) => {
         Music.cancel();
     });
@@ -404,7 +414,7 @@ Command.add('listplaylist', Permission.expert, (message, args) => {
 });
 
 Command.add('eval', Permission.expert, (message, args) => {
-    console.log(args);
+    console.log(args.join(' '));
     return new Promise((resolve, reject) => {
         try {
             eval(args.join(' '));
@@ -445,6 +455,7 @@ client.on('ready', () => {
     
     poudlard = client.guilds.get('307821648835248130');
     surveillants = poudlard.roles.get('469496344558698506');
+	prefets = poudlard.roles.get('501438461341990913');
 	
 	client.channels.get('442762703958835200').fetchMessages(); // Récupère les messages du règlement intérieur
     
@@ -466,7 +477,7 @@ client.on('message', message => {
         name = args.shift().toLowerCase();
     
     Command.execute(name, message, args).catch(err => {
-        message.reply(`Erreur: ${err}`);
+        message.reply(err);
     });
 });
 

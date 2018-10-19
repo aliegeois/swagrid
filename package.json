@@ -9,9 +9,7 @@
 		"discord.js": "^11.3.2",
 		"express": "^4.16.3",
 		"opusscript": "^0.0.6",
-		"request": "^2.87.0",
-		"request-promise-native": "^1.0.5",
-		"sequelize": "*",
+		"sequelize": "^4.40.0",
 		"sqlite3": "^4.0.2",
 		"youtube-api-v3-search": "^1.0.2",
 		"ytdl-core": "^0.24.0"
