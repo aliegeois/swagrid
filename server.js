@@ -437,16 +437,21 @@ Command.add('r34', Permission.expert, (message, args) => {
 			message.reply(`error: ${err}`);
 			reject(err);
 		});*/
-		let req = new XMLHttpRequest();
-		req.onreadystatechange = function(event) {
-			if(this.readyState === XMLHttpRequest.DONE && this.status == 200) {
-				console.log(`réponse: ${this.responseXML}`);
+		try {
+			let req = new XMLHttpRequest();
+			req.onreadystatechange = function(event) {
+				if(this.readyState === XMLHttpRequest.DONE && this.status == 200) {
+					console.log(`réponse: ${this.responseXML}`);
+					resolve();
+				}
 			}
+
+			req.open('GET', `https://rule34.xxx/index.php?page=dapi&s=post&q=index&limit=1&tags=${args.join('_')}`);
+			req.send(null);
+		} catch(err) {
+			console.log(`err: ${err}`);
+			resolve();
 		}
-		
-		req.open('GET', `https://rule34.xxx/index.php?page=dapi&s=post&q=index&limit=1&tags=${args.join('_')}`);
-		req.send(null);
-		
     });
 });
 
