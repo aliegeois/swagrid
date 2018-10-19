@@ -85,6 +85,8 @@ var Music = {
 		}
 	},
 	skip: () => {
+		if(Music.status == 'play')
+			Music.dispatcher.end();
 		if(Music.musics.length)
 			Music.play();
 	},
@@ -107,7 +109,6 @@ class Command {
 					fct(message, args).then(() => {
                         resolve();
                     }).catch(err => {
-                        message.reply(err);
                         reject(err);
                     })
                 } else {
@@ -127,7 +128,7 @@ Command.execute = function(name, message, args) {
 	if(cmd) {
 		return cmd.execute(message, args);
 	} else {
-		return new Promise((resolve, reject) => {reject(`Comande inconnue "${name}"`)});
+		return new Promise((resolve, reject) => reject(`Comande inconnue "${name}"`));
 	}
 }
 
@@ -231,6 +232,12 @@ Command.add('play', Permission.dj, (message, args) => {
 Command.add('cancel', Permission.dj, (message, args) => {
     return new Promise((resolve, reject) => {
         Music.cancel();
+    });
+});
+
+Command.add('playlist', Permission.dj, (message, args) => {
+    return new Promise((resolve, reject) => {
+        message.reply(Music.playlist());
     });
 });
 
