@@ -459,9 +459,13 @@ Command.add('r34', Permission.basic, (message, args) => {
 				if(err) {
 					reject(err);
 				} else {
-					message.channel.send({
-						file: result.posts.post[0].$.file_url
-					});
+					if(result.posts.$.count == '0') {
+						message.reply('Aucun résultat');
+					} else {
+						message.channel.send({
+							file: result.posts.post[0].$.file_url
+						});
+					}
 					resolve();
 				}
 			});
