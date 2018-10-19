@@ -426,34 +426,6 @@ Command.add('listplaylist', Permission.expert, (message, args) => {
 
 Command.add('r34', Permission.basic, (message, args) => {
 	return new Promise((resolve, reject) => {
-		/*let init = {
-			method: 'GET',
-			mode: 'cors'
-		};
-		fetch(`https://rule34.xxx/index.php?page=dapi&s=post&q=index&limit=1&tags=${args.join('_')}`, init).then(content => {
-			message.reply(`content: ${content}`);
-			let doc = new DOMParser().parseFromString(content, 'text/xml');
-			message.reply(`doc: ${doc}`);
-			resolve();
-		}).catch(err => {
-			message.reply(`error: ${err}`);
-			reject(err);
-		});*/
-		/*try {
-			let req = new XMLHttpRequest();
-			req.onreadystatechange = function(event) {
-				if(this.readyState === XMLHttpRequest.DONE && this.status == 200) {
-					console.log(`réponse: ${this.responseXML}`);
-					resolve();
-				}
-			}
-
-			req.open('GET', `https://rule34.xxx/index.php?page=dapi&s=post&q=index&limit=1&tags=${args.join('_')}`);
-			req.send(null);
-		} catch(err) {
-			console.log(`err: ${err}`);
-			resolve();
-		}*/
 		request(`https://rule34.xxx/index.php?page=dapi&s=post&q=index&limit=1&tags=${args.join('+')}`).then(data => {
 			parseString(data, (err, result) => {
 				if(err) {
@@ -472,7 +444,7 @@ Command.add('r34', Permission.basic, (message, args) => {
 		}).catch(err => {
 			reject(err);
 		});
-    });
+	});
 });
 
 Command.add('eval', Permission.expert, (message, args) => {
