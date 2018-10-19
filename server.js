@@ -5,6 +5,7 @@ const Discord = require('discord.js'),
 	  Sequelize = require('sequelize'),
 	  env = local ? require('./env.json') : {},
 	  search = require('youtube-api-v3-search'),
+	  request = require('request-promise-native'),
 	  ytdl = require('ytdl-core'),
 	  express = require('express'),
 	  app = express(),
@@ -437,7 +438,7 @@ Command.add('r34', Permission.expert, (message, args) => {
 			message.reply(`error: ${err}`);
 			reject(err);
 		});*/
-		try {
+		/*try {
 			let req = new XMLHttpRequest();
 			req.onreadystatechange = function(event) {
 				if(this.readyState === XMLHttpRequest.DONE && this.status == 200) {
@@ -451,7 +452,12 @@ Command.add('r34', Permission.expert, (message, args) => {
 		} catch(err) {
 			console.log(`err: ${err}`);
 			resolve();
-		}
+		}*/
+		request(`https://rule34.xxx/index.php?page=dapi&s=post&q=index&limit=1&tags=${args.join('_')}`).then(data => {
+			message.reply(data);
+		}).catch(err => {
+			reject(err);
+		})
     });
 });
 
