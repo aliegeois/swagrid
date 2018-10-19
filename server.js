@@ -65,11 +65,13 @@ var Music = {
 			volume: 1
 		}));
 		Music.dispatcher.on('end', reason => {
-			if(Music.musics.length) {
-				Music.play();
-			} else {
-				Music.status = 'stop';
-				Music.playing = '';
+			if(!reason) {
+				if(Music.musics.length) {
+					Music.play();
+				} else {
+					Music.status = 'stop';
+					Music.playing = '';
+				}
 			}
 		});
 	},
@@ -86,14 +88,14 @@ var Music = {
 	},
 	skip: () => {
 		if(Music.status == 'play')
-			Music.dispatcher.end();
+			Music.dispatcher.end('_');
 		if(Music.musics.length)
 			Music.play();
 	},
 	stop: () => {
 		Music.status = 'stop';
 		Music.playing = '';
-		Music.dispatcher.end();
+		Music.dispatcher.end('_');
 		Music.musics = [];
 	},
 	playlist: () => {
