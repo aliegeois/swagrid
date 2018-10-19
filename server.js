@@ -424,11 +424,17 @@ Command.add('listplaylist', Permission.expert, (message, args) => {
 
 Command.add('r34', Permission.expert, (message, args) => {
     return new Promise((resolve, reject) => {
-		fetch(`https://rule34.xxx/index.php?page=dapi&s=post&q=index&limit=1&tags=${args.join('_')}`).then(content => {
+		let init = {
+			method: 'GET',
+			mode: 'cors'
+		};
+		fetch(`https://rule34.xxx/index.php?page=dapi&s=post&q=index&limit=1&tags=${args.join('_')}`, init).then(content => {
+			message.reply(`content: ${content}`);
 			let doc = new DOMParser().parseFromString(content, 'text/xml');
-			message.reply(doc);
+			message.reply(`doc: ${doc}`);
 			resolve();
 		}).catch(err => {
+			message/reply(`error: ${err}`);
 			reject(err);
 		});
     });
