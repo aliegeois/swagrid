@@ -454,12 +454,14 @@ Command.add('r34', Permission.expert, (message, args) => {
 			console.log(`err: ${err}`);
 			resolve();
 		}*/
-		request(`https://rule34.xxx/index.php?page=dapi&s=post&q=index&limit=1&tags=${args.join('_')}`).then(data => {
+		request(`https://rule34.xxx/index.php?page=dapi&s=post&q=index&limit=1&tags=${args.join('+')}`).then(data => {
 			parseString(data, (err, result) => {
 				if(err) {
 					reject(err);
 				} else {
-					console.dir(result);
+					message.channel.send({
+						file: result.posts.post[0].$.file_url
+					});
 					resolve();
 				}
 			});
