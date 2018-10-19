@@ -424,7 +424,7 @@ Command.add('listplaylist', Permission.expert, (message, args) => {
     });
 });
 
-Command.add('r34', Permission.expert, (message, args) => {
+Command.add('r34', Permission.basic, (message, args) => {
 	return new Promise((resolve, reject) => {
 		/*let init = {
 			method: 'GET',
