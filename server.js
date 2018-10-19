@@ -422,6 +422,15 @@ Command.add('listplaylist', Permission.expert, (message, args) => {
     });
 });
 
+Command.add('r34', Permission.expert, (message, args) => {
+    return new Promise((resolve, reject) => {
+		fetch(`https://rule34.xxx/index.php?page=dapi&s=post&q=index&limit=1&tags=${args.join('_')}`).then(content => {
+			let doc = new DOMParser().parseFromString(content, 'text/xml');
+			message.reply(doc);
+		});
+    });
+});
+
 Command.add('eval', Permission.expert, (message, args) => {
     console.log(args.join(' '));
     return new Promise((resolve, reject) => {
