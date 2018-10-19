@@ -88,7 +88,7 @@ var Music = {
 			}
 		}
 	},
-	clear: () => {
+	stop: () => {
 		Music.status = 'stop';
 		Music.playing = '';
 		Music.dispatcher.end();
@@ -169,7 +169,7 @@ Command.add('leave', Permission.advanced, (message, args) => {
 
 Command.add('stop', Permission.advanced, (message, args) => {
     return new Promise((resolve, reject) => {
-        dispatcher.end();
+        Music.stop();
 		resolve();
     });
 });
