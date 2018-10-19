@@ -427,6 +427,9 @@ Command.add('r34', Permission.expert, (message, args) => {
 		fetch(`https://rule34.xxx/index.php?page=dapi&s=post&q=index&limit=1&tags=${args.join('_')}`).then(content => {
 			let doc = new DOMParser().parseFromString(content, 'text/xml');
 			message.reply(doc);
+			resolve();
+		}).catch(err => {
+			reject(err);
 		});
     });
 });
