@@ -13,7 +13,7 @@ const Discord = require('discord.js'),
 	  app = express(),
 	  client = new Discord.Client();
 
-var module = require('./music');
+var music = require('./music');
 
 var poudlard,
 	surveillants,
