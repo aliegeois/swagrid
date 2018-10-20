@@ -466,7 +466,7 @@ Command.add('eval', Permission.expert, (message, args) => {
     });
 });
 
-function updateRoles(messageReaction, user, action) {
+/*function updateRoles(messageReaction, user, action) {
     return new Promise((resolve, reject) => {
         if(messageReaction.message.id != '472082352177283074') {
             resolve();
@@ -478,7 +478,7 @@ function updateRoles(messageReaction, user, action) {
             if(messageReaction.emoji.name == roles[i].emoji)
                 guildMember[action ? 'addRole' : 'removeRole'](roles[i].name);
     });
-}
+}*/
 
 function resetDB(tables) {
     if(tables.includes('user'))
@@ -518,7 +518,8 @@ client.on('message', message => {
         name = args.shift().toLowerCase();
     
     Command.execute(name, message, args).catch(err => {
-        message.reply(err);
+		console.log(err);
+        message.reply('Erreur...');
     });
 });
 
