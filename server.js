@@ -439,10 +439,15 @@ Command.add('r34', Permission.basic, (message, args) => {
 						if(count == 0) {
 							message.reply('Aucun résultat');
 						} else {
-							let max = Math.min(count, 100);
-							message.channel.send({
-								file: result.posts.post[Math.floor(Math.random()*max)].$.file_url
-							});
+							let max = Math.min(count, 100),
+								post = result.posts.post[Math.floor(Math.random()*max)];
+							if(post.$.tags.split(' ').includes('scat')) {
+								message.reply('Image censurée car contient du scat');
+							} else {
+								message.channel.send({
+									file: post.$.file_url
+								});
+							}
 						}
 						resolve();
 					} 
@@ -546,7 +551,7 @@ client.on('message', message => {
     });
 });
 
-client.on('voiceStateUpdate', (oldmember, newmember) => {
+client.on('voiceStateUpdate', (oldmember, newmember) => { // Update packages
 	let oldvoice = oldmember.voiceChannel;
 	let newvoice = newmember.voiceChannel;
 	
