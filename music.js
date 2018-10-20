@@ -70,7 +70,7 @@ class Music {
 		let song = this._musics.splice(0, 1)[0];
 		this._status = 'play';
 		this._playing = song.title;
-		this._dispatcher = this._voiceConnection.playStream(ytdl(song.url, {
+		this._dispatcher = this.voiceConnection.playStream(ytdl(song.url, {
 			seek: 0,
 			volume: 1
 		}));
@@ -117,8 +117,8 @@ class Music {
 	}
 }
 Music._musics = [];
-Music._voiceChannel = null;
-Music._voiceConnection = null;
+Music.voiceChannel = null;
+Music.voiceConnection = null;
 Music._status = 'stop';
 Music._dispatcher = null;
 Music._playing = '';
