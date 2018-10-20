@@ -541,7 +541,8 @@ client.on('message', message => {
     
     Command.execute(name, message, args).catch(err => {
 		console.log(err);
-        message.reply(err.message);
+		if(err == 'Permission insuffisante')
+			message.reply(err);
     });
 });
 
