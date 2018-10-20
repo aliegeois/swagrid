@@ -7,7 +7,7 @@ const Discord = require('discord.js'),
 	  search = require('youtube-api-v3-search'),
 	  request = require('request-promise-native'),
 	  parseString = require('xml2js').parseString,
-	  //ytdl = require('ytdl-core'),
+	  ytdl = require('ytdl-core'),
 	  express = require('express'),
 	  music = require('./music'),
 	  app = express(),
@@ -133,7 +133,7 @@ Command.execute = function(name, message, args) {
 	if(cmd) {
 		return cmd.execute(message, args);
 	} else {
-		return new Promise((resolve, reject) => reject(`Comande inconnue "${name}"`));
+		return new Promise((resolve, reject) => resolve());
 	}
 }
 
@@ -466,19 +466,41 @@ Command.add('eval', Permission.expert, (message, args) => {
     });
 });
 
-/*function updateRoles(messageReaction, user, action) {
-    return new Promise((resolve, reject) => {
-        if(messageReaction.message.id != '472082352177283074') {
-            resolve();
-        }
-        
-        let guildMember = poudlard.members.get(user.id);
-        
-        for(let i in roles)
-            if(messageReaction.emoji.name == roles[i].emoji)
-                guildMember[action ? 'addRole' : 'removeRole'](roles[i].name);
-    });
-}*/
+Command.add('yt', Permission.expert, (message, args) => {
+	return new Promise((resolve, reject) => {
+		if(music.voiceConnection == null) {
+			reject('Swagrid n\'est pas dans un channel');
+		} else if(message.member.voiceChannelID != music.voiceChannel.id) {
+			message.reply('Petit boloss, arrête de mettre des sons si tu n\'es pas dans le channel');
+		} else {
+			search((local ? env : process.env).YT, {
+				q: args.join(' '),
+				maxResults: 1,
+				part: 'snippet',
+				type: 'video'
+			}).then(res => {
+				message.channel.send(`Recherche de \`${args.join(' ')}\``, new Discord.RichEmbed({
+					author: {
+						'name': 'Lecture en cours'
+					},
+					thumbnail: {
+						'url': `https://img.youtube.com/vi/${res.items[0].id.videoId}/hqdefault.jpg`
+					},
+					title: `${res.items[0].snippet.title}`,
+					url: `https://youtu.be/${res.items[0].id.videoId}/`
+				}));
+
+				let dispatcher = music.voiceConnection.playStream(ytdl(res.items[0].id.videoId, {
+					seek: 0,
+					volume: 1
+				}));
+				resolve();
+			}).catch((err) => {
+				reject(err);
+			});
+		}
+	});
+}, false);
 
 function resetDB(tables) {
     if(tables.includes('user'))
@@ -519,7 +541,7 @@ client.on('message', message => {
     
     Command.execute(name, message, args).catch(err => {
 		console.log(err);
-        message.reply('Erreur...');
+        message.reply(err.message);
     });
 });
 
