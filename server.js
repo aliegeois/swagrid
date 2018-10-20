@@ -426,19 +426,25 @@ Command.add('listplaylist', Permission.expert, (message, args) => {
 
 Command.add('r34', Permission.basic, (message, args) => {
 	return new Promise((resolve, reject) => {
-		request(`https://rule34.xxx/index.php?page=dapi&s=post&q=index&limit=1&tags=${args.join('+')}`).then(data => {
+		request(`https://rule34.xxx/index.php?page=dapi&s=post&q=index&tags=${args.join('+')}`).then(data => {
 			parseString(data, (err, result) => {
 				if(err) {
 					reject(err);
 				} else {
-					if(result.posts.$.count == '0') {
-						message.reply('Aucun résultat');
+					let count = parseInt(result.posts.$.count);
+					if(count == NaN) {
+						reject('Erreur dans la récupération des posts');
 					} else {
-						message.channel.send({
-							file: result.posts.post[0].$.file_url
-						});
-					}
-					resolve();
+						if(count == 0) {
+							message.reply('Aucun résultat');
+						} else {
+							let max = Math.min(count, 100);
+							message.channel.send({
+								file: result.posts.post[Math.floor(Math.random()*max)].$.file_url
+							});
+						}
+						resolve();
+					} 
 				}
 			});
 		}).catch(err => {
