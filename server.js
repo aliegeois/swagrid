@@ -7,18 +7,21 @@ const Discord = require('discord.js'),
 	  search = require('youtube-api-v3-search'),
 	  request = require('request-promise-native'),
 	  parseString = require('xml2js').parseString,
-	  ytdl = require('ytdl-core'),
+	  //ytdl = require('ytdl-core'),
 	  express = require('express'),
+	  music = require('./music'),
 	  app = express(),
 	  client = new Discord.Client();
+
+var module = require('./module');
 
 var poudlard,
 	surveillants,
 	prefets,
 	sequelize,
 	
-	voiceChannel = null,
-	voiceConnection = null,
+	//voiceChannel = null,
+	//voiceConnection = null,
 	ytKey = (local ? env : process.env).YT;
 
 var User,
@@ -48,7 +51,7 @@ var Permission = {
 	}
 };
 
-var Music = {
+/*var Music = {
 	musics: [],
 	status: 'stop',
 	dispatcher: null,
@@ -103,7 +106,7 @@ var Music = {
 	playlist: () => {
 		return Music.musics;
 	}
-};
+};*/
 
 class Command {
     constructor(permission, fct) {
@@ -154,13 +157,13 @@ Command.add('tts', Permission.advanced, (message, args) => {
 
 Command.add('join', Permission.dj, (message, args) => {
     return new Promise((resolve, reject) => {
-        voiceChannel = poudlard.channels.get(message.member.voiceChannelID);
-		voiceChannel.join().then(connection => {
-			voiceConnection = connection;
+        music.voiceChannel = poudlard.channels.get(message.member.voiceChannelID);
+		music.voiceChannel.join().then(connection => {
+			music.voiceConnection = connection;
 			resolve();
 		}).catch(err => {
-			voiceChannel = null;
-			voiceConnection = null;
+			music.voiceChannel = null;
+			music.voiceConnection = null;
 			reject(err);
 		});
     });
@@ -168,42 +171,42 @@ Command.add('join', Permission.dj, (message, args) => {
 
 Command.add('leave', Permission.dj, (message, args) => {
     return new Promise((resolve, reject) => {
-        voiceChannel.leave();
-		voiceChannel = null;
-		voiceConnection = null;
+        music.voiceChannel.leave();
+		music.voiceChannel = null;
+		music.voiceConnection = null;
 		resolve();
     });
 });
 
 Command.add('stop', Permission.dj, (message, args) => {
     return new Promise((resolve, reject) => {
-        Music.stop();
+        music.stop();
 		resolve();
     });
 });
 
 Command.add('skip', Permission.dj, (message, args) => {
     return new Promise((resolve, reject) => {
-        Music.skip();
+        music.skip();
 		resolve();
     });
 });
 
 Command.add('playing', Permission.basic, (message, args) => {
     return new Promise((resolve, reject) => {
-        if(Music.playing == '') {
+        if(music.playing == '') {
 			message.reply('Aucune musique en cours de lecture');
 		} else {
-			message.reply(`"${Music.playing}" est en cours de lecture`);
+			message.reply(`"${music.playing}" est en cours de lecture`);
 		}
     });
 });
 
 Command.add('play', Permission.dj, (message, args) => {
     return new Promise((resolve, reject) => {
-        if(voiceConnection == null) {
+        if(music.voiceConnection == null) {
 			reject('Swagrid n\'est pas dans un channel');
-		} else if(message.member.voiceChannelID != voiceChannel.id) {
+		} else if(message.member.voiceChannelID != music.voiceChannel.id) {
 			message.reply('Petit boloss, arrête de mettre des sons si tu n\'es pas dans le channel');
 		} else {
 			search(ytKey, {
@@ -223,7 +226,7 @@ Command.add('play', Permission.dj, (message, args) => {
 					url: `https://youtu.be/${res.items[0].id.videoId}/`
 				}));
 				
-				Music.add(res.items[0].id.videoId, res.items[0].snippet.title);
+				music.add(res.items[0].id.videoId, res.items[0].snippet.title);
 				
 				resolve();
 			}).catch(err => {
@@ -235,13 +238,13 @@ Command.add('play', Permission.dj, (message, args) => {
 
 Command.add('cancel', Permission.dj, (message, args) => {
     return new Promise((resolve, reject) => {
-        Music.cancel();
+        music.cancel();
     });
 });
 
 Command.add('playlist', Permission.dj, (message, args) => {
     return new Promise((resolve, reject) => {
-        message.reply(Music.playlist());
+        message.reply(music.playlist());
     });
 });
 
@@ -534,8 +537,7 @@ client.on('voiceStateUpdate', (oldmember, newmember) => {
 			// move
 			if(newvoice.id == client.user.id) {
 				// Swagrid a été déplacé
-				voiceChannel = newmember.voiceChannel;
-				poudlard.voiceConnection;
+				music.voiceChannel = newvoice;
 			}
 		} else {
 			// update genre mute/demute
