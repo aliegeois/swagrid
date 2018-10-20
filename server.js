@@ -427,7 +427,7 @@ Command.add('listplaylist', Permission.expert, (message, args) => {
 
 Command.add('r34', Permission.basic, (message, args) => {
 	return new Promise((resolve, reject) => {
-		request(`https://rule34.xxx/index.php?page=dapi&s=post&q=index&tags=${args.join('+')}`).then(data => {
+		request(`https://rule34.xxx/index.php?page=dapi&s=post&q=index&tags=${args.join('+')}+-scat`).then(data => {
 			parseString(data, (err, result) => {
 				if(err) {
 					reject(err);
@@ -439,7 +439,33 @@ Command.add('r34', Permission.basic, (message, args) => {
 						if(count == 0) {
 							message.reply('Aucun résultat');
 						} else {
-							let max = Math.min(count, 100),
+							var post_number = Math.floor(Math.random()*count),
+								pid = Math.floor(post_number / 100);
+							request(`https://rule34.xxx/index.php?page=dapi&s=post&q=index&tags=${args.join('+')}+-scat`).then(data2 => {
+								parseString(data2, (err2, result2) => {
+									if(err2) {
+										reject(err2);
+									} else {
+										let count2 = parseInt(result2.posts.$.count);
+										if(count2 == NaN) {
+											reject('Erreur dans la récupération des posts (2)');
+										} else {
+											let nb_post = post_number % 100,
+												post = result2.posts.post[nb_post];
+											message.channel.send({
+												file: post.$.file_url
+											});
+											resolve();
+										}
+									}
+								});
+							}).catch(err => {
+								reject(err);
+							})
+							
+							
+							
+							/*let max = Math.min(count, 100),
 								post = result.posts.post[Math.floor(Math.random()*max)];
 							if(post.$.tags.split(' ').includes('scat')) {
 								message.reply('Image censurée car contient du scat');
@@ -447,9 +473,8 @@ Command.add('r34', Permission.basic, (message, args) => {
 								message.channel.send({
 									file: post.$.file_url
 								});
-							}
+							}*/
 						}
-						resolve();
 					} 
 				}
 			});
