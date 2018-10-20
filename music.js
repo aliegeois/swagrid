@@ -123,4 +123,4 @@ Music._status = 'stop';
 Music._dispatcher = null;
 Music._playing = '';
 
-exports = Music;
+module.exports = Music;
