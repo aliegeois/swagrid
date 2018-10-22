@@ -633,7 +633,7 @@ app.get('/', (request, response) => {
 	response.sendFile(`${__dirname}/index.html`);
 });
 app.get('/anime', (request, response) => {
-	response.sendFile(`${__dirname}/anime.rdf`);
+	response.sendFile(`${__dirname}/anime`);
 })
 var listener = app.listen(3000, () => {
 	console.log('Swagrid présent sur le port ' + listener.address().port);
