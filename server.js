@@ -1,28 +1,30 @@
 var local = typeof process.env.TOKEN === 'undefined';
 
-var Discord = require('discord.js'),
-    config = require('./config.json'),
-    Sequelize = require('sequelize'),
-	env = local ? require('./env.json') : null,
-    search = require('youtube-api-v3-search'),
-	ytdl = require('ytdl-core'),
-	express = require('express'),
-    client = new Discord.Client();
+const Discord = require('discord.js'),
+	  config = require('./config.json'),
+	  Sequelize = require('sequelize'),
+	  env = local ? require('./env.json') : {},
+	  search = require('youtube-api-v3-search'),
+	  request = require('request-promise-native'),
+	  parseString = require('xml2js').parseString,
+	  ytdl = require('ytdl-core'),
+	  express = require('express'),
+	  music = require('./music'),
+	  app = express(),
+	  client = new Discord.Client();
 
 var poudlard,
-    surveillants,
-    env,
-    sequelize,
-	app = express(),
-	voiceChannel = null,
-	voiceConnection = null,
-	//dispatcher = null,
-	ytKey = (local ? env : process.env).YT/*,
-    music_list = []*/;
+	surveillants,
+	prefets,
+	sequelize,
+	
+	//voiceChannel = null,
+	//voiceConnection = null,
+	ytKey = (local ? env : process.env).YT;
 
 var User,
-    Playlist,
-    Link;
+	Playlist,
+	Link;
 
 var Permission = {
 	basic: {
@@ -35,6 +37,11 @@ var Permission = {
 			return surveillants.members.find(e => e.user.id == userID);
 		}
 	},
+	dj: {
+		check_permission: (userID) => { // Surveillants ou préfets
+			return surveillants.members.find(e => e.user.id == userID) || prefets.members.find(e => e.user.id == userID);
+		}
+	},
 	expert: {
 		check_permission: (userID) => { // Nero
 			return userID == config.owner;
@@ -42,15 +49,7 @@ var Permission = {
 	}
 };
 
-/* Exemple
-Command.add('dbar', Permission.advanced, (message, args) => {
-    return new Promise((resolve, reject) => {
-        resolve();
-    });
-});
-*/
-
-var Music = {
+/*var Music = {
 	musics: [],
 	status: 'stop',
 	dispatcher: null,
@@ -69,11 +68,13 @@ var Music = {
 			volume: 1
 		}));
 		Music.dispatcher.on('end', reason => {
-			if(Music.musics.length) {
-				Music.play();
-			} else {
-				Music.status = 'stop';
-				Music.playing = '';
+			if(!reason) {
+				if(Music.musics.length) {
+					Music.play();
+				} else {
+					Music.status = 'stop';
+					Music.playing = '';
+				}
 			}
 		});
 	},
@@ -88,13 +89,22 @@ var Music = {
 			}
 		}
 	},
+	skip: () => {
+		if(Music.status == 'play')
+			Music.dispatcher.end('_');
+		if(Music.musics.length)
+			Music.play();
+	},
 	stop: () => {
 		Music.status = 'stop';
 		Music.playing = '';
-		Music.dispatcher.end();
+		Music.dispatcher.end('_');
 		Music.musics = [];
+	},
+	playlist: () => {
+		return Music.musics;
 	}
-}
+};*/
 
 class Command {
     constructor(permission, fct) {
@@ -104,7 +114,6 @@ class Command {
 					fct(message, args).then(() => {
                         resolve();
                     }).catch(err => {
-                        message.reply(err);
                         reject(err);
                     })
                 } else {
@@ -124,7 +133,7 @@ Command.execute = (name, message, args) => {
 	if(cmd) {
 		return cmd.execute(message, args);
 	} else {
-		return new Promise((resolve, reject) => {reject(`Comande inconnue "${name}"`)});
+		return new Promise((resolve, reject) => resolve());
 	}
 }
 
@@ -144,51 +153,58 @@ Command.add('tts', Permission.advanced, (message, args) => {
     });
 });
 
-Command.add('join', Permission.advanced, (message, args) => {
+Command.add('join', Permission.dj, (message, args) => {
     return new Promise((resolve, reject) => {
-        voiceChannel = poudlard.channels.get(message.member.voiceChannelID);
-		voiceChannel.join().then(connection => {
-			voiceConnection = connection;
+        music.voiceChannel = poudlard.channels.get(message.member.voiceChannelID);
+		music.voiceChannel.join().then(connection => {
+			music.voiceConnection = connection;
 			resolve();
 		}).catch(err => {
-			voiceChannel = null;
-			voiceConnection = null;
+			music.voiceChannel = null;
+			music.voiceConnection = null;
 			reject(err);
 		});
     });
 });
 
-Command.add('leave', Permission.advanced, (message, args) => {
+Command.add('leave', Permission.dj, (message, args) => {
     return new Promise((resolve, reject) => {
-        voiceChannel.leave();
-		voiceChannel = null;
-		voiceConnection = null;
+        music.voiceChannel.leave();
+		music.voiceChannel = null;
+		music.voiceConnection = null;
 		resolve();
     });
 });
 
-Command.add('stop', Permission.advanced, (message, args) => {
+Command.add('stop', Permission.dj, (message, args) => {
     return new Promise((resolve, reject) => {
-        Music.stop();
+        music.stop();
 		resolve();
     });
 });
 
-Command.add('playing', Permission.advanced, (message, args) => {
+Command.add('skip', Permission.dj, (message, args) => {
     return new Promise((resolve, reject) => {
-        if(Music.playing == '') {
+        music.skip();
+		resolve();
+    });
+});
+
+Command.add('playing', Permission.basic, (message, args) => {
+    return new Promise((resolve, reject) => {
+        if(music.playing == '') {
 			message.reply('Aucune musique en cours de lecture');
 		} else {
-			message.reply(`"${Music.playing}" est en cours de lecture`);
+			message.reply(`"${music.playing}" est en cours de lecture`);
 		}
     });
 });
 
-Command.add('play', Permission.advanced, (message, args) => {
+Command.add('play', Permission.dj, (message, args) => {
     return new Promise((resolve, reject) => {
-        if(voiceConnection == null) {
+        if(music.voiceConnection == null) {
 			reject('Swagrid n\'est pas dans un channel');
-		} else if(message.member.voiceChannelID != voiceChannel.id) {
+		} else if(message.member.voiceChannelID != music.voiceChannel.id) {
 			message.reply('Petit boloss, arrête de mettre des sons si tu n\'es pas dans le channel');
 		} else {
 			search(ytKey, {
@@ -208,7 +224,7 @@ Command.add('play', Permission.advanced, (message, args) => {
 					url: `https://youtu.be/${res.items[0].id.videoId}/`
 				}));
 				
-				Music.add(res.items[0].id.videoId, res.items[0].snippet.title);
+				music.add(res.items[0].id.videoId, res.items[0].snippet.title);
 				
 				resolve();
 			}).catch(err => {
@@ -218,9 +234,15 @@ Command.add('play', Permission.advanced, (message, args) => {
     });
 });
 
-Command.add('cancel', Permission.advanced, (message, args) => {
+Command.add('cancel', Permission.dj, (message, args) => {
     return new Promise((resolve, reject) => {
-        Music.cancel();
+        music.cancel();
+    });
+});
+
+Command.add('playlist', Permission.dj, (message, args) => {
+    return new Promise((resolve, reject) => {
+        message.reply(music.playlist());
     });
 });
 
@@ -403,8 +425,67 @@ Command.add('listplaylist', Permission.expert, (message, args) => {
     });
 });
 
+Command.add('r34', Permission.basic, (message, args) => {
+	return new Promise((resolve, reject) => {
+		request(`https://rule34.xxx/index.php?page=dapi&s=post&q=index&tags=${args.join('+')}+-scat`).then(data => {
+			parseString(data, (err, result) => {
+				if(err) {
+					reject(err);
+				} else {
+					let count = parseInt(result.posts.$.count);
+					if(count == NaN) {
+						reject('Erreur dans la récupération des posts');
+					} else {
+						if(count == 0) {
+							message.reply('Aucun résultat');
+						} else {
+							var post_number = Math.floor(Math.random()*count),
+								pid = Math.floor(post_number / 100);
+							request(`https://rule34.xxx/index.php?page=dapi&s=post&q=index&tags=${args.join('+')}+-scat`).then(data2 => {
+								parseString(data2, (err2, result2) => {
+									if(err2) {
+										reject(err2);
+									} else {
+										let count2 = parseInt(result2.posts.$.count);
+										if(count2 == NaN) {
+											reject('Erreur dans la récupération des posts (2)');
+										} else {
+											let nb_post = post_number % 100,
+												post = result2.posts.post[nb_post];
+											message.channel.send({
+												file: post.$.file_url
+											});
+											resolve();
+										}
+									}
+								});
+							}).catch(err => {
+								reject(err);
+							})
+							
+							
+							
+							/*let max = Math.min(count, 100),
+								post = result.posts.post[Math.floor(Math.random()*max)];
+							if(post.$.tags.split(' ').includes('scat')) {
+								message.reply('Image censurée car contient du scat');
+							} else {
+								message.channel.send({
+									file: post.$.file_url
+								});
+							}*/
+						}
+					} 
+				}
+			});
+		}).catch(err => {
+			reject(err);
+		});
+	});
+});
+
 Command.add('eval', Permission.expert, (message, args) => {
-    console.log(args);
+    console.log(args.join(' '));
     return new Promise((resolve, reject) => {
         try {
             eval(args.join(' '));
@@ -415,19 +496,41 @@ Command.add('eval', Permission.expert, (message, args) => {
     });
 });
 
-function updateRoles(messageReaction, user, action) {
-    return new Promise((resolve, reject) => {
-        if(messageReaction.message.id != '472082352177283074') {
-            resolve();
-        }
-        
-        let guildMember = poudlard.members.get(user.id);
-        
-        for(let i in roles)
-            if(messageReaction.emoji.name == roles[i].emoji)
-                guildMember[action ? 'addRole' : 'removeRole'](roles[i].name);
-    });
-}
+Command.add('yt', Permission.expert, (message, args) => {
+	return new Promise((resolve, reject) => {
+		if(music.voiceConnection == null) {
+			reject('Swagrid n\'est pas dans un channel');
+		} else if(message.member.voiceChannelID != music.voiceChannel.id) {
+			message.reply('Petit boloss, arrête de mettre des sons si tu n\'es pas dans le channel');
+		} else {
+			search((local ? env : process.env).YT, {
+				q: args.join(' '),
+				maxResults: 1,
+				part: 'snippet',
+				type: 'video'
+			}).then(res => {
+				message.channel.send(`Recherche de \`${args.join(' ')}\``, new Discord.RichEmbed({
+					author: {
+						'name': 'Lecture en cours'
+					},
+					thumbnail: {
+						'url': `https://img.youtube.com/vi/${res.items[0].id.videoId}/hqdefault.jpg`
+					},
+					title: `${res.items[0].snippet.title}`,
+					url: `https://youtu.be/${res.items[0].id.videoId}/`
+				}));
+
+				let dispatcher = music.voiceConnection.playStream(ytdl(res.items[0].id.videoId, {
+					seek: 0,
+					volume: 1
+				}));
+				resolve();
+			}).catch((err) => {
+				reject(err);
+			});
+		}
+	});
+}, false);
 
 function resetDB(tables) {
     if(tables.includes('user'))
@@ -445,6 +548,7 @@ client.on('ready', () => {
     
     poudlard = client.guilds.get('307821648835248130');
     surveillants = poudlard.roles.get('469496344558698506');
+	prefets = poudlard.roles.get('501438461341990913');
 	
 	client.channels.get('442762703958835200').fetchMessages(); // Récupère les messages du règlement intérieur
     
@@ -466,11 +570,13 @@ client.on('message', message => {
         name = args.shift().toLowerCase();
     
     Command.execute(name, message, args).catch(err => {
-        message.reply(`Erreur: ${err}`);
+		console.log(err);
+		if(err == 'Permission insuffisante')
+			message.reply(err);
     });
 });
 
-client.on('voiceStateUpdate', (oldmember, newmember) => {
+client.on('voiceStateUpdate', (oldmember, newmember) => { // Update packages
 	let oldvoice = oldmember.voiceChannel;
 	let newvoice = newmember.voiceChannel;
 	
@@ -483,8 +589,7 @@ client.on('voiceStateUpdate', (oldmember, newmember) => {
 			// move
 			if(newvoice.id == client.user.id) {
 				// Swagrid a été déplacé
-				voiceChannel = newmember.voiceChannel;
-				poudlard.voiceConnection;
+				music.voiceChannel = newvoice;
 			}
 		} else {
 			// update genre mute/demute
