@@ -98,7 +98,7 @@ var Music = {
 
 class Command {
     constructor(permission, fct) {
-        this.execute = function(message, args) {
+        this.execute = (message, args) => {
             return new Promise((resolve, reject) => {
                 if(permission.check_permission(message.author.id)) {
 					fct(message, args).then(() => {
@@ -116,10 +116,10 @@ class Command {
 }
 
 Command.commands = new Map();
-Command.add = function(name, permission, fct) {
+Command.add = (name, permission, fct) => {
     Command.commands.set(name, new Command(permission, fct));
 }
-Command.execute = function(name, message, args) {
+Command.execute = (name, message, args) => {
 	var cmd = Command.commands.get(name);
 	if(cmd) {
 		return cmd.execute(message, args);
@@ -524,9 +524,12 @@ sequelize.authenticate().then(() => {
     console.error(err);
 });
 
-app.get('/', function(request, response) {
-	response.sendFile(__dirname + '/index.html');
+app.get('/', (request, response) => {
+	response.sendFile(`${__dirname}/index.html`);
 });
+app.get('/anime', (request, response) => {
+	response.sendFile(`${__dirname}/anime.rdf`);
+})
 var listener = app.listen(3000, () => {
 	console.log('Swagrid présent sur le port ' + listener.address().port);
 });
