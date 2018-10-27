@@ -67,7 +67,7 @@ let play = () => {
 		seek: 0,
 		volume: 1
 	}));
-	dispatcher.on('end', reason => {
+	/*dispatcher.on('end', reason => {
 		if(!reason) {
 			if(musics.length) {
 				play();
@@ -76,7 +76,7 @@ let play = () => {
 				playing = '';
 			}
 		}
-	});
+	});*/
 }
 
 let cancel = () => {
