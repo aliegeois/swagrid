@@ -59,7 +59,7 @@ let add = (url, title) => {
 		play();
 }
 
-let play = () {
+let play = () => {
 	let song = musics.splice(0, 1)[0];
 	status = 'play';
 	playing = song.title;
@@ -79,7 +79,7 @@ let play = () {
 	});
 }
 
-let cancel = () {
+let cancel = () => {
 	if(status == 'play') {
 		if(musics.length) {
 			musics.pop();
@@ -91,14 +91,14 @@ let cancel = () {
 	}
 }
 
-let skip = () {
+let skip = () => {
 	if(status == 'play')
 		dispatcher.end('_');
 	if(musics.length)
 		play();
 }
 
-let stop = () {
+let stop = () => {
 	status = 'stop';
 	playing = '';
 	dispatcher.end('_');
