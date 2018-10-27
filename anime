@@ -1,0 +1,82 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+anime:Anime a rdfs:Class .
+
+anime:title a rdf:Property ;
+	rdfs:label "title" ;
+	rdfs:comment "Le titre de l'anime" ;
+	rdfs:domain anime:Anime ;
+	rdfs:range rdfs:Literal .
+
+anime:type a rdf:Property ;
+	rdfs:label "type" ;
+	rdfs:comment "Le type de l'anime (TV, Movie, OAV, ...)" ;
+	rdfs:domain anime:Anime ;
+	rdfs:range rdfs:Literal .
+
+anime:source a rdf:Property ;
+	rdfs:label "source" ;
+	rdfs:comment "La source de l'anime (manga, light novel, original, ...)" ;
+	rdfs:domain anime:Anime ;
+	rdfs:range rdfs:Literal .
+
+anime:episodes a rdf:Property ;
+	rdfs:label "episodes" ;
+	rdfs:comment "Le nombre d'épisodes de l'anime" ;
+	rdfs:domain anime:Anime ;
+	rdfs:range rdfs:Literal .
+
+anime:airing_start a rdf:Property ;
+	rdfs:label "airing_start" ;
+	rdfs:comment "Date de diffusion du premier épisode de l'anime (yyyy-mm-dd)" ;
+	rdfs:domain anime:Anime ;
+	rdfs:range rdfs:Literal .
+
+anime:airing_end a rdf:Property ;
+	rdfs:label "airing_end" ;
+	rdfs:comment "Date de diffusion du dernier épisode de l'anime (yyyy-mm-dd)" ;
+	rdfs:domain anime:Anime ;
+	rdfs:range rdfs:Literal .
+
+anime:duration a rdf:Property ;
+	rdfs:label "duration" ;
+	rdfs:comment "Durée moyenne d'un épisode" ;
+	rdfs:domain anime:Anime ;
+	rdfs:range rdfs:Literal .
+
+anime:rating a rdf:Property ;
+	rdfs:label "rating" ;
+	rdfs:comment "Notation de l'anime (G, PG-13, R+, ...)" ;
+	rdfs:domain anime:Anime ;
+	rdfs:range rdfs:Literal .
+
+anime:score a rdf:Property ;
+	rdfs:label "score" ;
+	rdfs:comment "Score moyen donné par les utilisateurs" ;
+	rdfs:domain anime:Anime ;
+	rdfs:range rdfs:Literal .
+
+anime:producer a rdf:Property ;
+	rdfs:label "producer" ;
+	rdfs:comment "Producteur de l'anime" ;
+	rdfs:domain anime:Anime ;
+	rdfs:range rdfs:Literal .
+
+anime:licensor a rdf:Property ;
+	rdfs:label "licensor" ;
+	rdfs:comment "Licence de l'anime" ;
+	rdfs:domain anime:Anime ;
+	rdfs:range rdfs:Literal .
+
+anime:studio a rdf:Property ;
+	rdfs:label "studio" ;
+	rdfs:comment "Studio d'animation" ;
+	rdfs:domain anime:Anime ;
+	rdfs:range rdfs:Literal .
+
+anime:genres a rdf:Property ;
+	rdfs:label "genres" ;
+	rdfs:comment "Genres (slice of life, sport, harem, ...)" ;
+	rdfs:domain anime:Anime ;
+	rdfs:range rdfs:Literal .
