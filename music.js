@@ -9,20 +9,20 @@ class Music {
 	static _play() {
 		let song = this._musics.splice(0, 1)[0];
 		this._status = 'play';
-		this._playing = song.title;
+		this.playing = song.title;
 		this._dispatcher = this.voiceConnection.playStream(ytdl(song.url, {
 			seek: 0,
 			volume: 1
 		}));
 		this._dispatcher.on('end', reason => {
-			if(reason == '_') {
+			//if(reason == '_') {
 				if(this._musics.length) {
 					this._play();
 				} else {
 					this._status = 'stop';
-					this._playing = '';
-				}
+					this.playing = '';
 			}
+			//}
 		});
 	}
 	
@@ -32,7 +32,7 @@ class Music {
 				this._musics.pop();
 			} else {
 				this._status = 'stop';
-				this._playing = '';
+				this.playing = '';
 				this._dispatcher.end();
 			}
 		}
@@ -47,7 +47,7 @@ class Music {
 	
 	static stop() {
 		this._status = 'stop';
-		this._playing = '';
+		this.playing = '';
 		this._dispatcher.end('_');
 		this._musics = [];
 	}
@@ -61,6 +61,6 @@ Music.voiceChannel = null;
 Music.voiceConnection = null;
 Music._status = 'stop';
 Music._dispatcher = null;
-Music._playing = '';
+Music.playing = '';
 
 module.exports = Music;
