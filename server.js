@@ -500,9 +500,9 @@ Command.add('eval', Permission.expert, (message, args) => {
 
 Command.add('yt', Permission.expert, (message, args) => {
 	return new Promise((resolve, reject) => {
-		if(music.voiceConnection == null) {
+		if(voiceConnection == null) {
 			reject('Swagrid n\'est pas dans un channel');
-		} else if(message.member.voiceChannelID != music.voiceChannel.id) {
+		} else if(message.member.voiceChannelID != voiceChannel.id) {
 			message.reply('Petit boloss, arrête de mettre des sons si tu n\'es pas dans le channel');
 			resolve();
 		} else {
@@ -523,7 +523,7 @@ Command.add('yt', Permission.expert, (message, args) => {
 					url: `https://youtu.be/${res.items[0].id.videoId}/`
 				}));
 
-				let dispatcher = music.voiceConnection.playStream(ytdl(res.items[0].id.videoId, {
+				dispatcher = voiceConnection.playStream(ytdl(res.items[0].id.videoId, {
 					seek: 0,
 					volume: 1
 				}));
