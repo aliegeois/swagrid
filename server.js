@@ -7,9 +7,9 @@ const Discord = require('discord.js'),
 	  search = require('youtube-api-v3-search'),
 	  request = require('request-promise-native'),
 	  parseString = require('xml2js').parseString,
-	  ytdl = require('ytdl-core'),
+	  //ytdl = require('ytdl-core'),
 	  express = require('express'),
-	  //music = require('./music'),
+	  music = require('./music'),
 	  app = express(),
 	  client = new Discord.Client();
 
@@ -19,12 +19,12 @@ var poudlard,
 	sequelize,
 	ytKey = (local ? env : process.env).YT;
 
-var musics = [],
+/*var musics = [],
 	voiceChannel = null,
 	voiceConnection = null,
 	status = 'stop',
 	dispatcher = null,
-	playing = '';
+	playing = '';*/
 
 var User,
 	Playlist,
@@ -53,7 +53,7 @@ var Permission = {
 	}
 };
 
-let add = (url, title) => {
+/*let add = (url, title) => {
 	musics.push({url: url, title: title});
 	if(status == 'stop')
 		play();
@@ -67,7 +67,7 @@ let play = () => {
 		seek: 0,
 		volume: 1
 	}));
-	/*dispatcher.on('end', reason => {
+	dispatcher.on('end', reason => {
 		if(!reason) {
 			if(musics.length) {
 				play();
@@ -76,7 +76,7 @@ let play = () => {
 				playing = '';
 			}
 		}
-	});*/
+	});
 }
 
 let cancel = () => {
@@ -107,7 +107,7 @@ let stop = () => {
 
 let playlist = () => {
 	return musics;
-}
+}*/
 
 class Command {
     constructor(permission, fct) {
@@ -158,13 +158,13 @@ Command.add('tts', Permission.advanced, (message, args) => {
 
 Command.add('join', Permission.dj, (message, args) => {
     return new Promise((resolve, reject) => {
-        voiceChannel = poudlard.channels.get(message.member.voiceChannelID);
-		voiceChannel.join().then(connection => {
-			voiceConnection = connection;
+        music.voiceChannel = poudlard.channels.get(message.member.voiceChannelID);
+		music.voiceChannel.join().then(connection => {
+			music.voiceConnection = connection;
 			resolve();
 		}).catch(err => {
-			voiceChannel = null;
-			voiceConnection = null;
+			music.voiceChannel = null;
+			music.voiceConnection = null;
 			reject(err);
 		});
     });
@@ -172,33 +172,33 @@ Command.add('join', Permission.dj, (message, args) => {
 
 Command.add('leave', Permission.dj, (message, args) => {
     return new Promise((resolve, reject) => {
-        voiceChannel.leave();
-		voiceChannel = null;
-		voiceConnection = null;
+        music.voiceChannel.leave();
+		music.voiceChannel = null;
+		music.voiceConnection = null;
 		resolve();
     });
 });
 
 Command.add('stop', Permission.dj, (message, args) => {
     return new Promise((resolve, reject) => {
-        stop();
+        music.stop();
 		resolve();
     });
 });
 
 Command.add('skip', Permission.dj, (message, args) => {
     return new Promise((resolve, reject) => {
-        skip();
+        music.skip();
 		resolve();
     });
 });
 
 Command.add('playing', Permission.basic, (message, args) => {
     return new Promise((resolve, reject) => {
-        if(playing == '') {
+        if(music.playing == '') {
 			message.reply('Aucune musique en cours de lecture');
 		} else {
-			message.reply(`"${playing}" est en cours de lecture`);
+			message.reply(`"${music.playing}" est en cours de lecture`);
 		}
 		resolve();
     });
@@ -206,9 +206,9 @@ Command.add('playing', Permission.basic, (message, args) => {
 
 Command.add('play', Permission.dj, (message, args) => {
     return new Promise((resolve, reject) => {
-        if(voiceConnection == null) {
+        if(music.voiceConnection == null) {
 			reject('Swagrid n\'est pas dans un channel');
-		} else if(message.member.voiceChannelID != voiceChannel.id) {
+		} else if(message.member.voiceChannelID != music.voiceChannel.id) {
 			message.reply('Petit boloss, arrête de mettre des sons si tu n\'es pas dans le channel');
 			resolve();
 		} else {
@@ -228,9 +228,7 @@ Command.add('play', Permission.dj, (message, args) => {
 					title: `${res.items[0].snippet.title}`,
 					url: `https://youtu.be/${res.items[0].id.videoId}/`
 				}));
-				
-				add(res.items[0].id.videoId, res.items[0].snippet.title);
-				
+				music.add(res.items[0].id.videoId, res.items[0].snippet.title);
 				resolve();
 			}).catch(err => {
 				reject(err);
@@ -241,14 +239,14 @@ Command.add('play', Permission.dj, (message, args) => {
 
 Command.add('cancel', Permission.dj, (message, args) => {
     return new Promise((resolve, reject) => {
-        cancel();
+        music.cancel();
 		resolve();
     });
 });
 
 Command.add('playlist', Permission.dj, (message, args) => {
     return new Promise((resolve, reject) => {
-        message.reply(playlist());
+        message.reply(music.playlist());
 		resolve();
     });
 });
@@ -498,7 +496,7 @@ Command.add('eval', Permission.expert, (message, args) => {
     });
 });
 
-Command.add('yt', Permission.expert, (message, args) => {
+/*Command.add('yt', Permission.expert, (message, args) => {
 	return new Promise((resolve, reject) => {
 		if(voiceConnection == null) {
 			reject('Swagrid n\'est pas dans un channel');
@@ -533,7 +531,7 @@ Command.add('yt', Permission.expert, (message, args) => {
 			});
 		}
 	});
-}, false);
+}, false);*/
 
 function resetDB(tables) {
     if(tables.includes('user'))
