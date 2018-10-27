@@ -3,10 +3,10 @@ class Music {
 	static add(url, title) {
 		this._musics.push({url: url, title: title});
 		if(this._status == 'stop')
-			this.play();
+			this._play();
 	}
 	
-	static play() {
+	static _play() {
 		let song = this._musics.splice(0, 1)[0];
 		this._status = 'play';
 		this._playing = song.title;
@@ -15,9 +15,9 @@ class Music {
 			volume: 1
 		}));
 		this._dispatcher.on('end', reason => {
-			if(!reason) {
+			if(reason == '_') {
 				if(this._musics.length) {
-					this.play();
+					this._play();
 				} else {
 					this._status = 'stop';
 					this._playing = '';
@@ -42,7 +42,7 @@ class Music {
 		if(this._status == 'play')
 			this._dispatcher.end('_');
 		if(this._musics.length)
-			this.play();
+			this._play();
 	}
 	
 	static stop() {
