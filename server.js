@@ -450,12 +450,16 @@ Command.add('r34', Permission.basic, (message, args) => {
 										if(count2 == NaN) {
 											reject('Erreur dans la récupération des posts (2)');
 										} else {
-											let nb_post = post_number % 100,
-												post = result2.posts.post[nb_post];
-											message.channel.send({
-												file: post.$.file_url
-											});
-											resolve();
+											if(count2 == 0) {
+												message.reply('Aucun résultat (2)');
+											} else {
+												let nb_post = post_number % 100,
+													post = result2.posts.post[nb_post];
+												message.channel.send({
+													file: post.$.file_url
+												});
+												resolve();
+											}
 										}
 									}
 								});
