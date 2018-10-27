@@ -15,14 +15,12 @@ class Music {
 			volume: 1
 		}));
 		this._dispatcher.on('end', reason => {
-			//if(reason == '_') {
-				if(this._musics.length) {
-					this._play();
-				} else {
-					this._status = 'stop';
-					this.playing = '';
+			if(this._musics.length) {
+				this._play();
+			} else {
+				this._status = 'stop';
+				this.playing = '';
 			}
-			//}
 		});
 	}
 	
