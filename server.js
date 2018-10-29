@@ -541,14 +541,13 @@ let testForMio = (message) => {
 				userId: message.author.id
 			}
 		}).then(mio => {
-			console.log(typeof mio);
-			console.log(`_${mio}_`);
 			if(mio == null) {
 				Mio.create({
 					userId: message.author.id,
 					count: 1
 				}).catch(err => {
-					message.reply('erreur create ' + err.toString()).catch(_ => {});
+					console.log(`erreur create: ${err.toString()}`);
+					//message.reply('erreur create ' + err.toString()).catch(_ => {});
 				})
 			} else {
 				Mio.update({
@@ -558,32 +557,14 @@ let testForMio = (message) => {
                         userId: message.author.id
                     }
                 }).then(() => {
-					message.reply(`Compteur de mio/tio/viola: ${mio.count+1}`);
+					message.channel.send(`Compteur de mio/tio/viola: ${mio.count+1}`).catch(_ => {});
 				}).catch(err => {
-                    console.log('erreur update')
+                    console.log(`erreur update: ${err}`)
                 });
 			}
 		}).catch(err => {
-			console.log('erreur find');
+			console.log(`erreur find: ${err}`);
 		});
-		/*Mio.findAll({
-			where: {
-				userId: message.author.id
-			}
-		}).then(data => {
-			if(data == []) {
-				Mio.create({
-					userId: message.author.id,
-					count: 1
-				}).catch(err => {
-					message.reply('erreur create ' + err.toString()).catch(_ => {});
-				})
-			} else {
-				message.reply('data == [] ' + JSON.stringify(data)).catch(_ => {});
-			}
-		}).catch(err => {
-			message.reply('erreur find ' + err.toString()).catch(_ => {});
-		});*/
 	}
 }
 
