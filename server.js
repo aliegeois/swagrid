@@ -649,7 +649,7 @@ sequelize.authenticate().then(() => {
     });
 	Mio = sequelize.define('mio', {
 		userId: Sequelize.BIGINT,
-		count: Sequelize.INT
+		count: Sequelize.INTEGER
 	});
     
     //resetDB(['user', 'playlist', 'link', 'mio']);
