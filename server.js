@@ -541,13 +541,18 @@ let testForMio = (message) => {
 				userId: message.author.id
 			}
 		}).then(data => {
-			message.reply(JSON.stringify(data)).then(() => {
-				
-			}).catch(err => {
-				
-			})
+			if(data == []) {
+				Mio.create({
+					userId: message.author.id,
+					count: 1
+				}).catch(err => {
+					message.reply(err.toString()).catch(_ => {});
+				})
+			} else {
+				message.reply(JSON.stringify(data)).catch(_ => {});
+			}
 		}).catch(err => {
-			message.reply(err);
+			message.reply(err.toString()).catch(_ => {});
 		});
 	}
 }
