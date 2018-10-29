@@ -321,7 +321,7 @@ Command.add('playlist', Permission.dj, (message, args) => {
     });
 });*/
 
-Command.add('init', Permission.expert, (message, args) => {
+/*Command.add('init', Permission.expert, (message, args) => {
     return new Promise((resolve, reject) => {
         User.create({
             id: message.author.id
@@ -331,7 +331,7 @@ Command.add('init', Permission.expert, (message, args) => {
             reject(err);
         })
     });
-});
+});*/
 
 /*Command.add('createplaylist', Permission.expert, (message, args) => {
     return new Promise((resolve, reject) => {
@@ -553,12 +553,12 @@ let testForMio = (message) => {
 }
 
 function resetDB(tables) {
-    if(tables.includes('user'))
+    /*if(tables.includes('user'))
         User.sync({force: true});
     if(tables.includes('playlist'))
         Playlist.sync({force: true});
     if(tables.includes('link'))
-        Link.sync({force: true});
+        Link.sync({force: true});*/
 	if(tables.includes('mio'))
         Mio.sync({force: true});
 }
@@ -630,7 +630,7 @@ sequelize = new Sequelize('database', 'nero', null, {
 sequelize.authenticate().then(() => {
     console.log('Authentication success');
     
-    User = sequelize.define('user', {
+    /*User = sequelize.define('user', {
         id: {
             type: Sequelize.BIGINT,
             primaryKey: true
@@ -646,9 +646,12 @@ sequelize.authenticate().then(() => {
         value: Sequelize.CHAR(11),
         playlist_name: Sequelize.STRING,
         playlist_user_id: Sequelize.BIGINT
-    });
+    });*/
 	Mio = sequelize.define('mio', {
-		userId: Sequelize.BIGINT,
+		userId: {
+			type: Sequelize.STRING,
+			primaryKey: true
+		},
 		count: Sequelize.INTEGER
 	});
     
