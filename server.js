@@ -535,7 +535,8 @@ Command.add('eval', Permission.expert, (message, args) => {
 }, false);*/
 
 let testForMio = (message) => {
-	if(/^mio | mio | mio$|^mio$|^tio | tio | tio$|^tio$|^viola | viola | viola$|^viola$/i.test(message.content)) {
+	let mios;
+	if((mios = (message.content.match(/^mio | mio | mio$|^mio$|^tio | tio | tio$|^tio$|^viola | viola | viola$|^viola$/ig) || [])).length > 0) {
 		Mio.findOne({
 			where: {
 				userId: message.author.id
@@ -544,20 +545,19 @@ let testForMio = (message) => {
 			if(mio == null) {
 				Mio.create({
 					userId: message.author.id,
-					count: 1
+					count: mios.length
 				}).catch(err => {
 					console.log(`erreur create: ${err.toString()}`);
-					//message.reply('erreur create ' + err.toString()).catch(_ => {});
 				})
 			} else {
 				Mio.update({
-                    count: mio.count + 1
+                    count: mio.count + mios.length
                 }, {
                     where: {
                         userId: message.author.id
                     }
                 }).then(() => {
-					message.channel.send(`Compteur de mio/tio/viola: ${mio.count+1}`).catch(_ => {});
+					message.channel.send(`Compteur de mio/tio/viola pour ${message.author.username}: \`${mio.count+mios.length}\``).catch(_ => {});
 				}).catch(err => {
                     console.log(`erreur update: ${err}`)
                 });
