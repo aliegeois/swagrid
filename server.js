@@ -28,7 +28,8 @@ var poudlard,
 
 var User,
 	Playlist,
-	Link;
+	Link,
+	Mio;
 
 var Permission = {
 	basic: {
@@ -533,6 +534,24 @@ Command.add('eval', Permission.expert, (message, args) => {
 	});
 }, false);*/
 
+let testForMio = (message) => {
+	if(/^mio | mio | mio$|^tio | tio | tio$|^viola | viola | viola$/i.test(message.content)) {
+		Mio.findAll({
+			where: {
+				userId: message.author.id
+			}
+		}).then(data => {
+			message.reply(JSON.stringify(data)).then(() => {
+				
+			}).catch(err => {
+				
+			})
+		}).catch(err => {
+			message.reply(err);
+		});
+	}
+}
+
 function resetDB(tables) {
     if(tables.includes('user'))
         User.sync({force: true});
@@ -540,6 +559,8 @@ function resetDB(tables) {
         Playlist.sync({force: true});
     if(tables.includes('link'))
         Link.sync({force: true});
+	if(tables.includes('mio'))
+        Mio.sync({force: true});
 }
 
 client.on('ready', () => {
@@ -560,8 +581,10 @@ client.on('message', message => {
     if(message.author.bot)
         return;
     
-    if(message.content.indexOf(config.prefix) !== 0)
-        return;
+    if(message.content.indexOf(config.prefix) !== 0) {
+		testForMio(message);
+		return;
+	}
     
 	/*if(!(message.channel instanceof Discord.TextChannel))
 		if(!Permission.expert.check_permission(message.author.id))
@@ -624,8 +647,12 @@ sequelize.authenticate().then(() => {
         playlist_name: Sequelize.STRING,
         playlist_user_id: Sequelize.BIGINT
     });
+	Mio = sequelize.define('mio', {
+		userId: Sequelize.BIGINT,
+		count: Sequelize.INT
+	});
     
-    //resetDB(['user', 'playlist', 'link']);
+    //resetDB(['user', 'playlist', 'link', 'mio']);
 }).catch(err => {
     console.error(err);
 });
