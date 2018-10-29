@@ -535,7 +535,7 @@ Command.add('eval', Permission.expert, (message, args) => {
 }, false);*/
 
 let testForMio = (message) => {
-	if(/^mio | mio | mio$|^tio | tio | tio$|^viola | viola | viola$/i.test(message.content)) {
+	if(/^mio | mio | mio$|^mio$|^tio | tio | tio$|^tio$|^viola | viola | viola$|^viola$/i.test(message.content)) {
 		Mio.findAll({
 			where: {
 				userId: message.author.id
