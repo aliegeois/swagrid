@@ -548,7 +548,8 @@ let testForMio = (message) => {
 					count: mios.length
 				}).catch(err => {
 					console.log(`erreur create: ${err.toString()}`);
-				})
+				});
+				message.channel.send(`Compteur de mio/tio/viola pour <@${message.author.id}>: \`${mios.length}\``).catch(_ => {});
 			} else {
 				Mio.update({
 					count: mio.count + mios.length
