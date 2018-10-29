@@ -551,16 +551,16 @@ let testForMio = (message) => {
 				})
 			} else {
 				Mio.update({
-                    count: mio.count + mios.length
-                }, {
-                    where: {
-                        userId: message.author.id
-                    }
-                }).then(() => {
-					message.channel.send(`Compteur de mio/tio/viola pour ${message.author.username}: \`${mio.count+mios.length}\``).catch(_ => {});
+					count: mio.count + mios.length
+				}, {
+					where: {
+						userId: message.author.id
+					}
+				}).then(() => {
+					message.channel.send(`Compteur de mio/tio/viola pour <@${message.author.id}>: \`${mio.count+mios.length}\``).catch(_ => {});
 				}).catch(err => {
-                    console.log(`erreur update: ${err}`)
-                });
+					console.log(`erreur update: ${err}`)
+				});
 			}
 		}).catch(err => {
 			console.log(`erreur find: ${err}`);
