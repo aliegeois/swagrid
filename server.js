@@ -536,7 +536,37 @@ Command.add('eval', Permission.expert, (message, args) => {
 
 let testForMio = (message) => {
 	if(/^mio | mio | mio$|^mio$|^tio | tio | tio$|^tio$|^viola | viola | viola$|^viola$/i.test(message.content)) {
-		Mio.findAll({
+		Mio.findOne({
+			where: {
+				userId: message.author.id
+			}
+		}).then(mio => {
+			console.log(typeof mio);
+			console.log(`_${mio}_`);
+			if(mio == null) {
+				Mio.create({
+					userId: message.author.id,
+					count: 1
+				}).catch(err => {
+					message.reply('erreur create ' + err.toString()).catch(_ => {});
+				})
+			} else {
+				Mio.update({
+                    count: mio.count + 1
+                }, {
+                    where: {
+                        userId: message.author.id
+                    }
+                }).then(() => {
+					message.reply(`Compteur de mio/tio/viola: ${mio.count+1}`);
+				}).catch(err => {
+                    console.log('erreur update')
+                });
+			}
+		}).catch(err => {
+			console.log('erreur find');
+		});
+		/*Mio.findAll({
 			where: {
 				userId: message.author.id
 			}
@@ -553,7 +583,7 @@ let testForMio = (message) => {
 			}
 		}).catch(err => {
 			message.reply('erreur find ' + err.toString()).catch(_ => {});
-		});
+		});*/
 	}
 }
 
