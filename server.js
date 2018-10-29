@@ -546,13 +546,13 @@ let testForMio = (message) => {
 					userId: message.author.id,
 					count: 1
 				}).catch(err => {
-					message.reply(err.toString()).catch(_ => {});
+					message.reply('erreur create ' + err.toString()).catch(_ => {});
 				})
 			} else {
-				message.reply(JSON.stringify(data)).catch(_ => {});
+				message.reply('data == [] ' + JSON.stringify(data)).catch(_ => {});
 			}
 		}).catch(err => {
-			message.reply(err.toString()).catch(_ => {});
+			message.reply('erreur find ' + err.toString()).catch(_ => {});
 		});
 	}
 }
