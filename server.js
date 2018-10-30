@@ -16,6 +16,7 @@ const Discord = require('discord.js'),
 var poudlard,
 	surveillants,
 	prefets,
+	pasDeSwagrid,
 	sequelize,
 	ytKey = (local ? env : process.env).YT;
 
@@ -588,8 +589,9 @@ client.on('ready', () => {
     poudlard = client.guilds.get('307821648835248130');
     surveillants = poudlard.roles.get('469496344558698506');
 	prefets = poudlard.roles.get('501438461341990913');
+	pasDeSwagrid = poudlard.roles.get('506873198751645706');
 	
-	client.channels.get('442762703958835200').fetchMessages(); // Récupère les messages du règlement intérieur
+	//client.channels.get('442762703958835200').fetchMessages(); // Récupère les messages du règlement intérieur
     
     console.log('Started');
 });
@@ -597,6 +599,9 @@ client.on('ready', () => {
 client.on('message', message => {
     if(message.author.bot)
         return;
+	
+	if(pasDeSwagrid.members.find(e => e.user.id == message.author.id))
+		return;
     
     if(message.content.indexOf(config.prefix) !== 0) {
 		testForMio(message);
