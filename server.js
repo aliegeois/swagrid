@@ -452,16 +452,16 @@ Command.add('eval', Permission.expert, (message, args) => {
 
 Command.add('help', Permission.basic, (message, args) => {
 	return new Promise((resolve, reject) => {
-		let cmdName = args[0],
-			msg;
-		if(cmdName == '') {
+		let msg;
+		if(args.length == 0) {
 			msg = 'Liste des commandes disponibles:';
 			Command.commands.forEach((cmd, name) => {
 				msg += `\n${name}: ${cmd.description}`;
 			});
 			msg += `\n\npour obtenir de l\'aide sur une commande, entrez "${config.prefix}help <nom de la commande>"`;
 		} else {
-			let cmd = Command.commands.get(cmd);
+			let cmdName = args[0],
+				cmd = Command.commands.get(cmdName);
 			msg = `-- Aide pour ${cmdName} --\nDescription: ${cmd.description}\nUtilisation:\n\`\`\`${cmd.utilisation}\`\`\``;
 		}
 		message.channel.send(msg);
