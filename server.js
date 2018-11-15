@@ -54,64 +54,8 @@ var Permission = {
 	}
 };
 
-/*let add = (url, title) => {
-	musics.push({url: url, title: title});
-	if(status == 'stop')
-		play();
-}
-
-let play = () => {
-	let song = musics.splice(0, 1)[0];
-	status = 'play';
-	playing = song.title;
-	dispatcher = voiceConnection.playStream(ytdl(song.url, {
-		seek: 0,
-		volume: 1
-	}));
-	dispatcher.on('end', reason => {
-		if(!reason) {
-			if(musics.length) {
-				play();
-			} else {
-				status = 'stop';
-				playing = '';
-			}
-		}
-	});
-}
-
-let cancel = () => {
-	if(status == 'play') {
-		if(musics.length) {
-			musics.pop();
-		} else {
-			status = 'stop';
-			playing = '';
-			dispatcher.end();
-		}
-	}
-}
-
-let skip = () => {
-	if(status == 'play')
-		dispatcher.end('_');
-	if(musics.length)
-		play();
-}
-
-let stop = () => {
-	status = 'stop';
-	playing = '';
-	dispatcher.end('_');
-	musics = [];
-}
-
-let playlist = () => {
-	return musics;
-}*/
-
 class Command {
-    constructor(permission, fct) {
+    constructor(permission, fct, desc, util) {
         this.execute = (message, args) => {
             return new Promise((resolve, reject) => {
                 if(permission.check_permission(message.author.id)) {
@@ -125,20 +69,20 @@ class Command {
                 }
             });
         };
+		this.description = desc;
+		this.utilisation = util;
     }
 }
 
 Command.commands = new Map();
-Command.add = (name, permission, fct) => {
-    Command.commands.set(name, new Command(permission, fct));
-}
+Command.add = (name, permission, fct, desc, util) => Command.commands.set(name, new Command(permission, fct, desc, util));
 Command.execute = (name, message, args) => {
 	var cmd = Command.commands.get(name);
-	if(cmd) {
-		return cmd.execute(message, args);
-	} else {
-		return new Promise((resolve, reject) => resolve());
-	}
+	//if(cmd)
+	//	return cmd.execute(message, args);
+	//else
+	//	return new Promise((resolve, reject) => resolve());
+	return cmd ? cmd.execute(message, args) : new Promise(r => r());
 }
 
 Command.add('say', Permission.advanced, (message, args) => {
@@ -147,7 +91,7 @@ Command.add('say', Permission.advanced, (message, args) => {
 		message.channel.send(args.join(' '));
 		resolve();
     });
-});
+}, 'Pour faire dire des choses à swagrid', 'say <texte>: Supprime le message de la commande et Swagrid envoie <texte>');
 
 Command.add('tts', Permission.advanced, (message, args) => {
     return new Promise((resolve, reject) => {
@@ -155,21 +99,26 @@ Command.add('tts', Permission.advanced, (message, args) => {
 		message.channel.send(args.join(' '), {tts: true});
 		resolve();
     });
-});
+}, 'Comme "say" mais avec du tts en plus', 'tts <texte>: Supprime le message de la commande et Swagrid envoie <texte> en tts');
 
 Command.add('join', Permission.dj, (message, args) => {
     return new Promise((resolve, reject) => {
-        music.voiceChannel = poudlard.channels.get(message.member.voiceChannelID);
-		music.voiceChannel.join().then(connection => {
-			music.voiceConnection = connection;
+		if(message.member.voiceChannelID == null) {
+			message.reply('vous devez être dans un channel vocal pour invoquer Swagrid').catch(_=>{});
 			resolve();
-		}).catch(err => {
-			music.voiceChannel = null;
-			music.voiceConnection = null;
-			reject(err);
-		});
+		} else {
+			music.voiceChannel = poudlard.channels.get(message.member.voiceChannelID);
+			music.voiceChannel.join().then(connection => {
+				music.voiceConnection = connection;
+				resolve();
+			}).catch(err => {
+				music.voiceChannel = null;
+				music.voiceConnection = null;
+				reject(err);
+			});
+		}
     });
-});
+}, 'Invoque Swagrid dans le channel vocal', 'join: Si vous êtes dans un channel vocal, Swagrid vous rejoint');
 
 Command.add('leave', Permission.dj, (message, args) => {
     return new Promise((resolve, reject) => {
@@ -178,21 +127,21 @@ Command.add('leave', Permission.dj, (message, args) => {
 		music.voiceConnection = null;
 		resolve();
     });
-});
+}, 'Renvoie Swagrid du channel vocal vers sa hutte', 'leave: Swagrid quitte son channel vocal, peut importe dans lequel vous êtes');
 
 Command.add('stop', Permission.dj, (message, args) => {
     return new Promise((resolve, reject) => {
         music.stop();
 		resolve();
     });
-});
+}, 'Arrête la vidéo en cours et vide la file d\'attente');
 
 Command.add('skip', Permission.dj, (message, args) => {
     return new Promise((resolve, reject) => {
         music.skip();
 		resolve();
     });
-});
+}, 'Pour faire passer la vidéo en cours de lecture');
 
 Command.add('playing', Permission.basic, (message, args) => {
     return new Promise((resolve, reject) => {
@@ -203,7 +152,7 @@ Command.add('playing', Permission.basic, (message, args) => {
 		}
 		resolve();
     });
-});
+}, 'Permet d\'obtenir le nom de la vidéo qui passe actuellement');
 
 Command.add('play', Permission.dj, (message, args) => {
     return new Promise((resolve, reject) => {
@@ -236,21 +185,21 @@ Command.add('play', Permission.dj, (message, args) => {
 			});
 		}
     });
-});
+}, 'Effectue une recherche sur Youtube et joue la première vidéo trouvée, ou la met en attente si une vidéo est déjà en cours de lecture (vous devez être dans le même channel vocal que Swagrid)', 'play <recherche>: Recherche <recherche> sur youtube et lit la première vidéo trouvée. <recherche> peut être constitué de plusieurs mots (ex: "Rick Astley - Never Gonna Give You Up"). <recherche> peut être une url mais le résultat n\'est pas garantit');
 
 Command.add('cancel', Permission.dj, (message, args) => {
     return new Promise((resolve, reject) => {
         music.cancel();
 		resolve();
     });
-});
+}, 'Annule la dernière action (en rapport avec les vidéos)');
 
 Command.add('playlist', Permission.dj, (message, args) => {
     return new Promise((resolve, reject) => {
         message.reply(music.playlist());
 		resolve();
     });
-});
+}, 'Affiche le titre des chaque vidéo mises en attente');
 
 /*Command.add('search', Permission.expert, (message, args) => {
     return new Promise((resolve, reject) => {
@@ -435,55 +384,59 @@ Command.add('playlist', Permission.dj, (message, args) => {
 
 Command.add('r34', Permission.basic, (message, args) => {
 	return new Promise((resolve, reject) => {
-		request(`https://rule34.xxx/index.php?page=dapi&s=post&q=index&tags=${args.join('+')}+-scat`).then(data => {
-			parseString(data, (err, result) => {
-				if(err) {
-					reject(err);
-				} else {
-					let count = parseInt(result.posts.$.count);
-					if(count == NaN) {
-						reject('Erreur dans la récupération des posts');
+		if(message.channel.nsfw) {
+			request(`https://rule34.xxx/index.php?page=dapi&s=post&q=index&tags=${args.join('+')}+-scat`).then(data => {
+				parseString(data, (err, result) => {
+					if(err) {
+						reject(err);
 					} else {
-						if(count == 0) {
-							message.reply('Aucun résultat');
-							resolve();
+						let count = parseInt(result.posts.$.count);
+						if(count == NaN) {
+							reject('Erreur dans la récupération des posts');
 						} else {
-							var post_number = Math.floor(Math.random()*count),
-								pid = Math.floor(post_number / 100);
-							request(`https://rule34.xxx/index.php?page=dapi&s=post&q=index&tags=${args.join('+')}+-scat`).then(data2 => {
-								parseString(data2, (err2, result2) => {
-									if(err2) {
-										reject(err2);
-									} else {
-										let count2 = parseInt(result2.posts.$.count);
-										if(count2 == NaN) {
-											reject('Erreur dans la récupération des posts (2)');
+							if(count == 0) {
+								message.reply('Aucun résultat');
+								resolve();
+							} else {
+								var post_number = Math.floor(Math.random()*count),
+									pid = Math.floor(post_number / 100);
+								request(`https://rule34.xxx/index.php?page=dapi&s=post&q=index&tags=${args.join('+')}+-scat`).then(data2 => {
+									parseString(data2, (err2, result2) => {
+										if(err2) {
+											reject(err2);
 										} else {
-											if(count2 == 0) {
-												message.reply('Aucun résultat (2)');
+											let count2 = parseInt(result2.posts.$.count);
+											if(count2 == NaN) {
+												reject('Erreur dans la récupération des posts (2)');
 											} else {
-												let nb_post = post_number % 100,
-													post = result2.posts.post[nb_post];
-												message.channel.send({
-													file: post.$.file_url
-												});
+												if(count2 == 0) {
+													message.reply('Aucun résultat (2)');
+												} else {
+													let nb_post = post_number % 100,
+														post = result2.posts.post[nb_post];
+													message.channel.send({
+														file: post.$.file_url
+													});
+												}
+												resolve();
 											}
-											resolve();
 										}
-									}
+									});
+								}).catch(err => {
+									reject(err);
 								});
-							}).catch(err => {
-								reject(err);
-							});
-						}
-					} 
-				}
+							}
+						} 
+					}
+				});
+			}).catch(err => {
+				reject(err);
 			});
-		}).catch(err => {
-			reject(err);
-		});
+		} else {
+			reject('Pas dans un channel nsfw');
+		}
 	});
-});
+}, 'Effectue une recherche sur rule34 (xxx pas paheal) et affiche une image au hasard en rapport avec les tags indiqués', 'r34 <mot-clé-1> <mot-clé-2> ... <mot-clé-n>: Effectue une recherche sur https://rule34.xxx/ avec les mots-clés passés en paramètre (ex: "lucina chrom" affiche une image contenant Lucina ET Chrom). Ces mots-clés ne doivent pas contenir d\'espaces, sinon les remplacer par des "_" (ex: "devil may cry" => "devil_may_cry")');
 
 Command.add('eval', Permission.expert, (message, args) => {
     console.log(args.join(' '));
@@ -495,7 +448,25 @@ Command.add('eval', Permission.expert, (message, args) => {
             reject(err);
         }
     });
-});
+}, 'Exécute la commande en brut sur le serveur');
+
+Command.add('help', Permission.basic, (message, args) => {
+	return new Promise((resolve, reject) => {
+		let cmdName = args[0],
+			msg;
+		if(cmdName == '') {
+			msg = 'Liste des commandes disponibles:';
+			Command.commands.forEach((cmd, name) => {
+				msg += `\n${name}: ${cmd.description}`;
+			});
+			msg += `\n\npour obtenir de l\'aide sur une commande, entrez "${config.prefix}help <nom de la commande>"`;
+		} else {
+			let cmd = Command.commands.get(cmd);
+			msg = `-- Aide pour ${cmdName} --\nDescription: ${cmd.description}\nUtilisation:\n\`\`\`${cmd.utilisation}\`\`\``;
+		}
+		message.channel.send(msg);
+	});
+}, 'Affiche ce message d\'aide');
 
 /*Command.add('yt', Permission.expert, (message, args) => {
 	return new Promise((resolve, reject) => {
