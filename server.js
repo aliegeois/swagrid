@@ -65,7 +65,8 @@ class Command {
                         reject(err);
                     })
                 } else {
-                    reject('Permission insuffisante');
+					message.reply('Permission insuffisante');
+					reject();
                 }
             });
         };
@@ -433,7 +434,8 @@ Command.add('r34', Permission.basic, (message, args) => {
 				reject(err);
 			});
 		} else {
-			reject('Pas dans un channel nsfw');
+			message.reply('Pas de ça dans un chan SWF !!');
+			resolve();
 		}
 	});
 }, 'Effectue une recherche sur rule34 (xxx pas paheal) et affiche une image au hasard en rapport avec les tags indiqués', 'r34 <mot-clé-1> <mot-clé-2> ... <mot-clé-n>: Effectue une recherche sur https://rule34.xxx/ avec les mots-clés passés en paramètre (ex: "lucina chrom" affiche une image contenant Lucina ET Chrom). Ces mots-clés ne doivent pas contenir d\'espaces, sinon les remplacer par des "_" (ex: "devil may cry" => "devil_may_cry")');
@@ -458,11 +460,11 @@ Command.add('help', Permission.basic, (message, args) => {
 			Command.commands.forEach((cmd, name) => {
 				msg += `\n${name}: ${cmd.description}`;
 			});
-			msg += `\n\npour obtenir de l\'aide sur une commande, entrez "${config.prefix}help <nom de la commande>"`;
+			msg += `\n\nPour obtenir de l\'aide sur une commande, entrez "${config.prefix}help <nom de la commande>"`;
 		} else {
 			let cmdName = args[0],
 				cmd = Command.commands.get(cmdName);
-			msg = `-- Aide pour ${cmdName} --\nDescription: ${cmd.description}\nUtilisation:\n\`\`\`${cmd.utilisation}\`\`\``;
+			msg = `-- Aide pour ${cmdName} --\nDescription:\`\`\`${cmd.description}\`\`\`\nUtilisation:\`\`\`${config.prefix}${cmd.utilisation}\`\`\``;
 		}
 		message.channel.send(msg);
 	});
@@ -581,11 +583,7 @@ client.on('message', message => {
     var args = message.content.slice(config.prefix.length).trim().split(/ +/g),
         name = args.shift().toLowerCase();
     
-    Command.execute(name, message, args).catch(err => {
-		console.log(err);
-		if(err == 'Permission insuffisante')
-			message.reply(err);
-    });
+    Command.execute(name, message, args).catch(err => console.error(err));
 });
 
 client.on('voiceStateUpdate', (oldmember, newmember) => { // Update packages
