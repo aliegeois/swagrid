@@ -7,7 +7,6 @@ const Discord = require('discord.js'),
 	  search = require('youtube-api-v3-search'),
 	  request = require('request-promise-native'),
 	  parseString = require('xml2js').parseString,
-	  //ytdl = require('ytdl-core'),
 	  express = require('express'),
 	  music = require('./music'),
 	  app = express(),
@@ -18,13 +17,6 @@ var poudlard,
 	prefets,
 	sequelize,
 	ytKey = (local ? env : process.env).YT;
-
-/*var musics = [],
-	voiceChannel = null,
-	voiceConnection = null,
-	status = 'stop',
-	dispatcher = null,
-	playing = '';*/
 
 var User,
 	Playlist,
@@ -55,10 +47,11 @@ var Permission = {
 };
 
 class Command {
-    constructor(permission, fct, desc, util) {
+    constructor(perm, fct, desc, util) {
+		this.permission = perm;
         this.execute = (message, args) => {
             return new Promise((resolve, reject) => {
-                if(permission.check_permission(message.author.id)) {
+                if(perm.check_permission(message.author.id)) {
 					fct(message, args).then(() => {
                         resolve();
                     }).catch(err => {
@@ -78,11 +71,7 @@ class Command {
 Command.commands = new Map();
 Command.add = (name, permission, fct, desc, util) => Command.commands.set(name, new Command(permission, fct, desc, util));
 Command.execute = (name, message, args) => {
-	var cmd = Command.commands.get(name);
-	//if(cmd)
-	//	return cmd.execute(message, args);
-	//else
-	//	return new Promise((resolve, reject) => resolve());
+	let cmd = Command.commands.get(name);
 	return cmd ? cmd.execute(message, args) : new Promise(r => r());
 }
 
@@ -202,190 +191,9 @@ Command.add('playlist', Permission.dj, (message, args) => {
     });
 }, 'Affiche le titre des chaque vidéo mises en attente');
 
-/*Command.add('search', Permission.expert, (message, args) => {
-    return new Promise((resolve, reject) => {
-        search((local ? env : process.env).YT, {
-            q: args.join(' '),
-            maxResults: 1,
-            part: 'snippet',
-            type: 'video'
-        }).then(res => {
-            message.channel.send(`Recherche de \`${args.join(' ')}\``, new Discord.RichEmbed({
-                thumbnail: {
-                    url: `https://img.youtube.com/vi/${res.items[0].id.videoId}/hqdefault.jpg`
-                },
-                title: `${res.items[0].snippet.title}`,
-                url: `https://youtu.be/${res.items[0].id.videoId}/`
-            }));
-            User.update({
-                lastVideoSearched: res.items[0].id.videoId
-            }, {
-                where: {
-                    id: message.author.id
-                }
-            }).then(() => {
-                resolve();
-            }).catch(err => {
-                console.error('Erreur dans l\'update');
-                reject(err);
-            });
-        }).catch(err => {
-			reject(err);
-		});
-    });
-});*/
-
-/*Command.add('addtoplaylist', Permission.expert, (message, args) => {
-    return new Promise((resolve, reject) => {
-        User.findAll({
-            where: {
-                id: message.author.id
-            }
-        }).then(data => {
-            console.log(`addtoplaylist, data length: ${data.length}`);
-            if(data[0].activePlaylist && data[0].lastVideoSearched) {
-                Playlist.findAll({
-                    where: {
-                        name: data[0].activePlaylist,
-                        user_id: message.author.id
-                    }
-                }).then(d2 => {
-                    Link.create({
-                        value: data[0].lastVideoSearched,
-                        playlist_name: data[0].activePlaylist,
-                        playlist_user_id: message.author.id
-                    }).then(() => {
-                        resolve();
-                    }).catch(err => {
-                        reject(err);
-                    })
-                }).catch(err => {
-                    reject(err);
-                });
-            } else {
-                resolve();
-            }
-        }).catch(err => {
-            reject(err);
-        });
-    });
-});*/
-
-/*Command.add('init', Permission.expert, (message, args) => {
-    return new Promise((resolve, reject) => {
-        User.create({
-            id: message.author.id
-        }).then(() => {
-            resolve();
-        }).catch(err => {
-            reject(err);
-        })
-    });
-});*/
-
-/*Command.add('createplaylist', Permission.expert, (message, args) => {
-    return new Promise((resolve, reject) => {
-        let name = args.join(' ').trim();
-        if(name == '') {
-            message.reply('Veuillez entrer un nom de playlist').then(() => {
-                resolve();
-            }).catch(err => {
-                reject(err);
-            });
-        } else {
-            Playlist.create({
-                name: args.join(' '),
-                user_id: message.author.id
-            }).then(() => {
-                User.update({
-                    activePlaylist: args.join(' ')
-                }, {
-                    where: {
-                        id: message.author.id
-                    }
-                }).then(() => {
-                    message.reply(`playlist "${name}" créée`).then(() => {
-                        resolve();
-                    }).catch(err => {
-                        reject(err);
-                    })
-                }).catch(err => {
-                    reject(err);
-                });
-            }).catch(err => {
-                reject(err);
-            });
-        }
-    });
-});*/
-
-/*Command.add('editplaylist', Permission.expert, (message, args) => {
-    return new Promise((resolve, reject) => {
-        let name = args.join(' ').trim();
-        if(name == '') {
-            message.reply('Veuillez entrer un nom de playlist').then(() => {
-                resolve();
-            }).catch(err => {
-                reject(err);
-            });
-        } else {
-            Playlist.findAll({
-                where: {
-                    name: args[0],
-                    user_id: message.author.id
-                }
-            }).then(data => {
-                console.log(`editplaylist, data length: ${data.length}`);
-                User.update({
-                    activePlaylist: data[0].name
-                }, {
-                    where: {
-                        id: message.author.id
-                    }
-                }).then(() => {
-                    message.reply(`playlist en cours d\'édition: ${data[0].name}`);
-                    resolve();
-                }).catch(err => {
-                    reject(err);
-                })
-            }).catch(err => {
-                reject(err);
-            });
-        }
-    });
-});*/
-
-/*Command.add('listplaylist', Permission.expert, (message, args) => {
-    return new Promise((resolve, reject) => {
-        let name = args.join(' ').trim();
-        if(name == '') {
-            message.reply('Veuillez entrer un nom de playlist').then(() => {
-                resolve();
-            }).catch(err => {
-                reject(err);
-            });
-        } else {
-            Playlist.findAll({
-                where: {
-                    name: name,
-                    user_id: message.author.id
-                }
-            }).then(data => {
-                message.reply(JSON.stringify(data)).then(() => {
-                    resolve();
-                }).catch(err => {
-                    reject(err);
-                })
-            }).catch(err => {
-                reject(err);
-            })
-        }
-    });
-});*/
-
 Command.add('r34', Permission.basic, (message, args) => {
 	return new Promise((resolve, reject) => {
-		if(message.channel.nsfw) {
+		if(message.channel.nsfw || !(message.channel instanceof Discord.TextChannel)) {
 			request(`https://rule34.xxx/index.php?page=dapi&s=post&q=index&tags=${args.join('+')}+-scat`).then(data => {
 				parseString(data, (err, result) => {
 					if(err) {
@@ -399,7 +207,7 @@ Command.add('r34', Permission.basic, (message, args) => {
 								message.reply('Aucun résultat');
 								resolve();
 							} else {
-								var post_number = Math.floor(Math.random()*count),
+								let post_number = Math.floor(Math.random()*count),
 									pid = Math.floor(post_number / 100);
 								request(`https://rule34.xxx/index.php?page=dapi&s=post&q=index&tags=${args.join('+')}+-scat`).then(data2 => {
 									parseString(data2, (err2, result2) => {
@@ -456,56 +264,23 @@ Command.add('help', Permission.basic, (message, args) => {
 	return new Promise((resolve, reject) => {
 		let msg;
 		if(args.length == 0) {
-			msg = 'Liste des commandes disponibles:';
+			msg = 'Liste des commandes disponibles pour vous:';
 			Command.commands.forEach((cmd, name) => {
-				msg += `\n${name}: ${cmd.description}`;
+				if(cmd.permission.check_permission(message.author.id))
+					msg += `\n${name}: ${cmd.description}`;
 			});
 			msg += `\n\nPour obtenir de l\'aide sur une commande, entrez "${config.prefix}help <nom de la commande>"`;
 		} else {
 			let cmdName = args[0],
 				cmd = Command.commands.get(cmdName);
-			msg = `-- Aide pour ${cmdName} --\nDescription:\`\`\`${cmd.description}\`\`\`\nUtilisation:\`\`\`${config.prefix}${cmd.utilisation}\`\`\``;
+			msg = `-- Aide pour ${cmdName} --\nDescription:\`\`\`\n${cmd.description}\`\`\``;
+			if(cmd.utilisation)
+				msg += `\nUtilisation:\`\`\`\n${config.prefix}${cmd.utilisation}\`\`\``;
 		}
 		message.channel.send(msg);
 	});
 }, 'Affiche ce message d\'aide');
 
-/*Command.add('yt', Permission.expert, (message, args) => {
-	return new Promise((resolve, reject) => {
-		if(voiceConnection == null) {
-			reject('Swagrid n\'est pas dans un channel');
-		} else if(message.member.voiceChannelID != voiceChannel.id) {
-			message.reply('Petit boloss, arrête de mettre des sons si tu n\'es pas dans le channel');
-			resolve();
-		} else {
-			search((local ? env : process.env).YT, {
-				q: args.join(' '),
-				maxResults: 1,
-				part: 'snippet',
-				type: 'video'
-			}).then(res => {
-				message.channel.send(`Recherche de \`${args.join(' ')}\``, new Discord.RichEmbed({
-					author: {
-						'name': 'Lecture en cours'
-					},
-					thumbnail: {
-						'url': `https://img.youtube.com/vi/${res.items[0].id.videoId}/hqdefault.jpg`
-					},
-					title: `${res.items[0].snippet.title}`,
-					url: `https://youtu.be/${res.items[0].id.videoId}/`
-				}));
-
-				dispatcher = voiceConnection.playStream(ytdl(res.items[0].id.videoId, {
-					seek: 0,
-					volume: 1
-				}));
-				resolve();
-			}).catch((err) => {
-				reject(err);
-			});
-		}
-	});
-}, false);*/
 
 let testForMio = (message) => {
 	let mios;
@@ -543,12 +318,6 @@ let testForMio = (message) => {
 }
 
 function resetDB(tables) {
-    /*if(tables.includes('user'))
-        User.sync({force: true});
-    if(tables.includes('playlist'))
-        Playlist.sync({force: true});
-    if(tables.includes('link'))
-        Link.sync({force: true});*/
 	if(tables.includes('mio'))
         Mio.sync({force: true});
 }
