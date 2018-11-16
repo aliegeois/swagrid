@@ -242,7 +242,7 @@ Command.add('r34', Permission.basic, (message, args) => {
 				reject(err);
 			});
 		} else {
-			message.reply('Pas de ça dans un chan SWF !!');
+			message.reply('Pas de ça dans un chan SFW !!');
 			resolve();
 		}
 	});
