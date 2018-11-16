@@ -168,7 +168,7 @@ Command.add('playlist', Permission.dj, (message, args) => {
         message.reply(music.playlist());
 		resolve();
     });
-}, 'Affiche le titre des vidéos mises en file d\'attente');
+}, 'Affiche le titre des vidéos dans la file d\'attente');
 
 Command.add('cancel', Permission.dj, (message, args) => {
     return new Promise((resolve, reject) => {
