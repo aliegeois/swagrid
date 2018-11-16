@@ -81,7 +81,7 @@ Command.add('say', Permission.advanced, (message, args) => {
 		message.channel.send(args.join(' '));
 		resolve();
     });
-}, 'Pour faire dire des choses à swagrid', 'say <texte>: Supprime le message de la commande et Swagrid envoie <texte>');
+}, 'Pour faire dire des choses à Swagrid', 'say <texte>: Supprime le message de la commande et Swagrid envoie <texte>');
 
 Command.add('tts', Permission.advanced, (message, args) => {
     return new Promise((resolve, reject) => {
@@ -119,31 +119,6 @@ Command.add('leave', Permission.dj, (message, args) => {
     });
 }, 'Renvoie Swagrid du channel vocal vers sa hutte', 'leave: Swagrid quitte son channel vocal, peut importe dans lequel vous êtes');
 
-Command.add('stop', Permission.dj, (message, args) => {
-    return new Promise((resolve, reject) => {
-        music.stop();
-		resolve();
-    });
-}, 'Arrête la vidéo en cours et vide la file d\'attente');
-
-Command.add('skip', Permission.dj, (message, args) => {
-    return new Promise((resolve, reject) => {
-        music.skip();
-		resolve();
-    });
-}, 'Pour faire passer la vidéo en cours de lecture');
-
-Command.add('playing', Permission.basic, (message, args) => {
-    return new Promise((resolve, reject) => {
-        if(music.playing == '') {
-			message.reply('Aucune musique en cours de lecture');
-		} else {
-			message.reply(`"${music.playing}" est en cours de lecture`);
-		}
-		resolve();
-    });
-}, 'Permet d\'obtenir le nom de la vidéo qui passe actuellement');
-
 Command.add('play', Permission.dj, (message, args) => {
     return new Promise((resolve, reject) => {
         if(music.voiceConnection == null) {
@@ -177,6 +152,24 @@ Command.add('play', Permission.dj, (message, args) => {
     });
 }, 'Effectue une recherche sur Youtube et joue la première vidéo trouvée, ou la met en attente si une vidéo est déjà en cours de lecture (vous devez être dans le même channel vocal que Swagrid)', 'play <recherche>: Recherche <recherche> sur youtube et lit la première vidéo trouvée. <recherche> peut être constitué de plusieurs mots (ex: "Rick Astley - Never Gonna Give You Up"). <recherche> peut être une url mais le résultat n\'est pas garantit');
 
+Command.add('playing', Permission.basic, (message, args) => {
+    return new Promise((resolve, reject) => {
+        if(music.playing == '') {
+			message.reply('Aucune musique en cours de lecture');
+		} else {
+			message.reply(`"${music.playing}" est en cours de lecture`);
+		}
+		resolve();
+    });
+}, 'Permet d\'obtenir le nom de la vidéo qui passe actuellement');
+
+Command.add('playlist', Permission.dj, (message, args) => {
+    return new Promise((resolve, reject) => {
+        message.reply(music.playlist());
+		resolve();
+    });
+}, 'Affiche le titre des vidéos mises en file d\'attente');
+
 Command.add('cancel', Permission.dj, (message, args) => {
     return new Promise((resolve, reject) => {
         music.cancel();
@@ -184,12 +177,19 @@ Command.add('cancel', Permission.dj, (message, args) => {
     });
 }, 'Annule la dernière action (en rapport avec les vidéos)');
 
-Command.add('playlist', Permission.dj, (message, args) => {
+Command.add('skip', Permission.dj, (message, args) => {
     return new Promise((resolve, reject) => {
-        message.reply(music.playlist());
+        music.skip();
 		resolve();
     });
-}, 'Affiche le titre des chaque vidéo mises en attente');
+}, 'Pour faire passer la vidéo en cours de lecture');
+
+Command.add('stop', Permission.dj, (message, args) => {
+    return new Promise((resolve, reject) => {
+        music.stop();
+		resolve();
+    });
+}, 'Arrête la vidéo en cours et vide la file d\'attente');
 
 Command.add('r34', Permission.basic, (message, args) => {
 	return new Promise((resolve, reject) => {
