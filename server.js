@@ -91,7 +91,7 @@ Command.add('tts', Permission.advanced, (message, args) => {
     });
 }, 'Comme "say" mais avec du tts en plus', 'tts <texte>: Supprime le message de la commande et Swagrid envoie <texte> en tts');
 
-Command.add('join', Permission.dj, (message, args) => {
+Command.add('join', Permission.basic, (message, args) => {
     return new Promise((resolve, reject) => {
 		if(message.member.voiceChannelID == null) {
 			message.reply('vous devez être dans un channel vocal pour invoquer Swagrid').catch(_=>{});
@@ -110,7 +110,7 @@ Command.add('join', Permission.dj, (message, args) => {
     });
 }, 'Invoque Swagrid dans le channel vocal', 'join: Si vous êtes dans un channel vocal, Swagrid vous rejoint');
 
-Command.add('leave', Permission.dj, (message, args) => {
+Command.add('leave', Permission.basic, (message, args) => {
     return new Promise((resolve, reject) => {
         music.voiceChannel.leave();
 		music.voiceChannel = null;
@@ -119,7 +119,7 @@ Command.add('leave', Permission.dj, (message, args) => {
     });
 }, 'Renvoie Swagrid du channel vocal vers sa hutte', 'leave: Swagrid quitte son channel vocal, peut importe dans lequel vous êtes');
 
-Command.add('play', Permission.dj, (message, args) => {
+Command.add('play', Permission.basic, (message, args) => {
     return new Promise((resolve, reject) => {
         if(music.voiceConnection == null) {
 			reject('Swagrid n\'est pas dans un channel');
@@ -163,28 +163,28 @@ Command.add('playing', Permission.basic, (message, args) => {
     });
 }, 'Permet d\'obtenir le nom de la vidéo qui passe actuellement');
 
-Command.add('playlist', Permission.dj, (message, args) => {
+Command.add('playlist', Permission.basic, (message, args) => {
     return new Promise((resolve, reject) => {
         message.reply(music.playlist());
 		resolve();
     });
 }, 'Affiche le titre des vidéos dans la file d\'attente');
 
-Command.add('cancel', Permission.dj, (message, args) => {
+Command.add('cancel', Permission.basic, (message, args) => {
     return new Promise((resolve, reject) => {
         music.cancel();
 		resolve();
     });
 }, 'Annule la dernière action (en rapport avec les vidéos)');
 
-Command.add('skip', Permission.dj, (message, args) => {
+Command.add('skip', Permission.basic, (message, args) => {
     return new Promise((resolve, reject) => {
         music.skip();
 		resolve();
     });
 }, 'Pour faire passer la vidéo en cours de lecture');
 
-Command.add('stop', Permission.dj, (message, args) => {
+Command.add('stop', Permission.basic, (message, args) => {
     return new Promise((resolve, reject) => {
         music.stop();
 		resolve();
