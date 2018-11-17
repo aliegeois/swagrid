@@ -34,11 +34,6 @@ var Permission = {
 			return surveillants.members.find(e => e.user.id == userID);
 		}
 	},
-	dj: {
-		check_permission: (userID) => { // Surveillants ou préfets
-			return surveillants.members.find(e => e.user.id == userID) || prefets.members.find(e => e.user.id == userID);
-		}
-	},
 	expert: {
 		check_permission: (userID) => { // Nero
 			return userID == config.owner;
