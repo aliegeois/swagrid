@@ -391,6 +391,56 @@ let testForMio = message => {
  * @param {Discord.Message} message 
  */
 let countEmojis = message => {
+	let strs = message.content.match(/<:[A-Za-z]+:[0-9]+>/g);
+	strs.reduce((previous, current, index, array) => {
+		let [name, id] = current.slice(2, -1).split(':');
+		if(poudlard.emojis.get(id) != undefined) {
+			previous.then(() => {
+				return new Promise((resolve, reject) => {
+					Emoji.findOne({
+						where: {
+							emojiId: id
+						}
+					}).then(emoji => {
+						if(emoji == null) {
+							Emoji.create({
+								emojiId: id,
+								count: 1
+							}).then(() => {
+								resolve();
+							}).catch(err => {
+								//console.error(`erreur create emoji: ${err}`);
+								reject(err);
+							});
+						} else {
+							Emoji.update({
+								count: emoji.count + 1
+							}, {
+								where: {
+									emojiId: id
+								}
+							}).then(() => {
+								resolve();
+							}).catch(err => {
+								//console.error(`erreur update emoji: ${err}`);
+								reject(err);
+							});
+						}
+					}).catch(err => {
+						//console.error(`erreur find emoji: ${err}`);
+						reject(err);
+					});
+				});
+			}).catch(err => {
+				console.error(`arg: ${err}`);
+				array.splice(1);
+			});
+		} else {
+			array.splice(1);
+		}
+	});
+
+
 	for(let emostr of message.content.match(/<:[A-Za-z]+:[0-9]+>/g)) {
 		let [name, id] = emostr.slice(2, -1).split(':');
 		if(poudlard.emojis.get(id) != undefined) {
