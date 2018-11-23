@@ -536,16 +536,9 @@ client.on('messageReactionRemove', (reaction, user) => {
 				emojiId: emojiId
 			}
 		}).then(emoji => {
-			if(emoji == null) {
-				Emoji.create({
-					emojiId: emojiId,
-					count: 1
-				}).catch(err => {
-					console.error(`erreur create emoji: ${err}`);
-				});
-			} else {
+			if(emoji != null) {
 				Emoji.update({
-					count: emoji.count + 1
+					count: emoji.count - 1
 				}, {
 					where: {
 						emojiId: emojiId
