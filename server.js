@@ -425,10 +425,14 @@ let countEmojis = message => {
  * @param {string[]} tables 
  */
 let resetDB = tables => {
-	if(tables.includes('mio'))
+	if(tables.includes('mio')) {
 		Mio.sync({force: true});
-	if(tables.includes('emoji'))
+		console.log('reset mio');
+	}
+	if(tables.includes('emoji')) {
 		Emoji.sync({force: true});
+		console.log('reset emoji');
+	}
 };
 
 client.on('ready', () => {
