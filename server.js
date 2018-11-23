@@ -508,11 +508,8 @@ client.on('messageReactionAdd', (reaction, user) => {
 				Emoji.create({
 					emojiId: emojiId,
 					count: 1
-				}).then(() => {
-					resolve();
 				}).catch(err => {
 					console.error(`erreur create emoji: ${err}`);
-					reject(err);
 				});
 			} else {
 				Emoji.update({
@@ -521,11 +518,8 @@ client.on('messageReactionAdd', (reaction, user) => {
 					where: {
 						emojiId: emojiId
 					}
-				}).then(() => {
-					resolve();
 				}).catch(err => {
 					console.error(`erreur update emoji: ${err}`);
-					reject(err);
 				});
 			}
 		}).catch(err => {
@@ -545,25 +539,19 @@ client.on('messageReactionRemove', (reaction, user) => {
 			if(emoji == null) {
 				Emoji.create({
 					emojiId: emojiId,
-					count: 0
-				}).then(() => {
-					resolve();
+					count: 1
 				}).catch(err => {
 					console.error(`erreur create emoji: ${err}`);
-					reject(err);
 				});
 			} else {
 				Emoji.update({
-					count: emoji.count - 1
+					count: emoji.count + 1
 				}, {
 					where: {
 						emojiId: emojiId
 					}
-				}).then(() => {
-					resolve();
 				}).catch(err => {
 					console.error(`erreur update emoji: ${err}`);
-					reject(err);
 				});
 			}
 		}).catch(err => {
