@@ -318,7 +318,8 @@ Command.add('eval', Permission.expert, (message, args) => {
     });
 }, 'Exécute la commande en brut sur le serveur');
 
-Command.add('resetDB', Permission.expert, (message, args) => {
+Command.add('resetdb', Permission.expert, (message, args) => {
+	message.reply(args);
 	resetDB(args);
 });
 
