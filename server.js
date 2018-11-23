@@ -295,7 +295,8 @@ Command.add('emojipopularity', Permission.advanced, (message, args) => {
 			});
 			let msg = "Popularité des émojis par nombre d'utilisations:";
 			for(let emoji of emojis)
-				msg += `\n${emoji.count} : ${poudlard.emojis.get(emoji.emojiId)}`;
+				if(emoji.count > 0)
+					msg += `\n${emoji.count} : ${poudlard.emojis.get(emoji.emojiId)}`;
 			message.channel.send(msg);
 
 			resolve();
