@@ -318,6 +318,10 @@ Command.add('eval', Permission.expert, (message, args) => {
     });
 }, 'Exécute la commande en brut sur le serveur');
 
+Command.add('resetDB', Permission.expert, (message, args) => {
+	resetDB(args);
+});
+
 Command.add('help', Permission.basic, (message, args) => {
 	return new Promise((resolve, reject) => {
 		let msg;
