@@ -393,7 +393,7 @@ let countEmojis = message => {
 	let strs = message.content.match(/<:[A-Za-z]+:[0-9]+>/g);
 	strs.reduce((previous, current, index, array) => {
 		let [name, id] = current.slice(2, -1).split(':');
-		if(poudlard.emojis.get(id) != undefined) {
+		if(poudlard.emojis.has(id)) {
 			return previous.then(() => {
 				return new Promise((resolve, reject) => {
 					Emoji.findOne({
@@ -469,7 +469,7 @@ client.on('ready', () => {
     
     poudlard = client.guilds.get('307821648835248130');
     surveillants = poudlard.roles.get('469496344558698506');
-	prefets = poudlard.roles.get('501438461341990913');
+	//prefets = poudlard.roles.get('501438461341990913');
 	
 	//client.channels.get('442762703958835200').fetchMessages(); // Récupère les messages du règlement intérieur
     
@@ -498,21 +498,36 @@ client.on('message', message => {
 
 client.on('messageReactionAdd', (reaction, user) => {
 	let emojiId = reaction.emoji.id;
-	if(poudlard.emojis.get(emojiId) != undefined) {
+	if(poudlard.emojis.has(emojiId)) {
 		Emoji.findOne({
 			where: {
 				emojiId: emojiId
 			}
 		}).then(emoji => {
-			Emoji.update({
-				count: emoji.count + 1
-			}, {
-				where: {
-					emojiId: emojiId
-				}
-			}).catch(err => {
-				console.error(`erreur update emoji: ${err}`);
-			});
+			if(emoji == null) {
+				Emoji.create({
+					emojiId: emojiId,
+					count: 1
+				}).then(() => {
+					resolve();
+				}).catch(err => {
+					console.error(`erreur create emoji: ${err}`);
+					reject(err);
+				});
+			} else {
+				Emoji.update({
+					count: emoji.count + 1
+				}, {
+					where: {
+						emojiId: emojiId
+					}
+				}).then(() => {
+					resolve();
+				}).catch(err => {
+					console.error(`erreur update emoji: ${err}`);
+					reject(err);
+				});
+			}
 		}).catch(err => {
 			console.error(`erreur find emoji: ${err}`);
 		});
@@ -521,21 +536,36 @@ client.on('messageReactionAdd', (reaction, user) => {
 
 client.on('messageReactionRemove', (reaction, user) => {
 	let emojiId = reaction.emoji.id;
-	if(poudlard.emojis.get(emojiId) != undefined) {
+	if(poudlard.emojis.has(emojiId)) {
 		Emoji.findOne({
 			where: {
 				emojiId: emojiId
 			}
 		}).then(emoji => {
-			Emoji.update({
-				count: emoji.count - 1
-			}, {
-				where: {
-					emojiId: emojiId
-				}
-			}).catch(err => {
-				console.error(`erreur update emoji: ${err}`);
-			});
+			if(emoji == null) {
+				Emoji.create({
+					emojiId: emojiId,
+					count: 1
+				}).then(() => {
+					resolve();
+				}).catch(err => {
+					console.error(`erreur create emoji: ${err}`);
+					reject(err);
+				});
+			} else {
+				Emoji.update({
+					count: emoji.count + 1
+				}, {
+					where: {
+						emojiId: emojiId
+					}
+				}).then(() => {
+					resolve();
+				}).catch(err => {
+					console.error(`erreur update emoji: ${err}`);
+					reject(err);
+				});
+			}
 		}).catch(err => {
 			console.error(`erreur find emoji: ${err}`);
 		});
