@@ -320,7 +320,6 @@ Command.add('eval', Permission.expert, (message, args) => {
 
 Command.add('resetdb', Permission.expert, (message, args) => {
 	return new Promise((resolve, reject) => {
-		message.reply(args);
 		resetDB(args);
 		resolve();
 	});
@@ -409,7 +408,7 @@ let countEmojis = message => {
 							}).then(() => {
 								resolve();
 							}).catch(err => {
-								//console.error(`erreur create emoji: ${err}`);
+								console.error(`erreur create emoji: ${err}`);
 								reject(err);
 							});
 						} else {
@@ -422,12 +421,12 @@ let countEmojis = message => {
 							}).then(() => {
 								resolve();
 							}).catch(err => {
-								//console.error(`erreur update emoji: ${err}`);
+								console.error(`erreur update emoji: ${err}`);
 								reject(err);
 							});
 						}
 					}).catch(err => {
-						//console.error(`erreur find emoji: ${err}`);
+						console.error(`erreur find emoji: ${err}`);
 						reject(err);
 					});
 				});
@@ -442,8 +441,7 @@ let countEmojis = message => {
 		resolve();
 	}));
 
-
-	for(let emostr of message.content.match(/<:[A-Za-z]+:[0-9]+>/g)) {
+	/*for(let emostr of message.content.match(/<:[A-Za-z]+:[0-9]+>/g)) {
 		let [name, id] = emostr.slice(2, -1).split(':');
 		if(poudlard.emojis.get(id) != undefined) {
 			Emoji.findOne({
@@ -473,7 +471,7 @@ let countEmojis = message => {
 				console.error(`erreur find emoji: ${err}`);
 			});
 		}
-	}
+	}*/
 };
 
 /**
