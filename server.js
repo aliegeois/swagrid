@@ -360,7 +360,7 @@ let testForMio = message => {
 					userId: message.author.id,
 					count: mios.length
 				}).catch(err => {
-					console.log(`erreur create: ${err.toString()}`);
+					console.error(`erreur create: ${err.toString()}`);
 				});
 				message.channel.send(`Compteur de mio/tio/viola pour <@${message.author.id}>: \`${mios.length}\``).catch(_ => {});
 			} else {
@@ -373,11 +373,11 @@ let testForMio = message => {
 				}).then(() => {
 					message.channel.send(`Compteur de mio/tio/viola pour <@${message.author.id}>: \`${mio.count+mios.length}\``).catch(_ => {});
 				}).catch(err => {
-					console.log(`erreur update: ${err}`)
+					console.error(`erreur update: ${err}`)
 				});
 			}
 		}).catch(err => {
-			console.log(`erreur find: ${err}`);
+			console.error(`erreur find: ${err}`);
 		});
 	}
 };
@@ -442,7 +442,7 @@ client.on('ready', () => {
 	
 	//client.channels.get('442762703958835200').fetchMessages(); // Récupère les messages du règlement intérieur
     
-    console.log('Started');
+    console.info('Started');
 });
 
 client.on('message', message => {
@@ -539,7 +539,7 @@ sequelize = new Sequelize('database', 'nero', null, {
 });
 
 sequelize.authenticate().then(() => {
-    console.log('Authentication success');
+    console.info('Authentication success');
     
     /*User = sequelize.define('user', {
         id: {
@@ -584,7 +584,7 @@ app.get('/anime', (request, response) => {
 	response.sendFile(`${__dirname}/anime`);
 })
 var listener = app.listen(3000, () => {
-	console.log('Swagrid présent sur le port ' + listener.address().port);
+	console.info('Swagrid présent sur le port ' + listener.address().port);
 });
 
 client.login((local ? env : process.env).TOKEN);
