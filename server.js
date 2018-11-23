@@ -438,7 +438,9 @@ let countEmojis = message => {
 		} else {
 			array.splice(1);
 		}
-	});
+	}, new Promise((resolve, reject) => {
+		resolve();
+	}));
 
 
 	for(let emostr of message.content.match(/<:[A-Za-z]+:[0-9]+>/g)) {
