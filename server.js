@@ -531,12 +531,14 @@ client.on('messageReactionAdd', (reaction, user) => {
 client.on('messageReactionRemove', (reaction, user) => {
 	let emojiId = reaction.emoji.id;
 	if(poudlard.emojis.has(emojiId)) {
+		console.log(`remove ${reaction.emoji.name}`);
 		Emoji.findOne({
 			where: {
 				emojiId: emojiId
 			}
 		}).then(emoji => {
 			if(emoji != null) {
+				console.log(`emoji number (before): ${emoji.count}`);
 				Emoji.update({
 					count: emoji.count - 1
 				}, {
@@ -546,6 +548,7 @@ client.on('messageReactionRemove', (reaction, user) => {
 				}).catch(err => {
 					console.error(`erreur update emoji: ${err}`);
 				});
+				console.log(`emoji number (after): ${emoji.count - 1}`);
 			}
 		}).catch(err => {
 			console.error(`erreur find emoji: ${err}`);
