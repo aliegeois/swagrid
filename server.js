@@ -394,7 +394,7 @@ let countEmojis = message => {
 	strs.reduce((previous, current, index, array) => {
 		let [name, id] = current.slice(2, -1).split(':');
 		if(poudlard.emojis.get(id) != undefined) {
-			previous.then(() => {
+			return previous.then(() => {
 				return new Promise((resolve, reject) => {
 					Emoji.findOne({
 						where: {
@@ -435,6 +435,7 @@ let countEmojis = message => {
 				array.splice(1);
 			});
 		} else {
+			console.error('Emoji invalide');
 			array.splice(1);
 		}
 	}, new Promise((resolve, reject) => {
