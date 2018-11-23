@@ -432,47 +432,19 @@ let countEmojis = message => {
 				});
 			}).catch(err => {
 				console.error(`arg: ${err}`);
-				array.splice(1);
+				return new Promise((resolve, reject) => {
+					resolve();
+				});
 			});
 		} else {
 			console.error('Emoji invalide');
-			array.splice(1);
+			return new Promise((resolve, reject) => {
+				resolve();
+			});
 		}
 	}, new Promise((resolve, reject) => {
 		resolve();
 	}));
-
-	/*for(let emostr of message.content.match(/<:[A-Za-z]+:[0-9]+>/g)) {
-		let [name, id] = emostr.slice(2, -1).split(':');
-		if(poudlard.emojis.get(id) != undefined) {
-			Emoji.findOne({
-				where: {
-					emojiId: id
-				}
-			}).then(emoji => {
-				if(emoji == null) {
-					Emoji.create({
-						emojiId: id,
-						count: 1
-					}).catch(err => {
-						console.error(`erreur create emoji: ${err}`);
-					});
-				} else {
-					Emoji.update({
-						count: emoji.count + 1
-					}, {
-						where: {
-							emojiId: id
-						}
-					}).catch(err => {
-						console.error(`erreur update emoji: ${err}`);
-					});
-				}
-			}).catch(err => {
-				console.error(`erreur find emoji: ${err}`);
-			});
-		}
-	}*/
 };
 
 /**
