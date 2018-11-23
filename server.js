@@ -300,7 +300,7 @@ Command.add('emojipopularity', Permission.advanced, (message, args) => {
 
 			resolve();
 		}).catch(err => {
-			console.errror(`erreur retrieve all emojis: ${err}`);
+			console.error(`erreur retrieve all emojis: ${err}`);
 			reject(err);
 		})
 	});
