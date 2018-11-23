@@ -10,72 +10,116 @@ const Discord = require('discord.js'),
 	  express = require('express'),
 	  music = require('./music'),
 	  app = express(),
-	  client = new Discord.Client();
+	  client = new Discord.Client({
+		  disabledEvents: ['TYPING_START']
+	  });
 
 var poudlard,
 	surveillants,
-	prefets,
+	//prefets,
 	sequelize,
 	ytKey = (local ? env : process.env).YT;
 
-var User,
+var /*User,
 	Playlist,
-	Link,
-	Mio;
+	Link,*/
+	Mio,
+	Emoji;
 
+/**
+ * @class
+ */
 var Permission = {
 	basic: {
+		/**
+		 * @param {string} userID
+		 * @return {boolean}
+		 */
 		check_permission: (userID) => { // Tout le monde
 			return true;
 		}
 	},
 	advanced: {
+		/**
+		 * @param {string} userID
+		 * @return {boolean}
+		 */
 		check_permission: (userID) => { // Surveillants
 			return surveillants.members.find(e => e.user.id == userID);
 		}
 	},
 	expert: {
+		/**
+		 * @param {string} userID
+		 * @return {boolean}
+		 */
 		check_permission: (userID) => { // Nero
 			return userID == config.owner;
 		}
 	}
 };
 
+/**
+ * @class
+ */
 class Command {
+	/**
+	 * 
+	 * @param {Permission} perm 
+	 * @param {function(Discord.Message, string[]) : void} fct 
+	 * @param {string} desc 
+	 * @param {string} util 
+	 */
     constructor(perm, fct, desc, util) {
 		this.permission = perm;
-        this.execute = (message, args) => {
-            return new Promise((resolve, reject) => {
-                if(perm.check_permission(message.author.id)) {
+		/**
+		 * @param {Discord.Message} message
+		 * @param {string[]} args
+		 */
+		this.execute = (message, args) => {
+			return new Promise((resolve, reject) => {
+				if(perm.check_permission(message.author.id)) {
 					fct(message, args).then(() => {
-                        resolve();
-                    }).catch(err => {
-                        reject(err);
-                    })
-                } else {
+						resolve();
+					}).catch(err => {
+						reject(err);
+					});
+				} else {
 					message.reply('Permission insuffisante');
 					reject();
-                }
-            });
-        };
+				}
+			});
+		};
 		this.description = desc;
 		this.utilisation = util;
     }
 }
 
 Command.commands = new Map();
+/**
+ * @param {string} name
+ * @param {Permission} permission
+ * @param {function(Discord.Message, string[]) : Promise} fct
+ * @param {string} desc
+ * @param {string} util
+ */
 Command.add = (name, permission, fct, desc, util) => Command.commands.set(name, new Command(permission, fct, desc, util));
+/**
+ * @param {string} name
+ * @param {Discord.Message} message
+ * @param {string[]} args
+ */
 Command.execute = (name, message, args) => {
 	let cmd = Command.commands.get(name);
 	return cmd ? cmd.execute(message, args) : new Promise(r => r());
 }
 
 Command.add('say', Permission.advanced, (message, args) => {
-    return new Promise((resolve, reject) => {
-        message.delete().catch(_ => {});
+	return new Promise((resolve, reject) => {
+		message.delete().catch(_ => {});
 		message.channel.send(args.join(' '));
 		resolve();
-    });
+	});
 }, 'Pour faire dire des choses à Swagrid', 'say <texte>: Supprime le message de la commande et Swagrid envoie <texte>');
 
 Command.add('tts', Permission.advanced, (message, args) => {
@@ -243,6 +287,25 @@ Command.add('r34', Permission.basic, (message, args) => {
 	});
 }, 'Effectue une recherche sur rule34 (xxx pas paheal) et affiche une image au hasard en rapport avec les tags indiqués', 'r34 <mot-clé-1> <mot-clé-2> ... <mot-clé-n>: Effectue une recherche sur https://rule34.xxx/ avec les mots-clés passés en paramètre (ex: "lucina chrom" affiche une image contenant Lucina ET Chrom). Ces mots-clés ne doivent pas contenir d\'espaces, sinon les remplacer par des "_" (ex: "devil may cry" => "devil_may_cry")');
 
+Command.add('emojipopularity', Permission.advanced, (message, args) => {
+	return new Promise((resolve, reject) => {
+		Emoji.findAll().then(emojis => {
+			emojis.sort((e1, e2) => {
+				return e2.count - e1.count;
+			});
+			let msg = "Popularité des émojis par nombre d'utilisations:";
+			for(let emoji of emojis)
+				msg += `\n${emoji.count} : ${poudlard.emojis.get(emoji.emojiId)}`;
+			message.channel.send(msg);
+
+			resolve();
+		}).catch(err => {
+			console.errror(`erreur retrieve all emojis: ${err}`);
+			reject(err);
+		})
+	});
+}, 'Affiche la popularité des émojis du serveur');
+
 Command.add('eval', Permission.expert, (message, args) => {
     console.log(args.join(' '));
     return new Promise((resolve, reject) => {
@@ -276,8 +339,11 @@ Command.add('help', Permission.basic, (message, args) => {
 	});
 }, 'Affiche ce message d\'aide');
 
-
-let testForMio = (message) => {
+/**
+ * 
+ * @param {Discord.Message} message 
+ */
+let testForMio = message => {
 	let mios;
 	if((mios = (message.content.match(/^mio | mio | mio$|^mio$|^tio | tio | tio$|^tio$|^viola | viola | viola$|^viola$/ig) || [])).length > 0) {
 		Mio.findOne({
@@ -310,12 +376,56 @@ let testForMio = (message) => {
 			console.log(`erreur find: ${err}`);
 		});
 	}
-}
+};
 
-function resetDB(tables) {
+/**
+ * 
+ * @param {Discord.Message} message 
+ */
+let countEmojis = message => {
+	for(let emostr of message.content.match(/<:[A-Za-z]+:[0-9]+>/g)) {
+		let [name, id] = emostr.slice(2, -1).split(':');
+		if(poudlard.emojis.get(id) != undefined) {
+			Emoji.findOne({
+				where: {
+					emojiId: id
+				}
+			}).then(emoji => {
+				if(emoji == null) {
+					Emoji.create({
+						emojiId: id,
+						count: 1
+					}).catch(err => {
+						console.error(`erreur create emoji: ${err}`);
+					});
+				} else {
+					Emoji.update({
+						count: emoji.count + 1
+					}, {
+						where: {
+							emojiId: id
+						}
+					}).catch(err => {
+						console.error(`erreur update emoji: ${err}`);
+					});
+				}
+			}).catch(err => {
+				console.error(`erreur find emoji: ${err}`);
+			});
+		}
+	}
+};
+
+/**
+ * 
+ * @param {string[]} tables 
+ */
+let resetDB = tables => {
 	if(tables.includes('mio'))
-        Mio.sync({force: true});
-}
+		Mio.sync({force: true});
+	if(tables.includes('emoji'))
+		Emoji.sync({force: true});
+};
 
 client.on('ready', () => {
     console.log('Initialisation de Swagrid...');
@@ -337,6 +447,7 @@ client.on('message', message => {
     
     if(message.content.indexOf(config.prefix) !== 0) {
 		testForMio(message);
+		countEmojis(message);
 		return;
 	}
     
@@ -348,6 +459,52 @@ client.on('message', message => {
         name = args.shift().toLowerCase();
     
     Command.execute(name, message, args).catch(err => console.error(err));
+});
+
+client.on('messageReactionAdd', (reaction, user) => {
+	let emojiId = reaction.emoji.id;
+	if(poudlard.emojis.get(emojiId) != undefined) {
+		Emoji.findOne({
+			where: {
+				emojiId: emojiId
+			}
+		}).then(emoji => {
+			Emoji.update({
+				count: emoji.count + 1
+			}, {
+				where: {
+					emojiId: emojiId
+				}
+			}).catch(err => {
+				console.error(`erreur update emoji: ${err}`);
+			});
+		}).catch(err => {
+			console.error(`erreur find emoji: ${err}`);
+		});
+	}
+});
+
+client.on('messageReactionRemove', (reaction, user) => {
+	let emojiId = reaction.emoji.id;
+	if(poudlard.emojis.get(emojiId) != undefined) {
+		Emoji.findOne({
+			where: {
+				emojiId: emojiId
+			}
+		}).then(emoji => {
+			Emoji.update({
+				count: emoji.count - 1
+			}, {
+				where: {
+					emojiId: emojiId
+				}
+			}).catch(err => {
+				console.error(`erreur update emoji: ${err}`);
+			});
+		}).catch(err => {
+			console.error(`erreur find emoji: ${err}`);
+		});
+	}
 });
 
 client.on('voiceStateUpdate', (oldmember, newmember) => { // Update packages
@@ -404,7 +561,13 @@ sequelize.authenticate().then(() => {
 		},
 		count: Sequelize.INTEGER
 	});
-    
+    Emoji = sequelize.define('emoji', {
+		emojiId: {
+			type: Sequelize.STRING,
+			primaryKey: true
+		},
+		count: Sequelize.INTEGER
+	});
     //resetDB(['user', 'playlist', 'link', 'mio']);
 }).catch(err => {
     console.error(err);
