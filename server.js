@@ -392,7 +392,7 @@ let testForMio = message => {
  */
 let countEmojis = message => {
 	let strs = message.content.match(/<:[A-Za-z]+:[0-9]+>/g);
-	if(strs.length) {
+	if(strs != null) {
 		strs.reduce((previous, current, index, array) => {
 			let [name, id] = current.slice(2, -1).split(':');
 			if(poudlard.emojis.has(id)) {
