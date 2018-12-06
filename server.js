@@ -317,14 +317,14 @@ Command.add('eval', Permission.expert, (message, args) => {
             reject(err);
         }
     });
-}, 'Exécute la commande en brut sur le serveur');
+}, '');
 
 Command.add('resetdb', Permission.expert, (message, args) => {
 	return new Promise((resolve, reject) => {
 		resetDB(args);
 		resolve();
 	});
-});
+}, '');
 
 Command.add('help', Permission.basic, (message, args) => {
 	return new Promise((resolve, reject) => {
@@ -573,6 +573,8 @@ client.on('voiceStateUpdate', (oldmember, newmember) => { // Update packages
 			if(newvoice.id == client.user.id) {
 				// Swagrid a été déplacé
 				music.voiceChannel = newvoice;
+			} else {
+				newmember.addRole('520212429788151839');
 			}
 		} else {
 			// update genre mute/demute
@@ -589,23 +591,6 @@ sequelize = new Sequelize('database', 'nero', null, {
 sequelize.authenticate().then(() => {
     console.info('Authentication success');
     
-    /*User = sequelize.define('user', {
-        id: {
-            type: Sequelize.BIGINT,
-            primaryKey: true
-        },
-        lastVideoSearched: Sequelize.CHAR(11),
-        activePlaylist: Sequelize.STRING
-    });
-    Playlist = sequelize.define('playlist', {
-        name: Sequelize.STRING,
-        user_id: Sequelize.BIGINT
-    });
-    Link = sequelize.define('link', {
-        value: Sequelize.CHAR(11),
-        playlist_name: Sequelize.STRING,
-        playlist_user_id: Sequelize.BIGINT
-    });*/
 	Mio = sequelize.define('mio', {
 		userId: {
 			type: Sequelize.STRING,
@@ -620,7 +605,7 @@ sequelize.authenticate().then(() => {
 		},
 		count: Sequelize.INTEGER
 	});
-    //resetDB(['user', 'playlist', 'link', 'mio']);
+    //resetDB(['mio', 'emoji']);
 }).catch(err => {
     console.error(err);
 });

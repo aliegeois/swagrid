@@ -7,7 +7,7 @@ class Music {
 	}
 	
 	static _play() {
-		let song = this._musics.splice(0, 1)[0];
+		let song = this._musics.shift();
 		this._status = 'play';
 		this.playing = song.title;
 		this._dispatcher = this.voiceConnection.playStream(ytdl(song.url, {
@@ -51,7 +51,9 @@ class Music {
 	}
 	
 	static get playlist() {
-		return this._musics;
+		return Array.from(this._musics).push(this.playing).reduce(el => {
+			return `${el}\n`;
+		});
 	}
 }
 Music._musics = [];
