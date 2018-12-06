@@ -230,6 +230,20 @@ Command.add('stop', Permission.basic, (message, args) => {
     });
 }, 'Arrête la vidéo en cours et vide la file d\'attente');
 
+Command.add('goto', Permission.basic, (message, args) => {
+    return new Promise((resolve, reject) => {
+		/*let res = {};
+		for(let chan of poudlard.channels.fitler(ch => ch.type == 'voice')) {
+
+		}
+		
+		
+		for(let arg of args) {
+
+		}*/
+    });
+}, 'Déplace toutes les personnes de votre channel vers un autre');
+
 Command.add('r34', Permission.basic, (message, args) => {
 	return new Promise((resolve, reject) => {
 		if(message.channel.nsfw || !(message.channel instanceof Discord.TextChannel)) {
@@ -574,7 +588,8 @@ client.on('voiceStateUpdate', (oldmember, newmember) => { // Update packages
 				// Swagrid a été déplacé
 				music.voiceChannel = newvoice;
 			} else {
-				newmember.addRole('520210711767678977');
+				if(newvoice.id == '520211457481113610')
+					newmember.addRole('520210711767678977');
 			}
 		} else {
 			// update genre mute/demute
