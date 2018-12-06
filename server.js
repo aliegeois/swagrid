@@ -574,7 +574,7 @@ client.on('voiceStateUpdate', (oldmember, newmember) => { // Update packages
 				// Swagrid a été déplacé
 				music.voiceChannel = newvoice;
 			} else {
-				newmember.addRole('520212429788151839');
+				newmember.addRole('520210711767678977');
 			}
 		} else {
 			// update genre mute/demute
