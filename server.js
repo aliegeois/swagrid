@@ -232,15 +232,38 @@ Command.add('stop', Permission.basic, (message, args) => {
 
 Command.add('goto', Permission.basic, (message, args) => {
     return new Promise((resolve, reject) => {
-		/*let res = {};
-		for(let chan of poudlard.channels.fitler(ch => ch.type == 'voice')) {
+		if(!message.member.voiceChannelID) {
+			message.reply('vous n\'êtes pas dans un channel vocal');
+		} else {
+			let res = {};
+			for(let chan of poudlard.channels.filter(ch => ch.type == 'voice')) {
+				res[chan.id] = 0;
+				for(let arg of args)
+					if(chan.name.toLowerCase().split(' ').contains(arg.toLowerCase()))
+						res[chan.id]++;
+			}
 
+			let max = {
+				chan: null,
+				qty: 0
+			}
+			for(let [chan, qty] of Object.entries(res)) {
+				if(qty > max.quantity) {
+					max.chan = chan;
+					max.qty = qty;
+				}
+			}
+
+			if(max.chan == null) {
+				message.reply('channel inconnu');
+			} else {
+				for(let member of message.member.voiceChannel.members) {
+					member.setVoiceChannel(max.chan.id);
+				}
+			}
 		}
 		
-		
-		for(let arg of args) {
-
-		}*/
+		resolve();
     });
 }, 'Déplace toutes les personnes de votre channel vers un autre');
 
@@ -260,8 +283,8 @@ Command.add('r34', Permission.basic, (message, args) => {
 								message.reply('Aucun résultat');
 								resolve();
 							} else {
-								let post_number = Math.floor(Math.random()*count),
-									pid = Math.floor(post_number / 100);
+								let post_number = Math.floor(Math.random()*count)/*,
+									pid = Math.floor(post_number / 100)*/;
 								request(`https://rule34.xxx/index.php?page=dapi&s=post&q=index&tags=${args.join('+')}+-scat`).then(data2 => {
 									parseString(data2, (err2, result2) => {
 										if(err2) {
