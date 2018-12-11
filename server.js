@@ -1,5 +1,6 @@
 var local = typeof process.env.TOKEN === 'undefined';
 
+// Dependencies
 const Discord = require('discord.js'),
 	  config = require('./config.json'),
 	  Sequelize = require('sequelize'),
@@ -16,15 +17,16 @@ const Discord = require('discord.js'),
 
 var poudlard,
 	surveillants,
-	//prefets,
+	annonce_roles,
 	sequelize,
-	ytKey = (local ? env : process.env).YT;
+	ytKey = (local ? env : process.env).YT,
+	currentSuggestions = null;
 
-var /*User,
-	Playlist,
-	Link,*/
-	Mio,
-	Emoji;
+// Tables SQL
+var Mio,
+	Emoji,
+	BatchSuggestion,
+	RoleSuggestion;
 
 /**
  * @class
@@ -64,7 +66,6 @@ var Permission = {
  */
 class Command {
 	/**
-	 * 
 	 * @param {Permission} perm 
 	 * @param {function(Discord.Message, string[]) : void} fct 
 	 * @param {string} desc 
@@ -97,17 +98,17 @@ class Command {
 
 Command.commands = new Map();
 /**
- * @param {string} name
- * @param {Permission} permission
- * @param {function(Discord.Message, string[]) : Promise} fct
- * @param {string} desc
- * @param {string} util
+ * @param {string} name Nom de la commande
+ * @param {Permission} permission Persmission necéssaire pour exécuter la commande
+ * @param {function(Discord.Message, string[]) : Promise} fct Exécution de la commande
+ * @param {string} desc Description de la commande
+ * @param {string} util Exemples d'utilisation de la commande
  */
 Command.add = (name, permission, fct, desc, util) => Command.commands.set(name, new Command(permission, fct, desc, util));
 /**
- * @param {string} name
- * @param {Discord.Message} message
- * @param {string[]} args
+ * @param {string} name Nom de la commande
+ * @param {Discord.Message} message Message de la commande
+ * @param {string[]} args Arguments de la commande
  */
 Command.execute = (name, message, args) => {
 	let cmd = Command.commands.get(name);
@@ -344,6 +345,82 @@ Command.add('emojipopularity', Permission.advanced, (message, args) => {
 	});
 }, 'Affiche la popularité des émojis du serveur');
 
+Command.add('changementrole', Permission.advanced, (message, args) => {
+    return new Promise((resolve, reject) => {
+        if(changementRoleOpen) {
+			message.reply('déjà des propositions en cours, peut pas en avoir 2 en même temps');
+		} else {
+			BatchSuggestion.create({
+				startDate: new Date()
+			}).then(batch => {
+				annonce_roles.send('Debut');
+				let dateFin = new Date(batch.startDate);
+				dateFin.setTime(dateFin.getTime() + 2000);
+				setTimeout(endSuggestions, dateFin.getTime() - new Date().getTime());
+			}).catch(err => {
+				console.error(`erreur create: ${err.toString()}`);
+			});
+		}
+		resolve();
+    });
+}, '(placeholder)');
+
+Command.add('suggestrole', Permission.basic, (message, args) => {
+    return new Promise((resolve, reject) => {
+        if(changementRoleOpen) {
+			if(args.length < 2) {
+				message.channel.send('Syntace correcte: "+suggestrole <nom du rôle> <couleur en hexadécimal>"\n'
+								   + 'Exemple: "+suggestrole Gobeur de chibres #20a78f" pour proposer le rôle "Gobeur de chibres" avec une couleur turquoise\n'
+								   + 'Pour avoir la palette de couleur, suivre ce lien: https://www.w3schools.com/colors/colors_picker.asp');
+			} else {
+				let color = args.pop();
+				if(color.length != 7 || color[0] != '#') {
+					// format de couleur invalide
+					message.channel.send('Format de couleur correct: "#xxxxxx" où les x sont des caractèrs compris dans l\'intervalle 0-9 ou a-f\n'
+									   + 'Exemple: "#20a78f" pour une couleur turquoise\n'
+									   + 'Pour avoir la palette de couleur, suivre ce lien: https://www.w3schools.com/colors/colors_picker.asp');
+				} else {
+					let id = message.author.id;
+					if(proposedRoles.find(e => e.id == id).length > 0) {
+						message.channel.send('Un vote par personne !');
+					} else {
+						let name = args.join(' ');
+						proposedRoles.push({
+							id: id,
+							name: name,
+							color: color
+						});
+						RoleSuggestion.findOrCreate({
+							where: {
+								dateBatch: rien
+							},
+							defaults: {
+								dateBatch: rien,
+									userId: id,
+									name: name,
+									color: color
+							}
+						}).spread((suggestion, created) => {
+							if(created) {
+								// Suggestion déjà effectuée
+								message.reply('Proposition déjà effectuée');
+							}
+						});
+						message.channel.send(`Proposition de rôle acceptée avec le nom "${name}"`, {
+							embed: {
+								color: color.slice(1)
+							}
+						})
+					}
+				}
+			}
+		} else {
+			message.channel.send('Bro c\'est pas le moment');
+		}
+		resolve();
+    });
+}, '(placeholder)');
+
 Command.add('eval', Permission.expert, (message, args) => {
     console.log(args.join(' '));
     return new Promise((resolve, reject) => {
@@ -388,7 +465,7 @@ Command.add('help', Permission.basic, (message, args) => {
  * 
  * @param {Discord.Message} message 
  */
-let testForMio = message => {
+function testForMio(message) {
 	let mios;
 	if((mios = (message.content.match(/^mio | mio | mio$|^mio$|^tio | tio | tio$|^tio$|^viola | viola | viola$|^viola$/ig) || [])).length > 0) {
 		Mio.findOne({
@@ -427,7 +504,7 @@ let testForMio = message => {
  * 
  * @param {Discord.Message} message 
  */
-let countEmojis = message => {
+function countEmojis(message) {
 	let strs = message.content.match(/<:[A-Za-z]+:[0-9]+>/g);
 	if(strs != null) {
 		strs.reduce((previous, current, index, array) => {
@@ -487,11 +564,22 @@ let countEmojis = message => {
 	}
 };
 
+function endSuggestions() {
+	RoleSuggestion.findAll({
+		where: {
+			dateBatch: currentSuggestions
+		}
+	}).then(suggestions => {
+		annonce_roles.send(suggestions);
+		currentSuggestions = null;
+	});
+}
+
 /**
  * 
  * @param {string[]} tables 
  */
-let resetDB = tables => {
+function resetDB(tables) {
 	if(tables.includes('mio')) {
 		Mio.sync({force: true});
 		console.log('reset mio');
@@ -499,6 +587,14 @@ let resetDB = tables => {
 	if(tables.includes('emoji')) {
 		Emoji.sync({force: true});
 		console.log('reset emoji');
+	}
+	if(tables.includes('batchsuggestion')) {
+		BatchSuggestion.sync({force: true});
+		console.log('reset batchsuggestion');
+	}
+	if(tables.includes('rolesuggestion')) {
+		RoleSuggestion.sync({force: true});
+		console.log('reset rolesuggestion');
 	}
 };
 
@@ -512,8 +608,29 @@ client.on('ready', () => {
 	//prefets = poudlard.roles.get('501438461341990913');
 	
 	//client.channels.get('442762703958835200').fetchMessages(); // Récupère les messages du règlement intérieur
+	annonce_roles = client.channels.get('522057339176615936');
+
+	BatchSuggestion.findOne({
+		order: [
+			sequelize.fn('max', sequelize.col('dateStart'), 'DESC')
+		]
+	}).then(batch => {
+		if(batch != null) {
+			let dateEnd = new Date(batch.dateStart);
+			dateEnd.setDate(dateStart.getDate() + 1);
+			let timeTillEnd = dateEnd.getTime() - new Date().getTime();
+			if(timeTillEnd > 0) {
+				currentSuggestions = batch.dateStart;
+				setTimeout(endSuggestions, timeTillEnd);
+			}
+		} else {
+			// Table vide
+		}
+	}).catch(err => {
+		console.error(`error find: ${err}`);
+	})
     
-    console.info('Started');
+    console.info('Prêt à défoncer des mères');
 });
 
 client.on('message', message => {
@@ -642,6 +759,24 @@ sequelize.authenticate().then(() => {
 			primaryKey: true
 		},
 		count: Sequelize.INTEGER
+	});
+	BatchSuggestion = sequelize.define('batchsuggestion', {
+		dateStart: {
+			type: Sequelize.DATE,
+			primaryKey: true
+		}
+	});
+	RoleSuggestion = sequelize.define('rolesuggestion', {
+		dateBatch: {
+			type: Sequelize.DATE,
+			primaryKey: true
+		},
+		userId: {
+			type: Sequelize.INTEGER,
+			primaryKey: true
+		},
+		name: Sequelize.STRING,
+		color: Sequelize.STRING
 	});
     //resetDB(['mio', 'emoji']);
 }).catch(err => {
