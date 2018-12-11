@@ -625,7 +625,7 @@ client.on('ready', () => {
 	}).then(batch => {
 		if(batch != null) {
 			let dateEnd = new Date(batch.dateStart);
-			dateEnd.setDate(dateStart.getDate() + 1);
+			dateEnd.setDate(dateEnd.getDate() + 1);
 			let timeTillEnd = dateEnd.getTime() - new Date().getTime();
 			console.log(`active batch, time (in ms) till end: ${timeTillEnd}`);
 			if(timeTillEnd > 0) {
