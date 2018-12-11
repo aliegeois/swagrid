@@ -347,7 +347,7 @@ Command.add('emojipopularity', Permission.advanced, (message, args) => {
 
 Command.add('changementrole', Permission.advanced, (message, args) => {
     return new Promise((resolve, reject) => {
-        if(currentSuggestions) {
+        if(currentSuggestions != null) {
 			message.reply('déjà des propositions en cours, peut pas en avoir 2 en même temps');
 		} else {
 			BatchSuggestion.create({
@@ -575,7 +575,7 @@ function endSuggestions() {
 		if(suggestions == null) {
 			annonce_roles.send('Aucun suggestion proposée :(');
 		} else {
-			annonce_roles.send(suggestions);
+			annonce_roles.send(`suggestions: ${suggestions}`);
 		}
 		currentSuggestions = null;
 	}).catch(err => {
@@ -627,16 +627,18 @@ client.on('ready', () => {
 			let dateEnd = new Date(batch.dateStart);
 			dateEnd.setDate(dateStart.getDate() + 1);
 			let timeTillEnd = dateEnd.getTime() - new Date().getTime();
+			console.log(`active batch, time (in ms) till end: ${timeTillEnd}`);
 			if(timeTillEnd > 0) {
 				currentSuggestions = batch.dateStart;
 				setTimeout(endSuggestions, timeTillEnd);
 			}
 		} else {
 			// Table vide
+			console.log('table batch vide');
 		}
 	}).catch(err => {
-		console.error(`error find: ${err}`);
-	})
+		console.error(`error find (client.ready): ${err}`);
+	});
     
     console.info('Prêt à défoncer des mères');
 });
