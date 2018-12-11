@@ -351,7 +351,7 @@ Command.add('changementrole', Permission.advanced, (message, args) => {
 			message.reply('déjà des propositions en cours, peut pas en avoir 2 en même temps');
 		} else {
 			BatchSuggestion.create({
-				startDate: new Date()
+				startDate: new Date().getTime()
 			}).then(batch => {
 				annonce_roles.send('Debut');
 				let dateFin = new Date(batch.startDate);
