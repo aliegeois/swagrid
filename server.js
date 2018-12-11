@@ -570,7 +570,11 @@ function endSuggestions() {
 			dateBatch: currentSuggestions
 		}
 	}).then(suggestions => {
-		annonce_roles.send(suggestions);
+		if(suggestions == null) {
+			annonce_roles.send('Aucun suggestion proposée :(');
+		} else {
+			annonce_roles.send(suggestions);
+		}
 		currentSuggestions = null;
 	});
 }
