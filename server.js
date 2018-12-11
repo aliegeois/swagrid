@@ -399,11 +399,10 @@ Command.add('suggestrole', Permission.basic, (message, args) => {
 					}).spread((suggestion, created) => {
 						if(created) {
 							// Suggestion déjà effectuée
-							message.channel.send(`Proposition de rôle acceptée avec le nom "${suggestion.name}"`, {
-								embed: {
-									color: suggestion.color.slice(1)
-								}
-							});
+							message.channel.send(new Discord.RichEmbed({
+								description: `Proposition de rôle acceptée avec le nom "${suggestion.name}"`,
+								color: suggestion.color.slice(1)
+							}));
 						} else {
 							message.reply('Proposition déjà effectuée');
 						}
