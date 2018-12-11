@@ -620,7 +620,8 @@ client.on('ready', () => {
 
 	BatchSuggestion.findOne({
 		order: [
-			sequelize.fn('max', sequelize.col('dateStart'), 'DESC')
+			['dateStart', 'DESC']/*,
+			sequelize.fn('max', sequelize.col('dateStart'), 'DESC')*/
 		]
 	}).then(batch => {
 		if(batch != null) {
