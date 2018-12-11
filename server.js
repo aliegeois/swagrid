@@ -387,10 +387,10 @@ Command.add('suggestrole', Permission.basic, (message, args) => {
 					let id = message.author.id;
 					RoleSuggestion.findOrCreate({
 						where: {
-							dateBatch: rien
+							dateBatch: currentSuggestions
 						},
 						defaults: {
-							dateBatch: rien,
+							dateBatch: currentSuggestions,
 								userId: id,
 								name: name,
 								color: color
