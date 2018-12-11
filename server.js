@@ -356,7 +356,7 @@ Command.add('changementrole', Permission.advanced, (message, args) => {
 			}).then(() => {
 				annonce_roles.send('Debut');
 				let dateFin = new Date(dateCreated.getTime());
-				dateFin.setTime(dateFin.getTime() + 2000);
+				dateFin.setTime(dateFin.getTime() + 20000);
 				let timeDifference = dateFin.getTime() - new Date().getTime();
 				annonce_roles.send(`Time (in ms) till end: ${timeDifference}`);
 				setTimeout(endSuggestions, timeDifference);
@@ -370,7 +370,7 @@ Command.add('changementrole', Permission.advanced, (message, args) => {
 
 Command.add('suggestrole', Permission.basic, (message, args) => {
     return new Promise((resolve, reject) => {
-        if(currentSuggestions) {
+        if(currentSuggestions != null) {
 			if(args.length < 2) {
 				message.channel.send('Syntace correcte: "+suggestrole <nom du rôle> <couleur en hexadécimal>"\n'
 								   + 'Exemple: "+suggestrole Gobeur de chibres #20a78f" pour proposer le rôle "Gobeur de chibres" avec une couleur turquoise\n'
@@ -384,37 +384,28 @@ Command.add('suggestrole', Permission.basic, (message, args) => {
 									   + 'Pour avoir la palette de couleur, suivre ce lien: https://www.w3schools.com/colors/colors_picker.asp');
 				} else {
 					let id = message.author.id;
-					if(proposedRoles.find(e => e.id == id).length > 0) {
-						message.channel.send('Un vote par personne !');
-					} else {
-						let name = args.join(' ');
-						proposedRoles.push({
-							id: id,
-							name: name,
-							color: color
-						});
-						RoleSuggestion.findOrCreate({
-							where: {
-								dateBatch: rien
-							},
-							defaults: {
-								dateBatch: rien,
-									userId: id,
-									name: name,
-									color: color
-							}
-						}).spread((suggestion, created) => {
-							if(created) {
-								// Suggestion déjà effectuée
-								message.reply('Proposition déjà effectuée');
-							}
-						});
-						message.channel.send(`Proposition de rôle acceptée avec le nom "${name}"`, {
-							embed: {
-								color: color.slice(1)
-							}
-						})
-					}
+					RoleSuggestion.findOrCreate({
+						where: {
+							dateBatch: rien
+						},
+						defaults: {
+							dateBatch: rien,
+								userId: id,
+								name: name,
+								color: color
+						}
+					}).spread((suggestion, created) => {
+						if(created) {
+							// Suggestion déjà effectuée
+							message.channel.send(`Proposition de rôle acceptée avec le nom "${suggestion.name}"`, {
+								embed: {
+									color: suggestion.color.slice(1)
+								}
+							});
+						} else {
+							message.reply('Proposition déjà effectuée');
+						}
+					});
 				}
 			}
 		} else {
