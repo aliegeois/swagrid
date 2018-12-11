@@ -770,13 +770,13 @@ sequelize.authenticate().then(() => {
 	});
 	BatchSuggestion = sequelize.define('batchsuggestion', {
 		dateStart: {
-			type: Sequelize.DATE,
+			type: Sequelize.INTEGER,
 			primaryKey: true
 		}
 	});
 	RoleSuggestion = sequelize.define('rolesuggestion', {
 		dateBatch: {
-			type: Sequelize.DATE,
+			type: Sequelize.INTEGER,
 			primaryKey: true
 		},
 		userId: {
