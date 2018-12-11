@@ -347,7 +347,7 @@ Command.add('emojipopularity', Permission.advanced, (message, args) => {
 
 Command.add('changementrole', Permission.advanced, (message, args) => {
     return new Promise((resolve, reject) => {
-        if(changementRoleOpen) {
+        if(currentSuggestions) {
 			message.reply('déjà des propositions en cours, peut pas en avoir 2 en même temps');
 		} else {
 			BatchSuggestion.create({
@@ -367,7 +367,7 @@ Command.add('changementrole', Permission.advanced, (message, args) => {
 
 Command.add('suggestrole', Permission.basic, (message, args) => {
     return new Promise((resolve, reject) => {
-        if(changementRoleOpen) {
+        if(currentSuggestions) {
 			if(args.length < 2) {
 				message.channel.send('Syntace correcte: "+suggestrole <nom du rôle> <couleur en hexadécimal>"\n'
 								   + 'Exemple: "+suggestrole Gobeur de chibres #20a78f" pour proposer le rôle "Gobeur de chibres" avec une couleur turquoise\n'
