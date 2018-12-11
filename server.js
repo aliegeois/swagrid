@@ -356,7 +356,9 @@ Command.add('changementrole', Permission.advanced, (message, args) => {
 				annonce_roles.send('Debut');
 				let dateFin = new Date(batch.startDate);
 				dateFin.setTime(dateFin.getTime() + 2000);
-				setTimeout(endSuggestions, dateFin.getTime() - new Date().getTime());
+				let timeDifference = dateFin.getTime() - new Date().getTime();
+				annonce_roles.send(`Time (in ms) till end: ${timeDifference}`)
+				setTimeout(endSuggestions, timeDifference);
 			}).catch(err => {
 				console.error(`erreur create: ${err.toString()}`);
 			});
@@ -576,6 +578,8 @@ function endSuggestions() {
 			annonce_roles.send(suggestions);
 		}
 		currentSuggestions = null;
+	}).catch(err => {
+		console.error(`error create: ${err}`);
 	});
 }
 
