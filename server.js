@@ -350,14 +350,15 @@ Command.add('changementrole', Permission.advanced, (message, args) => {
         if(currentSuggestions != null) {
 			message.reply('déjà des propositions en cours, peut pas en avoir 2 en même temps');
 		} else {
+			let dateCreated = new Date();
 			BatchSuggestion.create({
-				startDate: new Date().getTime()
-			}).then(batch => {
+				startDate: dateCreated.getTime()
+			}).then(() => {
 				annonce_roles.send('Debut');
-				let dateFin = new Date(batch.startDate);
+				let dateFin = new Date(dateCreated.getTime());
 				dateFin.setTime(dateFin.getTime() + 2000);
 				let timeDifference = dateFin.getTime() - new Date().getTime();
-				annonce_roles.send(`Time (in ms) till end: ${timeDifference}`)
+				annonce_roles.send(`Time (in ms) till end: ${timeDifference}`);
 				setTimeout(endSuggestions, timeDifference);
 			}).catch(err => {
 				console.error(`erreur create: ${err.toString()}`);
