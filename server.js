@@ -384,7 +384,8 @@ Command.add('suggestrole', Permission.basic, (message, args) => {
 									   + 'Exemple: "#20a78f" pour une couleur turquoise\n'
 									   + 'Pour avoir la palette de couleur, suivre ce lien: https://www.w3schools.com/colors/colors_picker.asp');
 				} else {
-					let id = message.author.id;
+					let name = args.join(' '),
+					    id = message.author.id;
 					RoleSuggestion.findOrCreate({
 						where: {
 							dateBatch: currentSuggestions
