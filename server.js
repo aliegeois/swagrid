@@ -355,11 +355,10 @@ Command.add('changementrole', Permission.advanced, (message, args) => {
 				startDate: dateCreated.getTime()
 			}).then(() => {
 				currentSuggestions = dateCreated.getTime();
-				annonce_roles.send('Debut');
+				annonce_roles.send('Venez proposez des noms pour les rôles du serveur !');
 				let dateFin = new Date(dateCreated.getTime());
 				dateFin.setTime(dateFin.getTime() + 20000);
 				let timeDifference = dateFin.getTime() - new Date().getTime();
-				annonce_roles.send(`Time (in ms) till end: ${timeDifference}`);
 				setTimeout(endSuggestions, timeDifference);
 			}).catch(err => {
 				console.error(`erreur create: ${err.toString()}`);
@@ -568,14 +567,10 @@ function endSuggestions() {
 		if(suggestions == null) {
 			annonce_roles.send('Aucun suggestion proposée :(');
 		} else {
-			let msg = 'Liste des suggestions:\n';
-			for(let i = 0; i < suggestions.length; i++) {
-				msg += suggestions[i].name;
-				if(i < suggestions.length - 1)
-					msg += ','
-				else
-					msg += '\n';
-			}
+			shuffle(suggestions);
+			let msg = 'Fin du temps imparti pour proposer vos suggestions !\nListe des noms proposés:\n';
+			for(let i = 0; i < suggestions.length; i++)
+				msg += `${i+1}. ${suggestions[i].name} (${suggestions[i].color})\n`;
 			annonce_roles.send(msg);
 		}
 		currentSuggestions = null;
@@ -607,6 +602,17 @@ function resetDB(tables) {
 	}
 };
 
+/**
+ * 
+ * @param {any[]} array 
+ */
+function shuffle(array) {
+    for(let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
 client.on('ready', () => {
     console.log('Initialisation de Swagrid...');
     
@@ -627,16 +633,16 @@ client.on('ready', () => {
 	}).then(batch => {
 		if(batch != null) {
 			let dateEnd = new Date(batch.dateStart);
-			dateEnd.setDate(dateEnd.getDate() + 1);
+			//dateEnd.setDate(dateEnd.getDate() + 1);
+			dateEnd.setTime(dateEnd.getTime() + 60000);
 			let timeTillEnd = dateEnd.getTime() - new Date().getTime();
-			console.log(`active batch, time (in ms) till end: ${timeTillEnd}`);
 			if(timeTillEnd > 0) {
 				currentSuggestions = batch.dateStart;
 				setTimeout(endSuggestions, timeTillEnd);
 			}
 		} else {
 			// Table vide
-			console.log('table batch vide');
+			//console.log('table batch vide');
 		}
 	}).catch(err => {
 		console.error(`error find (client.ready): ${err}`);
