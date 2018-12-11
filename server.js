@@ -569,7 +569,15 @@ function endSuggestions() {
 		if(suggestions == null) {
 			annonce_roles.send('Aucun suggestion proposée :(');
 		} else {
-			annonce_roles.send(`suggestions: ${suggestions}`);
+			let msg = 'Liste des suggestions:\n';
+			for(let i = 0; i < suggestions.length; i++) {
+				msg += suggestions[i].name;
+				if(i < suggestions.length - 1)
+					msg += ','
+				else
+					msg += '\n';
+			}
+			annonce_roles.send(msg);
 		}
 		currentSuggestions = null;
 	}).catch(err => {
