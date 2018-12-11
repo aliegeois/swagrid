@@ -354,6 +354,7 @@ Command.add('changementrole', Permission.advanced, (message, args) => {
 			BatchSuggestion.create({
 				startDate: dateCreated.getTime()
 			}).then(() => {
+				currentSuggestions = dateCreated.getTime();
 				annonce_roles.send('Debut');
 				let dateFin = new Date(dateCreated.getTime());
 				dateFin.setTime(dateFin.getTime() + 20000);
