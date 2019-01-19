@@ -17,10 +17,10 @@ const Discord = require('discord.js'),
 
 var poudlard,
 	surveillants,
-	annonce_roles,
+	//annonce_roles,
 	sequelize,
-	ytKey = (local ? env : process.env).YT,
-	currentSuggestions = null;
+	ytKey = (local ? env : process.env).YT/*,
+	currentSuggestions = null*/;
 
 // Tables SQL
 var Mio,
@@ -152,9 +152,13 @@ Command.add('join', Permission.basic, (message, args) => {
 
 Command.add('leave', Permission.basic, (message, args) => {
     return new Promise((resolve, reject) => {
-        music.voiceChannel.leave();
-		music.voiceChannel = null;
-		music.voiceConnection = null;
+		if(message.member.voiceChannelID == null) {
+			message.reply('vous devez être dans un channel vocal pour déplacer Swagrid').catch(_=>{});
+		} else {
+			music.voiceChannel.leave();
+			music.voiceChannel = null;
+			music.voiceConnection = null;
+		}
 		resolve();
     });
 }, 'Renvoie Swagrid du channel vocal vers sa hutte', 'leave: Swagrid quitte son channel vocal, peut importe dans lequel vous êtes');
@@ -212,26 +216,35 @@ Command.add('playlist', Permission.basic, (message, args) => {
 
 Command.add('cancel', Permission.basic, (message, args) => {
     return new Promise((resolve, reject) => {
-        music.cancel();
+		if(message.member.voiceChannelID == null)
+			message.reply('vous devez être dans un channel vocal pour déplacer Swagrid').catch(_=>{});
+		else
+			music.cancel();
 		resolve();
     });
 }, 'Annule la dernière action (en rapport avec les vidéos)');
 
 Command.add('skip', Permission.basic, (message, args) => {
     return new Promise((resolve, reject) => {
-        music.skip();
+		if(message.member.voiceChannelID == null)
+			message.reply('vous devez être dans un channel vocal pour déplacer Swagrid').catch(_=>{});
+		else
+        	music.skip();
 		resolve();
     });
 }, 'Pour faire passer la vidéo en cours de lecture');
 
 Command.add('stop', Permission.basic, (message, args) => {
     return new Promise((resolve, reject) => {
-        music.stop();
+		if(message.member.voiceChannelID == null)
+			message.reply('vous devez être dans un channel vocal pour déplacer Swagrid').catch(_=>{});
+		else
+        	music.stop();
 		resolve();
     });
 }, 'Arrête la vidéo en cours et vide la file d\'attente');
 
-Command.add('goto', Permission.basic, (message, args) => {
+/*Command.add('goto', Permission.basic, (message, args) => {
     return new Promise((resolve, reject) => {
 		if(!message.member.voiceChannelID) {
 			message.reply('vous n\'êtes pas dans un channel vocal');
@@ -266,7 +279,7 @@ Command.add('goto', Permission.basic, (message, args) => {
 		
 		resolve();
     });
-}, 'Déplace toutes les personnes de votre channel vers un autre');
+}, 'Déplace toutes les personnes de votre channel vers un autre');*/
 
 Command.add('r34', Permission.basic, (message, args) => {
 	return new Promise((resolve, reject) => {
@@ -345,7 +358,7 @@ Command.add('emojipopularity', Permission.advanced, (message, args) => {
 	});
 }, 'Affiche la popularité des émojis du serveur');
 
-Command.add('changementrole', Permission.advanced, (message, args) => {
+/*Command.add('changementrole', Permission.advanced, (message, args) => {
     return new Promise((resolve, reject) => {
         if(currentSuggestions != null) {
 			message.reply('déjà des propositions en cours, peut pas en avoir 2 en même temps');
@@ -413,7 +426,7 @@ Command.add('suggestrole', Permission.basic, (message, args) => {
 		}
 		resolve();
     });
-}, '(placeholder)');
+}, '(placeholder)');*/
 
 Command.add('eval', Permission.expert, (message, args) => {
     console.log(args.join(' '));
@@ -558,7 +571,7 @@ function countEmojis(message) {
 	}
 };
 
-function endSuggestions() {
+/*function endSuggestions() {
 	RoleSuggestion.findAll({
 		where: {
 			dateBatch: currentSuggestions
@@ -577,7 +590,7 @@ function endSuggestions() {
 	}).catch(err => {
 		console.error(`error create: ${err}`);
 	});
-}
+}*/
 
 /**
  * 
@@ -606,12 +619,12 @@ function resetDB(tables) {
  * 
  * @param {any[]} array 
  */
-function shuffle(array) {
+/*function shuffle(array) {
     for(let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [array[i], array[j]] = [array[j], array[i]];
     }
-}
+}*/
 
 client.on('ready', () => {
     console.log('Initialisation de Swagrid...');
@@ -623,7 +636,7 @@ client.on('ready', () => {
 	//prefets = poudlard.roles.get('501438461341990913');
 	
 	//client.channels.get('442762703958835200').fetchMessages(); // Récupère les messages du règlement intérieur
-	annonce_roles = client.channels.get('522057339176615936');
+	//annonce_roles = client.channels.get('522057339176615936');
 
 	BatchSuggestion.findOne({
 		order: [
