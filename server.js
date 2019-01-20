@@ -5,17 +5,19 @@ var local = typeof process.env.TOKEN === 'undefined';
 const Discord = require('discord.js'),
 	  config = require('./config.json'),
 	  Sequelize = require('sequelize'),
-	  env = local ? require('./env.json') : {},
 	  search = require('youtube-api-v3-search'),
 	  request = require('request-promise-native'),
 	  parseString = require('xml2js').parseString,
 	  express = require('express'),
 	  ytdl = require('ytdl-core'),
-	  //music = require('./music'),
 	  app = express(),
 	  client = new Discord.Client({
 		  disabledEvents: ['TYPING_START']
 	  });
+/**
+ * @type {{TOKEN: string, YT: string}}
+ */
+const env = local ? require('./env.json') : {};
 
 /** @type {Discord.Guild} */
 var poudlard;
