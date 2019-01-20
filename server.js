@@ -1,9 +1,8 @@
 /** @type {boolean} */
-var local = typeof process.env.TOKEN === 'undefined';
+const local = typeof process.env.TOKEN === 'undefined';
 
 // Dependencies
 const Discord = require('discord.js'),
-	  config = require('./config.json'),
 	  Sequelize = require('sequelize'),
 	  search = require('youtube-api-v3-search'),
 	  request = require('request-promise-native'),
@@ -14,9 +13,9 @@ const Discord = require('discord.js'),
 	  client = new Discord.Client({
 		  disabledEvents: ['TYPING_START']
 	  });
-/**
- * @type {{TOKEN: string, YT: string}}
- */
+/** @type {{prefix: string, owner: string}} */
+const config = require('./config.json');
+/** @type {{}|{TOKEN: string, YT: string}} */
 const env = local ? require('./env.json') : {};
 
 /** @type {Discord.Guild} */
@@ -150,6 +149,7 @@ Music._playing = null;
  * @param {string} userId
  * @return {boolean}
  */
+(()=>{})();
 /** @class */
 class Permission {
 	/**
@@ -157,18 +157,19 @@ class Permission {
 	 */
 	constructor(fct) {
 		/** @type {permissionCallback} */
-		this.checkPermission = userId => fct(userId);
+		this.checkPermission = fct;
 	}
 }
 Permission.basic = new Permission(userId => {
 	return true;
 });
 Permission.advanced = new Permission(userId => {
-	return surveillants.members.find(e => userId === e.user.id);
+	return surveillants.members.find(e => userId === e.user.id) !== null;
 });
 Permission.expert = new Permission(userId => {
-	return userId == config.owner;
+	return userId === config.owner;
 });
+
 
 /**
  * @callback commandCallback
@@ -176,6 +177,7 @@ Permission.expert = new Permission(userId => {
  * @param {string[]} args
  * @returns {Promise<void>}
  */
+(()=>{})();
 /** @class */
 class Command {
 	/**
@@ -943,11 +945,9 @@ sequelize.authenticate().then(() => {
 app.get('/', (request, response) => {
 	response.sendFile(`${__dirname}/index.html`);
 });
-app.get('/anime', (request, response) => {
-	response.sendFile(`${__dirname}/anime`);
-})
 var listener = app.listen(3000, () => {
 	console.info('Swagrid présent sur le port ' + listener.address().port);
 });
+
 
 client.login((local ? env : process.env).TOKEN);
