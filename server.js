@@ -1,18 +1,19 @@
+/* jshint esversion: 6 */
+/* jshint -W061 */
+
 /** @type {boolean} */
 const local = typeof process.env.TOKEN === 'undefined';
 
 // Dependencies
 const Discord = require('discord.js'),
-	  Sequelize = require('sequelize'),
-	  search = require('youtube-api-v3-search'),
-	  request = require('request-promise-native'),
-	  parseString = require('xml2js').parseString,
-	  express = require('express'),
-	  ytdl = require('ytdl-core'),
-	  app = express(),
-	  client = new Discord.Client({
-		  disabledEvents: ['TYPING_START']
-	  });
+      Sequelize = require('sequelize'),
+      search = require('youtube-api-v3-search'),
+      request = require('request-promise-native'),
+      parseString = require('xml2js').parseString,
+      express = require('express'),
+      ytdl = require('ytdl-core'),
+      app = express(),
+      client = new Discord.Client({disabledEvents: ['TYPING_START']});
 /** @type {{prefix: string, owner: string}} */
 const config = require('./config.json');
 /** @type {{}|{TOKEN: string, YT: string}} */
@@ -231,7 +232,7 @@ Command.execute = (name, message, args) => {
 	/** @type {?Command} */
 	let cmd = Command.commands.get(name);
 	return cmd ? cmd.execute(message, args) : new Promise(r => r());
-}
+};
 
 Command.add('say', Permission.advanced, (message, args) => {
 	return new Promise((resolve, reject) => {
@@ -409,7 +410,7 @@ Command.add('r34', Permission.basic, (message, args) => {
 					} else {
 						/** @type {number} */
 						let count = parseInt(result.posts.$.count, 10);
-						if(count == NaN) {
+						if(isNaN(count)) {
 							reject('Erreur dans la récupération des posts');
 						} else {
 							if(count == 0) {
@@ -425,7 +426,7 @@ Command.add('r34', Permission.basic, (message, args) => {
 										} else {
 											/** @type {number} */
 											let count2 = parseInt(result2.posts.$.count, 10);
-											if(count2 == NaN) {
+											if(isNaN(count2)) {
 												reject('Erreur dans la récupération des posts (2)');
 											} else {
 												if(count2 == 0) {
@@ -473,7 +474,7 @@ Command.add('emojipopularity', Permission.advanced, (message, args) => {
 		}).catch(err => {
 			console.error(`erreur retrieve all emojis: ${err}`);
 			reject(err);
-		})
+		});
 	});
 }, 'Affiche la popularité des émojis du serveur');
 
@@ -616,14 +617,14 @@ function testForMio(message) {
 				}).then(() => {
 					message.channel.send(`Compteur de mio/tio/viola pour <@${message.author.id}>: \`${mio.count+mios.length}\``).catch(_ => {});
 				}).catch(err => {
-					console.error(`erreur update: ${err}`)
+					console.error(`erreur update: ${err}`);
 				});
 			}
 		}).catch(err => {
 			console.error(`erreur find: ${err}`);
 		});
 	}
-};
+}
 
 /** @param {Discord.Message} message */
 function countEmojis(message) {
@@ -685,7 +686,7 @@ function countEmojis(message) {
 			resolve();
 		}));
 	}
-};
+}
 
 /*function endSuggestions() {
 	RoleSuggestion.findAll({
@@ -726,7 +727,7 @@ function resetDB(tables) {
 		RoleSuggestion.sync({force: true});
 		console.log('reset rolesuggestion');
 	}*/
-};
+}
 
 /**
  * 
