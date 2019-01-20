@@ -55,7 +55,7 @@ class Music {
 		/** @type {music} */
 		let song = this._musics.shift();
 		this._status = 'play';
-		this.playing = song;
+		this._playing = song;
 		this._dispatcher = this.voiceConnection.playStream(ytdl(song.url, {
 			seek: 0,
 			volume: 1
@@ -65,7 +65,7 @@ class Music {
 				this._play();
 			} else {
 				this._status = 'stop';
-				this.playing = null;
+				this._playing = null;
 			}
 		});
 	}
@@ -77,7 +77,7 @@ class Music {
 				this._musics.pop();
 			} else {
 				this._status = 'stop';
-				this.playing = null;
+				this._playing = null;
 				this._dispatcher.end();
 			}
 		}
@@ -94,7 +94,7 @@ class Music {
 	/** Stoppe la vidéo en cours de lecture */
 	static stop() {
 		this._status = 'stop';
-		this.playing = null;
+		this._playing = null;
 		this._dispatcher.end('_');
 		this._musics = [];
 	}
