@@ -199,7 +199,7 @@ class Command {
 						reject(err);
 					});
 				} else {
-					message.reply('Permission insuffisante');
+					message.reply('Permission insuffisante').catch(_=>{});
 					reject();
 				}
 			});
@@ -286,7 +286,7 @@ Command.add('play', Permission.basic, (message, args) => {
 		if(Music.voiceConnection == null) {
 			reject('Swagrid n\'est pas dans un channel');
 		} else if(message.member.voiceChannelID != Music.voiceChannel.id) {
-			message.reply('Petit boloss, arrête de mettre des sons si tu n\'es pas dans le channel');
+			message.reply('Petit boloss, arrête de mettre des sons si tu n\'es pas dans le channel').catch(_=>{});
 			resolve();
 		} else {
 			search(ytKey, {
@@ -317,9 +317,9 @@ Command.add('play', Permission.basic, (message, args) => {
 Command.add('playing', Permission.basic, (message, args) => {
 	return new Promise((resolve, reject) => {
 		if(Music.playing == '') {
-			message.reply('Aucune musique en cours de lecture');
+			message.reply('Aucune musique en cours de lecture').catch(_=>{});
 		} else {
-			message.reply(`"${Music.playing}" est en cours de lecture`);
+			message.reply(`"${Music.playing}" est en cours de lecture`).catch(_=>{});
 		}
 		resolve();
 	});
@@ -327,7 +327,7 @@ Command.add('playing', Permission.basic, (message, args) => {
 
 Command.add('playlist', Permission.basic, (message, args) => {
 	return new Promise((resolve, reject) => {
-		message.reply(Music.playlist());
+		message.reply(Music.playlist()).catch(_=>{});
 		resolve();
 	});
 }, 'Affiche le titre des vidéos dans la file d\'attente');
@@ -365,7 +365,7 @@ Command.add('stop', Permission.basic, (message, args) => {
 /*Command.add('goto', Permission.basic, (message, args) => {
 	return new Promise((resolve, reject) => {
 		if(!message.member.voiceChannelID) {
-			message.reply('vous n\'êtes pas dans un channel vocal');
+			message.reply('vous n\'êtes pas dans un channel vocal').catch(_=>{});
 		} else {
 			let res = {};
 			for(let chan of poudlard.channels.filter(ch => ch.type == 'voice')) {
@@ -387,7 +387,7 @@ Command.add('stop', Permission.basic, (message, args) => {
 			}
 
 			if(max.chan == null) {
-				message.reply('channel inconnu');
+				message.reply('channel inconnu').catch(_=>{});
 			} else {
 				for(let member of message.member.voiceChannel.members) {
 					member.setVoiceChannel(max.chan.id);
@@ -413,7 +413,7 @@ Command.add('r34', Permission.basic, (message, args) => {
 							reject('Erreur dans la récupération des posts');
 						} else {
 							if(count == 0) {
-								message.reply('Aucun résultat');
+								message.reply('Aucun résultat').catch(_=>{});
 								resolve();
 							} else {
 								/** @type {number} */
@@ -429,7 +429,7 @@ Command.add('r34', Permission.basic, (message, args) => {
 												reject('Erreur dans la récupération des posts (2)');
 											} else {
 												if(count2 == 0) {
-													message.reply('Aucun résultat (2)');
+													message.reply('Aucun résultat (2)').catch(_=>{});
 												} else {
 													let post = result2.posts.post[post_number % 100];
 													message.channel.send({
@@ -451,7 +451,7 @@ Command.add('r34', Permission.basic, (message, args) => {
 				reject(err);
 			});
 		} else {
-			message.reply('Pas de ça dans un chan SFW !!');
+			message.reply('Pas de ça dans un chan SFW !!').catch(_=>{});
 			resolve();
 		}
 	});
@@ -480,7 +480,7 @@ Command.add('emojipopularity', Permission.advanced, (message, args) => {
 /*Command.add('changementrole', Permission.advanced, (message, args) => {
 	return new Promise((resolve, reject) => {
 		if(currentSuggestions != null) {
-			message.reply('déjà des propositions en cours, peut pas en avoir 2 en même temps');
+			message.reply('déjà des propositions en cours, peut pas en avoir 2 en même temps').catch(_=>{});
 		} else {
 			let dateCreated = new Date();
 			BatchSuggestion.create({
@@ -535,7 +535,7 @@ Command.add('suggestrole', Permission.basic, (message, args) => {
 								color: suggestion.color.slice(1)
 							}));
 						} else {
-							message.reply('Proposition déjà effectuée');
+							message.reply('Proposition déjà effectuée').catch(_=>{});
 						}
 					});
 				}
