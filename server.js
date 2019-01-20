@@ -588,10 +588,7 @@ Command.add('help', Permission.basic, (message, args) => {
 	});
 }, 'Affiche ce message d\'aide');
 
-/**
- * 
- * @param {Discord.Message} message 
- */
+/** @param {Discord.Message} message */
 function testForMio(message) {
 	/** @type {RegExpMatchArray} */
 	let mios;
@@ -628,10 +625,7 @@ function testForMio(message) {
 	}
 };
 
-/**
- * 
- * @param {Discord.Message} message 
- */
+/** @param {Discord.Message} message */
 function countEmojis(message) {
 	/** @type {RegExpMatchArray} */
 	let strs = message.content.match(/<:[A-Za-z]+:[0-9]+>/g);
@@ -714,10 +708,7 @@ function countEmojis(message) {
 	});
 }*/
 
-/**
- * 
- * @param {string[]} tables 
- */
+/** @param {string[]} tables */
 function resetDB(tables) {
 	if(tables.includes('mio')) {
 		Mio.sync({force: true});
