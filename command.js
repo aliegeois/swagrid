@@ -1,48 +1,131 @@
+/* jshint esversion: 6 */
+
+/**
+ * Morte de rire
+ * @class */
 class Command {
+	/** @param {string} name Nom de la commande */
 	constructor(name) {
+		/** @type {string} */
 		this.name = name;
-		this.arguments = new Array();
+		/**
+		 * @type {Map.<string, LiteralCommand>}
+		 * @private
+		 */
+		this.__literals = new Map();
+		/**
+		 * @type {?ArgumentCommand}
+		 * @private
+		*/
+		this.__argument = null;
+		/**
+		 * @type {boolean}
+		 * @private
+		*/
+		this.__canBeLast = false;
 	}
 
-	then(argument) {
-		this.arguments.push(argument);
+	/**
+	 * @param {Command} command
+	 */
+	then(command) {
+		if(command instanceof LiteralCommand) {
+			this.__literals.set(command.name, command);
+		} else if(command instanceof ArgumentCommand) {
+			this.__argument = command;
+		}
+		this.__last = false;
+
 		return this;
 	}
 
-	executes(fct) {
-		this.execute = fct;
+	/**
+	 * What appens when you execute the command
+	 * @param {function(): Command} command The command to execute
+	 */
+	executes(command) {
+		/**
+		 * @type {function(string[]): void}
+		 * @private
+		*/
+		this.execute = command;
+		this.__canBeLast = true;
+
+		return this;
+	}
+
+	/** @param {string} name */
+	hasSubCommand(name) {
+		return this.__literals.has(name);
+	}
+
+	/** @param {string} name */
+	getSubCommand(name) {
+		return this.__literals.get(name);
+	}
+
+	hasArgument() {
+		return this.__argument !== null;
+	}
+
+	getArgument() {
+		return this.__argument;
+	}
+
+	canBeLast() {
+		return this.__canBeLast;
 	}
 }
 
-class Argument {
+/** @class */
+class LiteralCommand extends Command {
+	/**
+	 * @param {string} name
+	 */
 	constructor(name) {
-		this.name = name;
-		this.arguments = new Array();
+		super(name);
+	}
+}
+
+/** @class */
+class ArgumentCommand extends Command {
+	/**
+	 * @param {string} name 
+	 * @param {string} [type]
+	 */
+	constructor(name, restString) {
+		super(name);
+		/** @type {boolean} */
+		this.__restString = typeof restString === 'undefined' ? false : restString;
 	}
 
-	then(argument) {
-		this.arguments.push(argument);
-		return this;
-	}
-
-	executes(fct) {
-		this.execute = fct;
+	/** @returns {boolean} */
+	isRestString() {
+		return this.__restString;
 	}
 }
 
 class CommandDispatcher {
 	constructor() {
-		this.commands = new Map();
+		/**
+		 * @type {Map.<string, Command>}
+		 * @private
+		*/
+		this.__commands = new Map();
 	}
-	
-	register(cmdName) {
-		if(this.commands.has(cmdName))
-			throw new Error('command already registered');
-		this.commands.set(cmdName, 1);
+	/**
+	 * Enregistre une nouvelle commande
+	 * @param {LiteralCommand} command Command à ajouter
+	 * @throws {Error} si la commande est déjà enregistrée
+	*/
+	register(command) {
+		if(this.__commands.has(command.name))
+			throw new Error('Command already registered');
+		this.__commands.set(command.name, command);
 	}
 
-	parse(cmd) {
-		if(typeof cmd != 'string')
+	parse(cmd, source) {
+		if(typeof cmd !== 'string')
 			throw new TypeError();
 		
 		cmd = cmd.trim();
@@ -73,47 +156,145 @@ class CommandDispatcher {
 		}
 		args.push(str);
 
+		return this.dispatch(args, source);
+	}
+
+	/**
+	 * 
+	 * @param {string[]} args 
+	 */
+	dispatch(args) {
 		if(args.length > 0) {
-			let name = args.shift();
-			if(this.commands.has(name)) {
-				let command = this.commands.get(name),
-				    canExecute = false;
-				while(!canExecute) {
-					if(typeof command == 'Command') {
-						//
-					} else if(typeof command == 'Argument') {
-						//
+			let name = args.shift(),
+				totalArgs = [];
+			if(this.__commands.has(name)) {
+				let command = this.__commands.get(name);
+
+				while(args.length) {
+					if(command instanceof LiteralCommand) {
+						let arg = args.shift();
+						totalArgs = [arg];
+						if(command.hasSubCommand(arg)) {
+							command = command.getSubCommand(arg);
+						} else if(command.hasArgument()) {
+							command = command.getArgument();
+						} else {
+							throw new Error('Too many arguments');
+						}
+					} else if(command instanceof ArgumentCommand) {
+						if(command.isRestString()) {
+							//console.log(args);
+							//console.log(totalArgs);
+							totalArgs = totalArgs.concat(args.splice(0));
+						} else if(command.hasArgument()) {
+							command = command.getArgument();
+							totalArgs.push(args.shift());
+						} else {
+							console.log('???');
+						}
 					}
 				}
+				if(!command.canBeLast()) {
+					throw new Error('Missing arguments');
+				}
+
+				//console.log(`Exécution de ${command.name} avec ${cmdArgs.length} argument${cmdArgs.length == 1 ? '' : 's'}: ${cmdArgs}`);
+
+				if(totalArgs.length)
+					return command.execute(...totalArgs);
+				else
+					return command.execute();
 			} else
-				throw new Error('unknown command');
-		} else {
-			throw new Error('empty string');
-		}
+				throw new Error(`Unknown command ${name}`);
+		} else
+			throw new Error('No command');
 	}
 }
 
+/**
+ * 
+ * @param {string} name 
+ */
+function literal(name) {
+	return new LiteralCommand(name);
+}
 
-let literal = name => {
-	return new Command(name);
-};
-
-let argument = name => {
-	return new Argument(name);
-};
+/**
+ * See {@link Command} for dbar as well as {@link Command#executes} for more
+ * @param {string} name 
+ * @param {string} [restString=false]
+ */
+function argument(name, restString) {
+	return new ArgumentCommand(name, restString);
+}
 
 let dispatcher = new CommandDispatcher();
 
 dispatcher.register(
-	literal("foo")
+	literal('foo')
 		.then(
-			argument("bar")
+			argument('bar')
+				.then(
+					argument('baz')
+						.executes((bar, baz) => {
+							console.log(`foo ${bar} ${baz}`);
+							return `foo ${bar} ${baz}`;
+						})
+				)
 				.executes(c => {
 					console.log(`foo ${c}`);
-					return 1;
+					return `foo ${c}`;
 				})
+		)
+		.then(
+			literal('blyat')
+				.then(
+					argument('bite', true).executes((...bite) => {
+						console.log(`foo blyat [${bite}]`);
+						return `foo blyat [${bite}]`;
+					})
+				)
 		)
 		.executes(() => {
 			console.log('foo');
+			return 'foo';
 		})
 );
+
+dispatcher.register(
+	literal('say')
+		.then(
+			argument('message', true)
+				.executes(/*(message, content) => {
+					return new Promise((resolve, reject) => {
+						message.delete().catch(_=>{});
+						message.channel.send(content);
+					});
+				}*/)
+		)
+		.executes(/*(message, content) => {
+			return new Promise((resolve, reject) => {
+				message.delete().catch(_=>{});
+				message.channel.send(content);
+			});
+		}*/)
+);
+
+dispatcher.register(
+	literal('tts', true)
+		.then(
+			argument('message')
+				.executes(/*(message, content) => {
+					return new Promise((resolve, reject) => {
+						message.delete().catch(_=>{});
+						message.channel.send(content, {tts: true}).catch(_=>{});
+					});
+				}*/)
+		)
+);
+
+console.info('foo' === dispatcher.parse('foo', {})); // OK
+console.info('foo 123 456' === dispatcher.parse('foo 123 456', {})); // OK
+console.info('foo blyat [a,b,c]' === dispatcher.parse('foo blyat a b c', {})); // OK
+
+//dispatcher.parse('dbar "de \\"rire\\"" 42');

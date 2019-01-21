@@ -1,5 +1,5 @@
 class SwagridUser {
-    constrcutor() {
-        
-    }
+	constructor() {
+		
+	}
 }

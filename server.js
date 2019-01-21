@@ -6,14 +6,16 @@ const local = typeof process.env.TOKEN === 'undefined';
 
 // Dependencies
 const Discord = require('discord.js'),
-      Sequelize = require('sequelize'),
-      search = require('youtube-api-v3-search'),
-      request = require('request-promise-native'),
-      parseString = require('xml2js').parseString,
-      express = require('express'),
-      ytdl = require('ytdl-core'),
-      app = express(),
-      client = new Discord.Client({disabledEvents: ['TYPING_START']});
+	Sequelize = require('sequelize'),
+	search = require('youtube-api-v3-search'),
+	request = require('request-promise-native'),
+	parseString = require('xml2js').parseString,
+	express = require('express'),
+	ytdl = require('ytdl-core'),
+	app = express(),
+	client = new Discord.Client({
+		disabledEvents: ['TYPING_START']
+	});
 /** @type {{prefix: string, owner: string}} */
 const config = require('./config.json');
 /** @type {{}|{TOKEN: string, YT: string}} */
@@ -237,7 +239,7 @@ Command.execute = (name, message, args) => {
 Command.add('say', Permission.advanced, (message, args) => {
 	return new Promise((resolve, reject) => {
 		message.delete().catch(_ => {});
-		message.channel.send(args.join(' '));
+		message.channel.send(args.join(' ')).catch(_=>{});
 		resolve();
 	});
 }, 'Pour faire dire des choses à Swagrid', 'say <texte>: Supprime le message de la commande et Swagrid envoie <texte>');
@@ -245,7 +247,7 @@ Command.add('say', Permission.advanced, (message, args) => {
 Command.add('tts', Permission.advanced, (message, args) => {
 	return new Promise((resolve, reject) => {
 		message.delete().catch(_ => {});
-		message.channel.send(args.join(' '), {tts: true});
+		message.channel.send(args.join(' '), {tts: true}).catch(_=>{});
 		resolve();
 	});
 }, 'Comme "say" mais avec du tts en plus', 'tts <texte>: Supprime le message de la commande et Swagrid envoie <texte> en tts');
@@ -305,7 +307,7 @@ Command.add('play', Permission.basic, (message, args) => {
 					},
 					title: `${res.items[0].snippet.title}`,
 					url: `https://youtu.be/${res.items[0].id.videoId}/`
-				}));
+				})).catch(_=>{});
 				Music.add(res.items[0].id.videoId, res.items[0].snippet.title);
 				resolve();
 			}).catch(err => {
@@ -435,7 +437,7 @@ Command.add('r34', Permission.basic, (message, args) => {
 													let post = result2.posts.post[post_number % 100];
 													message.channel.send({
 														file: post.$.file_url
-													});
+													}).catch(_=>{});
 												}
 												resolve();
 											}
@@ -464,11 +466,11 @@ Command.add('emojipopularity', Permission.advanced, (message, args) => {
 			emojis.sort((e1, e2) => {
 				return e2.count - e1.count;
 			});
-			let msg = "Popularité des émojis par nombre d'utilisations:";
+			let msg = 'Popularité des émojis par nombre d\'utilisations:';
 			for(let emoji of emojis)
 				if(emoji.count > 0)
 					msg += `\n${emoji.count} : ${poudlard.emojis.get(emoji.emojiId)}`;
-			message.channel.send(msg);
+			message.channel.send(msg).catch(_=>{});
 
 			resolve();
 		}).catch(err => {
@@ -488,7 +490,7 @@ Command.add('emojipopularity', Permission.advanced, (message, args) => {
 				startDate: dateCreated.getTime()
 			}).then(() => {
 				currentSuggestions = dateCreated.getTime();
-				annonce_roles.send('Venez proposez des noms pour les rôles du serveur !');
+				annonce_roles.send('Venez proposez des noms pour les rôles du serveur !').catch(_=>{});
 				let dateFin = new Date(dateCreated.getTime());
 				dateFin.setTime(dateFin.getTime() + 20000);
 				let timeDifference = dateFin.getTime() - new Date().getTime();
@@ -514,7 +516,7 @@ Command.add('suggestrole', Permission.basic, (message, args) => {
 					// format de couleur invalide
 					message.channel.send('Format de couleur correct: "#xxxxxx" où les x sont des caractèrs compris dans l\'intervalle 0-9 ou a-f\n'
 									   + 'Exemple: "#20a78f" pour une couleur turquoise\n'
-									   + 'Pour avoir la palette de couleur, suivre ce lien: https://www.w3schools.com/colors/colors_picker.asp');
+									   + 'Pour avoir la palette de couleur, suivre ce lien: https://www.w3schools.com/colors/colors_picker.asp').catch(_=>{});
 				} else {
 					let name = args.join(' '),
 						id = message.author.id;
@@ -534,7 +536,7 @@ Command.add('suggestrole', Permission.basic, (message, args) => {
 							message.channel.send(new Discord.RichEmbed({
 								description: `Proposition de rôle acceptée avec le nom "${suggestion.name}"`,
 								color: suggestion.color.slice(1)
-							}));
+							})).catch(_=>{});
 						} else {
 							message.reply('Proposition déjà effectuée').catch(_=>{});
 						}
@@ -542,7 +544,7 @@ Command.add('suggestrole', Permission.basic, (message, args) => {
 				}
 			}
 		} else {
-			message.channel.send('Bro c\'est pas le moment');
+			message.channel.send('Bro c\'est pas le moment').catch(_=>{});
 		}
 		resolve();
 	});
@@ -577,7 +579,7 @@ Command.add('help', Permission.basic, (message, args) => {
 				if(cmd.permission.checkPermission(message.author.id))
 					msg += `\n${name}: ${cmd.description}`;
 			});
-			msg += `\n\nPour obtenir de l\'aide sur une commande, entrez "${config.prefix}help <nom de la commande>"`;
+			msg += `\n\nPour obtenir de l'aide sur une commande, entrez "${config.prefix}help <nom de la commande>"`;
 		} else {
 			let cmdName = args[0],
 				cmd = Command.commands.get(cmdName);
@@ -585,7 +587,7 @@ Command.add('help', Permission.basic, (message, args) => {
 			if(cmd.utilisation)
 				msg += `\nUtilisation:\`\`\`\n${config.prefix}${cmd.utilisation}\`\`\``;
 		}
-		message.channel.send(msg);
+		message.channel.send(msg).catch(_=>{});
 	});
 }, 'Affiche ce message d\'aide');
 
@@ -695,13 +697,13 @@ function countEmojis(message) {
 		}
 	}).then(suggestions => {
 		if(suggestions == null) {
-			annonce_roles.send('Aucun suggestion proposée :(');
+			annonce_roles.send('Aucun suggestion proposée :(').catch(_=>{});
 		} else {
 			shuffle(suggestions);
 			let msg = 'Fin du temps imparti pour proposer vos suggestions !\nListe des noms proposés:\n';
 			for(let i = 0; i < suggestions.length; i++)
 				msg += `${i+1}. ${suggestions[i].name} (${suggestions[i].color})\n`;
-			annonce_roles.send(msg);
+			annonce_roles.send(msg).catch(_=>{});
 		}
 		currentSuggestions = null;
 	}).catch(err => {
