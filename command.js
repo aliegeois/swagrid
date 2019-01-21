@@ -19,6 +19,10 @@ class Command {
 		*/
 		this.__argument = null;
 		/**
+		 * @type {function(...string): void}
+		 */
+		this.execute = null;
+		/**
 		 * @type {boolean}
 		 * @private
 		*/
@@ -41,7 +45,7 @@ class Command {
 
 	/**
 	 * What appens when you execute the command
-	 * @param {function(): Command} command The command to execute
+	 * @param {function(): Command} command La commande à exécuter
 	 */
 	executes(command) {
 		/**
@@ -64,14 +68,23 @@ class Command {
 		return this.__literals.get(name);
 	}
 
+	/** @returns {boolean} */
 	hasArgument() {
 		return this.__argument !== null;
 	}
 
+	/**
+	 * Retourne l'argument suivant
+	 * @return {ArgumentCommand}
+	 */
 	getArgument() {
 		return this.__argument;
 	}
 
+	/**
+	 * Indique si cette commande peut être exécutée toute seule
+	 * @returns {boolean}
+	 */
 	canBeLast() {
 		return this.__canBeLast;
 	}
@@ -105,6 +118,14 @@ class ArgumentCommand extends Command {
 	}
 }
 
+
+
+console.info('foo' === dispatcher.parse('foo', {})); // OK
+console.info('foo 123 456' === dispatcher.parse('foo 123 456', {})); // OK
+console.info('foo blyat [a,b,c]' === dispatcher.parse('foo blyat a b c', {})); // OK
+
+//dispatcher.parse('dbar "de \\"rire\\"" 42');
+
 class CommandDispatcher {
 	constructor() {
 		/**
@@ -115,7 +136,7 @@ class CommandDispatcher {
 	}
 	/**
 	 * Enregistre une nouvelle commande
-	 * @param {LiteralCommand} command Command à ajouter
+	 * @param {LiteralCommand} command Commande à ajouter
 	 * @throws {Error} si la commande est déjà enregistrée
 	*/
 	register(command) {
@@ -124,6 +145,11 @@ class CommandDispatcher {
 		this.__commands.set(command.name, command);
 	}
 
+	/**
+	 * 
+	 * @param {string} cmd La chaîne de caractère à parser
+	 * @param {any} source L'environnement dont à besoin la commande
+	 */
 	parse(cmd, source) {
 		if(typeof cmd !== 'string')
 			throw new TypeError();
@@ -160,8 +186,9 @@ class CommandDispatcher {
 	}
 
 	/**
-	 * 
+	 * Vérifie que la commande est correcte
 	 * @param {string[]} args 
+	 * @private
 	 */
 	dispatch(args) {
 		if(args.length > 0) {
@@ -293,8 +320,4 @@ dispatcher.register(
 		)
 );
 
-console.info('foo' === dispatcher.parse('foo', {})); // OK
-console.info('foo 123 456' === dispatcher.parse('foo 123 456', {})); // OK
-console.info('foo blyat [a,b,c]' === dispatcher.parse('foo blyat a b c', {})); // OK
-
-//dispatcher.parse('dbar "de \\"rire\\"" 42');
+module.exports = CommandDispatcher;
