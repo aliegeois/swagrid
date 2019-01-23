@@ -1,4 +1,4 @@
-/* jshint esversion: 6 */
+const Permission = require('./permission');
 
 /**
  * Morte de rire
@@ -16,7 +16,7 @@ class Command {
 		/**
 		 * @type {?ArgumentCommand}
 		 * @private
-		*/
+		 */
 		this.__argument = null;
 		/**
 		 * @type {function(...string): void}
@@ -25,12 +25,23 @@ class Command {
 		/**
 		 * @type {boolean}
 		 * @private
-		*/
+		 */
 		this.__canBeLast = false;
+		/**
+		 * @type {string}
+		 * @private
+		 */
+		this.__description = '';
+		/**
+		 * @type {}
+		 * @private
+		 */
+		this.__permission = Permission.basic;
 	}
 
 	/**
 	 * @param {Command} command
+	 * @returns {this}
 	 */
 	then(command) {
 		if(command instanceof LiteralCommand) {
@@ -45,15 +56,27 @@ class Command {
 
 	/**
 	 * What appens when you execute the command
-	 * @param {function(): Command} command La commande à exécuter
+	 * @param {function(): Promise<void>} command La commande à exécuter
+	 * @returns {this}
 	 */
 	executes(command) {
 		/**
 		 * @type {function(string[]): void}
 		 * @private
-		*/
+		 */
 		this.execute = command;
 		this.__canBeLast = true;
+
+		return this;
+	}
+
+	/**
+	 * Ajoute une description à la commande
+	 * @param {string} text La description
+	 * @returns {this}
+	 */
+	description(text) {
+		this.__description = text;
 
 		return this;
 	}
@@ -118,12 +141,6 @@ class ArgumentCommand extends Command {
 	}
 }
 
-
-
-console.info('foo' === dispatcher.parse('foo', {})); // OK
-console.info('foo 123 456' === dispatcher.parse('foo 123 456', {})); // OK
-console.info('foo blyat [a,b,c]' === dispatcher.parse('foo blyat a b c', {})); // OK
-
 //dispatcher.parse('dbar "de \\"rire\\"" 42');
 
 class CommandDispatcher {
@@ -131,15 +148,15 @@ class CommandDispatcher {
 		/**
 		 * @type {Map.<string, Command>}
 		 * @private
-		*/
+		 */
 		this.__commands = new Map();
 	}
 	/**
 	 * Enregistre une nouvelle commande
 	 * @param {LiteralCommand} command Commande à ajouter
 	 * @throws {Error} si la commande est déjà enregistrée
-	*/
-	register(command) {
+	 */
+	register(command, permission) { // Rajouter la permission
 		if(this.__commands.has(command.name))
 			throw new Error('Command already registered');
 		this.__commands.set(command.name, command);
@@ -247,7 +264,7 @@ function literal(name) {
 }
 
 /**
- * See {@link Command} for dbar as well as {@link Command#executes} for more
+ * See {@link Command} for dbar as well as {@link Command#executes()} for more
  * @param {string} name 
  * @param {string} [restString=false]
  */
@@ -286,38 +303,173 @@ dispatcher.register(
 			console.log('foo');
 			return 'foo';
 		})
+		.description('')
 );
 
 dispatcher.register(
 	literal('say')
 		.then(
 			argument('message', true)
-				.executes(/*(message, content) => {
+				.executes((message, content) => {
 					return new Promise((resolve, reject) => {
 						message.delete().catch(_=>{});
 						message.channel.send(content);
+						resolve();
 					});
-				}*/)
+				})
 		)
-		.executes(/*(message, content) => {
-			return new Promise((resolve, reject) => {
-				message.delete().catch(_=>{});
-				message.channel.send(content);
-			});
-		}*/)
 );
 
 dispatcher.register(
-	literal('tts', true)
+	literal('tts')
 		.then(
-			argument('message')
-				.executes(/*(message, content) => {
+			argument('message', true)
+				.executes((message, content) => {
 					return new Promise((resolve, reject) => {
 						message.delete().catch(_=>{});
 						message.channel.send(content, {tts: true}).catch(_=>{});
+						resolve();
 					});
-				}*/)
+				})
 		)
 );
+
+dispatcher.register(
+	literal('join')
+		.executes((message) => {
+			return new Promise((resolve, reject) => {
+				resolve();
+			});
+		})
+);
+
+dispatcher.register(
+	literal('leave')
+		.executes((message) => {
+			return new Promise((resolve, reject) => {
+				resolve();
+			});
+		})
+);
+
+dispatcher.register(
+	literal('play')
+		.then(
+			argument('keywords')
+				.executes((message, keywords) => {
+					return new Promise((resolve, reject) => {
+						resolve();
+					});
+				})
+		)
+);
+
+dispatcher.register(
+	literal('playing')
+		.executes((message) => {
+			return new Promise((resolve, reject) => {
+				resolve();
+			});
+		})
+);
+
+dispatcher.register(
+	literal('playlist')
+		.executes((message) => {
+			return new Promise((resolve, reject) => {
+				resolve();
+			});
+		})
+);
+
+dispatcher.register(
+	literal('cancel')
+		.executes((message) => {
+			return new Promise((resolve, reject) => {
+				resolve();
+			});
+		})
+);
+
+dispatcher.register(
+	literal('skip')
+		.executes((message) => {
+			return new Promise((resolve, reject) => {
+				resolve();
+			});
+		})
+);
+
+dispatcher.register(
+	literal('stop')
+		.executes((message) => {
+			return new Promise((resolve, reject) => {
+				resolve();
+			});
+		})
+);
+
+dispatcher.register(
+	literal('r34')
+		.then(
+			argument('keywords', true)
+				.executes((message, keywords) => {
+					return new Promise((resolve, reject) => {
+						resolve();
+					});
+				})
+		)
+);
+
+dispatcher.register(
+	literal('emojipopularity')
+		.executes((message, keyword) => {
+			return new Promise((resolve, reject) => {
+				resolve();
+			});
+		})
+);
+
+dispatcher.register(
+	literal('eval')
+		.then(
+			argument('command', true)
+				.executes((message, command) => {
+					return new Promise((resolve, reject) => {
+						resolve();
+					});
+				})
+		)
+);
+
+dispatcher.register(
+	literal('resetdb')
+		.then(
+			argument('databases', true)
+				.executes((message, databases) => {
+					return new Promise((resolve, reject) => {
+						resolve();
+					});
+				})
+		)
+);
+
+dispatcher.register(
+	literal('help')
+		.then(
+			argument('keywords', true)
+				.executes((message, keywords) => {
+					return new Promise((resolve, reject) => {
+						resolve();
+					});
+				})
+		)
+);
+
+/*
+console.info('foo' === dispatcher.parse('foo', {})); // OK
+console.info('foo 123 456' === dispatcher.parse('foo 123 456', {})); // OK
+console.info('foo blyat [a,b,c]' === dispatcher.parse('foo blyat a b c', {})); // OK
+*/
 
 module.exports = CommandDispatcher;

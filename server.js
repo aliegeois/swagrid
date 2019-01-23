@@ -1,4 +1,3 @@
-/* jshint esversion: 6 */
 /* jshint -W061 */
 
 /** @type {boolean} */
@@ -913,24 +912,6 @@ sequelize.authenticate().then(() => {
 		},
 		count: Sequelize.INTEGER
 	});
-	/*BatchSuggestion = sequelize.define('batchsuggestion', {
-		dateStart: {
-			type: Sequelize.INTEGER,
-			primaryKey: true
-		}
-	});
-	RoleSuggestion = sequelize.define('rolesuggestion', {
-		dateBatch: {
-			type: Sequelize.INTEGER,
-			primaryKey: true
-		},
-		userId: {
-			type: Sequelize.INTEGER,
-			primaryKey: true
-		},
-		name: Sequelize.STRING,
-		color: Sequelize.STRING
-	});*/
 	//resetDB(['mio', 'emoji']);
 }).catch(err => {
 	console.error(err);
