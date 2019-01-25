@@ -414,6 +414,7 @@ dispatcher.register(
 				.executes((source, commandName) => {
 					return new Promise((resolve, reject) => {
 						/** @type {Discord.Message} */
+						/*
 						let message = source.message;
 
 						let command = dispatcher.commands.get(commandName);
@@ -456,7 +457,10 @@ dispatcher.register(
 							message.reply(`commande inconnue: "${commandName}"`)
 								.then(resolve)
 								.catch(reject);
-						}
+						}*/
+
+						console.log(`help ${commandName}`);
+						resolve();
 
 						/*
 						let command = dispatcher.commands.get(commandName);
@@ -477,17 +481,56 @@ dispatcher.register(
 		)
 		.executes(source => {
 			return new Promise((resolve, reject) => {
-				let result = 'Liste des commandes disponibles pour vous:';
-
-				for(let [name, command] of dispatcher.commands) {
-					if(command.permission.checkPermission(source.message.member))
-						result += `\n${name}: ${command.description}`;
-				}
-				result += `\n\nPour obtenir de l'aide sur une commande, entrez "${config.prefix}help <nom de la commande>"`;
-
 				/** @type {Discord.Message} */
 				let message = source.message;
-				message.channel.send(result).then(resolve).catch(reject);
+
+				//let result = 'Liste des commandes disponibles pour vous:';
+
+				let descHelp = '';
+
+				for(let [name, command] of dispatcher.commands) {
+					/*if(command.permission.checkPermission(source.message.member))
+						result += `\n${name}: ${command.description}`;*/
+
+					let exploration = [{
+						command: command,
+						usage: name
+					}];
+
+					while(exploration.length > 0) {
+						let exp = exploration.shift();
+
+						if(exp.command.executable && exp.command.permission.checkPermission(message.member)) {
+							descHelp += `\n- "${exp.usage}": ${exp.command.description}`;
+						}
+
+						for(let lit of exp.command.literals.values()) {
+							exploration.push({
+								command: lit,
+								usage: exp.usage + ' ' + lit.name
+							});
+						}
+						if(exp.command.argument) {
+							exploration.push({
+								command: exp.command.argument,
+								usage: exp.usage + ' ' + exp.command.argument.name
+							});
+						}
+					}
+				}
+
+				if(descHelp === '') {
+					reject('permission insuffisante pour voir cette commande');
+				} else {
+					message.channel.send(`Liste des commandes disponibles pour vous:${descHelp}`)
+						.then(resolve)
+						.catch(reject);
+				}
+				/*result += `\n\nPour obtenir de l'aide sur une commande, entrez "${config.prefix}help <nom de la commande>"`;
+
+				message.channel.send(result)
+					.then(resolve)
+					.catch(reject);*/
 			});
 		})
 		.description('Affiche ce message d\'aide')
