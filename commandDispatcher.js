@@ -282,7 +282,7 @@ class CommandDispatcher {
 				//console.log(`Exécution de ${command.name} avec ${cmdArgs.length} argument${cmdArgs.length == 1 ? '' : 's'}: ${cmdArgs}`);
 
 				if(totalArgs.length)
-					return command.execute(source, ...totalArgs);
+					return command.execute(source, totalArgs);
 				else
 					return command.execute(source);
 			} else
