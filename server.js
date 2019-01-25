@@ -865,9 +865,7 @@ client.on('messageReactionRemove', (reaction, user) => {
 });
 
 client.on('voiceStateUpdate', (oldmember, newmember) => { // Update packages
-	/** @type {Discord.VoiceChannel} */
 	let oldvoice = oldmember.voiceChannel;
-	/** @type {Discord.VoiceChannel} */
 	let newvoice = newmember.voiceChannel;
 	
 	if(!oldvoice && newvoice) {

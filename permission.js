@@ -1,7 +1,3 @@
-/*
- * @module Permission
- */
-
 /**
  * @callback permissionCallback
  * @param {...any} args
@@ -22,4 +18,3 @@ class Permission {
 Permission.basic = new Permission(() => true);
 
 module.exports = Permission;
-

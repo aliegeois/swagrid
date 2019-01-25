@@ -8,9 +8,9 @@ const Discord = require('discord.js'),
 	Sequelize = require('sequelize'),
 	search = require('youtube-api-v3-search'),
 	request = require('request-promise-native'),
-	parseString = require('xml2js').parseString,
+	//parseString = require('xml2js').parseString,
 	express = require('express'),
-	ytdl = require('ytdl-core'),
+	//ytdl = require('ytdl-core'),
 	app = express(),
 	client = new Discord.Client({
 		disabledEvents: ['TYPING_START']
@@ -47,12 +47,12 @@ dispatcher.register(
 									.then(resolve)
 									.catch(reject);
 							})
-							.catch(_=>{});
+							.catch(reject);
 					});
 				})
+				.permission(Permission.advanced)
+				.description('Fait dire des choses à Swagrid')
 		)
-		.permission(Permission.advanced)
-		.description('Fait dire des choses à Swagrid')
 );
 
 dispatcher.register(
@@ -70,9 +70,9 @@ dispatcher.register(
 							.catch(_=>{});
 					});
 				})
+				.permission(Permission.advanced)
+				.description('Comme "say" mais avec du tts en plus')
 		)
-		.permission(Permission.advanced)
-		.description('Comme "say" mais avec du tts en plus')
 );
 
 dispatcher.register(
@@ -107,13 +107,15 @@ dispatcher.register(
 				/** @type {Discord.Message} */
 				let message = source.message;
 				if(message.member.voiceChannelID == null) {
-					message.reply('vous devez être dans un channel vocal pour déplacer Swagrid').catch(_=>{});
+					message.reply('vous devez être dans un channel vocal pour déplacer Swagrid')
+						.then(resolve)
+						.catch(reject);
 				} else {
 					Music.voiceChannel.leave();
 					Music.voiceChannel = null;
 					Music.voiceConnection = null;
+					resolve();
 				}
-				resolve();
 			});
 		})
 		.description('Renvoie Swagrid du channel vocal vers sa hutte')
@@ -122,7 +124,7 @@ dispatcher.register(
 dispatcher.register(
 	literal('play')
 		.then(
-			argument('keywords')
+			argument('keywords', true)
 				.executes((source, keywords) => {
 					return new Promise((resolve, reject) => {
 						/** @type {Discord.Message} */
@@ -158,9 +160,8 @@ dispatcher.register(
 						}
 					});
 				})
-
+				.description('Effectue une recherche sur Youtube et joue la première vidéo trouvée, ou la met en attente si une vidéo est déjà en cours de lecture (vous devez être dans le même channel vocal que Swagrid)')
 		)
-		.description('Effectue une recherche sur Youtube et joue la première vidéo trouvée, ou la met en attente si une vidéo est déjà en cours de lecture (vous devez être dans le même channel vocal que Swagrid)')
 );
 
 dispatcher.register(
@@ -189,7 +190,7 @@ dispatcher.register(
 			return new Promise((resolve, reject) => {
 				/** @type {Discord.Message} */
 				let message = source.message;
-				message.reply(Music.playlist())
+				message.reply(Music.playlist)
 					.then(resolve)
 					.catch(reject);
 			});
@@ -481,29 +482,110 @@ client.on('message', message => {
 	if(message.author.bot)
 		return;
 	
-	if(message.content.indexOf(config.prefix) !== 0) {
+	let content = message.content.trim();
+	
+	if(content.indexOf(config.prefix) !== 0) {
 		//testForMio(message);
 		//countEmojis(message);
 		return;
 	}
 	
-	/*if(!(message.channel instanceof Discord.TextChannel))
-		if(!Permission.expert.checkPermission(message.author.id))
-			return;*/
-	
 	/** @type {string[]} */
-	let args = message.content.slice(config.prefix.length).trim().split(/ +/g);
+	//let args = message.content.slice(config.prefix.length).trim().split(/ +/g);
 	/** @type {string} */
-	let name = args.shift().toLowerCase();
+	//let name = args.shift().toLowerCase();
 	
 	//Command.execute(name, message, args).catch(err => console.error(err));
 
 	dispatcher.parse({
 		message: message
-	},message.content.slice(config.prefix.length).trim());
+	}, content.slice(config.prefix.length).trim());
 });
 
+client.on('messageReactionAdd', (reaction, user) => {
+	let emojiId = reaction.emoji.id;
+	if(reaction.message.member.guild.emojis.has(emojiId)) {
+		Emoji.findOne({
+			where: {
+				emojiId: emojiId
+			}
+		}).then(emoji => {
+			if(emoji == null) {
+				Emoji.create({
+					emojiId: emojiId,
+					count: 1
+				}).catch(err => {
+					console.error(`erreur create emoji: ${err}`);
+				});
+			} else {
+				Emoji.update({
+					count: emoji.count + 1
+				}, {
+					where: {
+						emojiId: emojiId
+					}
+				}).catch(err => {
+					console.error(`erreur update emoji: ${err}`);
+				});
+			}
+		}).catch(err => {
+			console.error(`erreur find emoji: ${err}`);
+		});
+	}
+});
 
+client.on('messageReactionRemove', (reaction, user) => {
+	/** @type {string} */
+	let emojiId = reaction.emoji.id;
+	if(reaction.message.member.guild.emojis.has(emojiId)) {
+		console.log(`remove ${reaction.emoji.name}`);
+		Emoji.findOne({
+			where: {
+				emojiId: emojiId
+			}
+		}).then(emoji => {
+			if(emoji != null) {
+				console.log(`emoji number (before): ${emoji.count}`);
+				Emoji.update({
+					count: emoji.count - 1
+				}, {
+					where: {
+						emojiId: emojiId
+					}
+				}).catch(err => {
+					console.error(`erreur update emoji: ${err}`);
+				});
+				console.log(`emoji number (after): ${emoji.count - 1}`);
+			}
+		}).catch(err => {
+			console.error(`erreur find emoji: ${err}`);
+		});
+	}
+});
+
+client.on('voiceStateUpdate', (oldmember, newmember) => { // Update packages
+	let oldvoice = oldmember.voiceChannel;
+	let newvoice = newmember.voiceChannel;
+	
+	if(!oldvoice && newvoice) {
+		//join
+	} else if(oldvoice && !newvoice) {
+		//leave
+	} else {
+		if(oldvoice.id != newvoice.id) {
+			// move
+			if(newvoice.id == client.user.id) {
+				// Swagrid a été déplacé
+				Music.voiceChannel = newvoice;
+			} else {
+				if(newvoice.id == '520211457481113610')
+					newmember.addRole('520210711767678977');
+			}
+		} else {
+			// update genre mute/demute
+		}
+	}
+});
 
 sequelize = new Sequelize('database', {
 	dialect: 'sqlite',
@@ -521,7 +603,7 @@ sequelize.authenticate().then(() => {
 		},
 		count: Sequelize.INTEGER
 	});
-	//resetDB(['mio', 'emoji']);
+	//resetDB(['emoji']);
 }).catch(err => {
 	console.error(err);
 });
