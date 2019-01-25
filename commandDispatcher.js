@@ -159,6 +159,8 @@ class Command {
 			name: this.name,
 			executable: this.__canBeLast,
 			description: this.__description,
+			literals: this.__literals,
+			argument: this.__argument,
 			permission: this.__permission
 		};
 	}
@@ -206,7 +208,7 @@ class CommandDispatcher {
 	get commands() {
 		let cmds = new Map();
 		for(let [name, command] of this.__commands)
-			cmds.set(name, command);
+			cmds.set(name, command.infos);
 		return cmds;
 	}
 
