@@ -199,9 +199,9 @@ class CommandDispatcher {
 	}
 
 	/**
-	 * 
+	 * Analyse une commande et l'exécute si elle est bien formée
 	 * @param {any} source L'environnement dont à besoin la commande
-	 * @param {string} cmd La chaîne de caractère à parser
+	 * @param {string} cmd La chaîne de caractères à parser
 	 */
 	parse(source, cmd) {
 		if(typeof cmd !== 'string')
@@ -266,8 +266,6 @@ class CommandDispatcher {
 						}
 					} else if(command instanceof ArgumentCommand) {
 						if(command.isRestString()) {
-							//console.log(args);
-							//console.log(totalArgs);
 							totalArgs = totalArgs.concat(args.splice(0));
 						} else if(command.hasArgument()) {
 							command = command.getArgument();
