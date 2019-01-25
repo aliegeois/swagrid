@@ -1,7 +1,7 @@
-const Permission = require('./permission');
+//const Permission = require('./permission');
 
 /**
- * Morte de rire
+ * 
  * @class */
 class Command {
 	/** @param {string} name Nom de la commande */
@@ -29,7 +29,7 @@ class Command {
 		 */
 		this.__description = '(aucune description disponible)';
 		/**
-		 * @type {}
+		 * @type {Permission}
 		 * @private
 		 */
 		this.__permission = Permission.basic;
@@ -40,7 +40,7 @@ class Command {
 	 * @param {string[]} args
 	 * @returns {Promise<void>}
 	 */
-	execute(source, ...args) {
+	execute(source, args) {
 		return new Promise((resolve, reject) => {
 			resolve();
 		});
@@ -68,10 +68,20 @@ class Command {
 	 */
 	executes(command) {
 		/**
-		 * @type {function(...string): void}
+		 * @type {function(source: any, args: string[]): void}
 		 * @private
 		 */
-		this.execute = command;
+		this.execute = (source, args) => {
+			return new Promise((resolve, reject) => {
+				if(this.__permission.checkPermission(source.message.member)) {
+					command(source, args)
+						.then(resolve)
+						.catch(reject);
+				} else {
+					reject(new Error('permission insuffisante'));
+				}
+			});
+		};
 		this.__canBeLast = true;
 
 		return this;
@@ -97,6 +107,20 @@ class Command {
 		this.__description = text;
 
 		return this;
+	}
+
+	/**
+	 * @returns {Map.<string, LiteralCommand>}
+	 */
+	get literals() {
+		return this.__literals;
+	}
+
+	/**
+	 * @returns {ArgumentCommand}
+	 */
+	get argument() {
+		return this.__argument;
 	}
 
 	/** @param {string} name */
@@ -133,6 +157,7 @@ class Command {
 	get infos() {
 		return {
 			name: this.name,
+			executable: this.__canBeLast,
 			description: this.__description,
 			permission: this.__permission
 		};
@@ -168,8 +193,6 @@ class ArgumentCommand extends Command {
 	}
 }
 
-//dispatcher.parse('dbar "de \\"rire\\"" 42');
-
 class CommandDispatcher {
 	constructor() {
 		/**
@@ -179,11 +202,11 @@ class CommandDispatcher {
 		this.__commands = new Map();
 	}
 
-	/** @returns {Map<string, {name: string, description: string, permission: Permission}>} */
+	/** @returns {Map<string, Command>} */
 	get commands() {
 		let cmds = new Map();
 		for(let [name, command] of this.__commands)
-			cmds.set(name, command.infos);
+			cmds.set(name, command);
 		return cmds;
 	}
 
@@ -294,21 +317,41 @@ class CommandDispatcher {
 
 /**
  * 
- * @param {string} name 
+ * @param {string} name
  */
 function literal(name) {
 	return new LiteralCommand(name);
 }
 
 /**
- * See {@link Command} for dbar as well as {@link Command#executes()} for more
- * @param {string} name 
+ * 
+ * @param {string} name
  * @param {string} [restString=false]
  */
-function argument(name, restString) {
+function argument(name, restString = false) {
 	return new ArgumentCommand(name, restString);
 }
 
+/**
+ * @callback permissionCallback
+ * @param {any} verifiable l'object sur lequel on vérifie la permission
+ * @returns {boolean}
+ */
+
+/** @class */
+class Permission {
+	/**
+	 * @param {permissionCallback} check
+	 */
+	constructor(check) {
+		/** @type {permissionCallback} */
+		this.checkPermission = check;
+	}
+}
+
+Permission.basic = new Permission(() => true);
+
+/*
 let dispatcher = new CommandDispatcher();
 
 dispatcher.register(
@@ -343,11 +386,10 @@ dispatcher.register(
 		.description('')
 );
 
-
 // Tests
 console.info('foo' === dispatcher.parse({}, 'foo')); // OK
 console.info('foo 123 456' === dispatcher.parse({}, 'foo 123 456')); // OK
 console.info('foo blyat [a,b,c]' === dispatcher.parse({}, 'foo blyat a b c')); // OK
+*/
 
-
-module.exports = {CommandDispatcher, literal, argument};
+module.exports = {Permission, CommandDispatcher, literal, argument};

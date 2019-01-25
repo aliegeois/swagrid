@@ -16,9 +16,8 @@ const Discord = require('discord.js'),
 		disabledEvents: ['TYPING_START']
 	});
 
-const Music = require('./music'),
-	Permission = require('./permission'),
-	{ CommandDispatcher, literal, argument } = require('./commandDispatcher');
+const Music = new (require('./music'))(),
+	{ Permission, CommandDispatcher, literal, argument } = require('./commandDispatcher');
 
 /** @type {{prefix: string, owner: string, guilds: [{id: string, permissions: [{name: string, roleId: string}]}]}} */
 const config = require('./config.json');
@@ -33,6 +32,7 @@ var sequelize;
 /** @type {Sequelize.Model} */
 var Emoji;
 
+Permission.expert = new Permission();
 const dispatcher = new CommandDispatcher();
 
 dispatcher.register(
@@ -410,19 +410,67 @@ dispatcher.register(
 dispatcher.register(
 	literal('help')
 		.then(
-			argument('commandName', true)
+			argument('commandName')
 				.executes((source, commandName) => {
 					return new Promise((resolve, reject) => {
+						/** @type {Discord.Message} */
+						let message = source.message;
+
 						let command = dispatcher.commands.get(commandName);
 						if(command !== undefined) {
-							if(command.permission.checkPermission(source.message.member)) {
-								/** @type {Discord.Message} */
-								let message = source.message;
-								message.channel.send(`-- Aide pour ${command.name} --\nDescription:\`\`\`\n${command.description}\`\`\``).then(resolve).catch(reject);
-							} else {
-								reject('permission insuffisante pour voir cette commande');
+							let descHelp = '';
+							let exploration = [{
+								command: command,
+								usage: command.name
+							}];
+
+							while(exploration.length > 0) {
+								let exp = exploration.shift();
+
+								if(exp.command.executable && exp.command.permission.checkPermission(message.member)) {
+									descHelp += `- "${exp.usage}": ${exp.command.description}\n`;
+								}
+
+								for(let lit of exp.command.literals.values()) {
+									exploration.push({
+										command: lit,
+										usage: exp.usage + ' ' + lit.name
+									});
+								}
+								if(exp.command.argument) {
+									exploration.push({
+										command: exp.command.argument,
+										usage: exp.usage + ' ' + exp.command.argument.name
+									});
+								}
 							}
+
+							if(descHelp === '') {
+								reject('permission insuffisante pour voir cette commande');
+							} else {
+								message.channel.send(`-- Aide pour la commande "${command.name}" --\n${descHelp}`)
+									.then(resolve)
+									.catch(reject);
+							}
+						} else {
+							message.reply(`commande inconnue: "${commandName}"`)
+								.then(resolve)
+								.catch(reject);
 						}
+
+						/*
+						let command = dispatcher.commands.get(commandName);
+						if(command === undefined) {
+							message.reply(`commande inconnue: "${commandName}"`)
+								.then(resolve)
+								.catch(reject);
+						} else if(command.permission.checkPermission(message.member)) {
+							message.channel.send(`-- Aide pour ${command.name} --\nDescription:\`\`\`\n${command.description}\`\`\``)
+								.then(resolve)
+								.catch(reject);
+						} else {
+							reject('permission insuffisante pour voir cette commande');
+						}*/
 					});
 				})
 				.description('Affiche l\'aide d\'une commande en particulier')
@@ -594,7 +642,7 @@ sequelize = new Sequelize('database', 'nero', null, {
 });
 
 sequelize.authenticate().then(() => {
-	console.info('Authentication to database successfull');
+	console.info('Authentication to database successful');
 	
 	Emoji = sequelize.define('emoji', {
 		emojiId: {
