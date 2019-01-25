@@ -587,7 +587,7 @@ client.on('voiceStateUpdate', (oldmember, newmember) => { // Update packages
 	}
 });
 
-sequelize = new Sequelize('database', {
+sequelize = new Sequelize('database', 'nero', null, {
 	dialect: 'sqlite',
 	storage: '.data/database.sqlite',
 	logging: false
