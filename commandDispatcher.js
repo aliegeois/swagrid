@@ -19,10 +19,6 @@ class Command {
 		 */
 		this.__argument = null;
 		/**
-		 * @type {function(...string): void}
-		 */
-		this.execute = null;
-		/**
 		 * @type {boolean}
 		 * @private
 		 */
@@ -31,12 +27,23 @@ class Command {
 		 * @type {string}
 		 * @private
 		 */
-		this.__description = '';
+		this.__description = '(aucune description disponible)';
 		/**
 		 * @type {}
 		 * @private
 		 */
 		this.__permission = Permission.basic;
+	}
+
+	/**
+	 * @param {any} source
+	 * @param {string[]} args
+	 * @returns {Promise<void>}
+	 */
+	execute(source, ...args) {
+		return new Promise((resolve, reject) => {
+			resolve();
+		});
 	}
 
 	/**
@@ -56,16 +63,27 @@ class Command {
 
 	/**
 	 * What appens when you execute the command
-	 * @param {function(): Promise<void>} command La commande à exécuter
+	 * @param {function(source, ...string): Promise<void>} command La commande à exécuter
 	 * @returns {this}
 	 */
 	executes(command) {
 		/**
-		 * @type {function(string[]): void}
+		 * @type {function(...string): void}
 		 * @private
 		 */
 		this.execute = command;
 		this.__canBeLast = true;
+
+		return this;
+	}
+
+	/**
+	 * Définit la permission nécessaire pour exécuter cette commande
+	 * @param {Permission} perm
+	 * @returns {this}
+	 */
+	permission(perm) {
+		this.__permission = perm;
 
 		return this;
 	}
@@ -111,6 +129,14 @@ class Command {
 	canBeLast() {
 		return this.__canBeLast;
 	}
+
+	get infos() {
+		return {
+			name: this.name,
+			description: this.__description,
+			permission: this.__permission
+		};
+	}
 }
 
 /** @class */
@@ -127,12 +153,13 @@ class LiteralCommand extends Command {
 class ArgumentCommand extends Command {
 	/**
 	 * @param {string} name 
-	 * @param {string} [type]
+	 * @param {boolean} [restString=false]
 	 */
-	constructor(name, restString) {
+	constructor(name, restString = false) {
 		super(name);
 		/** @type {boolean} */
-		this.__restString = typeof restString === 'undefined' ? false : restString;
+		//this.__restString = restString;
+		this.__restString = restString = restString === undefined ? false : restString;
 	}
 
 	/** @returns {boolean} */
@@ -151,12 +178,21 @@ class CommandDispatcher {
 		 */
 		this.__commands = new Map();
 	}
+
+	/** @returns {Map<string, {name: string, description: string, permission: Permission}>} */
+	get commands() {
+		let cmds = new Map();
+		for(let [name, command] of this.__commands)
+			cmds.set(name, command.infos);
+		return cmds;
+	}
+
 	/**
 	 * Enregistre une nouvelle commande
 	 * @param {LiteralCommand} command Commande à ajouter
 	 * @throws {Error} si la commande est déjà enregistrée
 	 */
-	register(command, permission) { // Rajouter la permission
+	register(command) { // Rajouter la permission
 		if(this.__commands.has(command.name))
 			throw new Error('Command already registered');
 		this.__commands.set(command.name, command);
@@ -164,18 +200,19 @@ class CommandDispatcher {
 
 	/**
 	 * 
-	 * @param {string} cmd La chaîne de caractère à parser
 	 * @param {any} source L'environnement dont à besoin la commande
+	 * @param {string} cmd La chaîne de caractère à parser
 	 */
-	parse(cmd, source) {
+	parse(source, cmd) {
 		if(typeof cmd !== 'string')
 			throw new TypeError();
 		
 		cmd = cmd.trim();
-		let args = [],
-			str = '',
-			escaped = false,
-			string = false;
+		/** @type {string[]} */
+		let args = [];
+		let str = '';
+		let escaped = false;
+		let string = false;
 		for(let ch of cmd) {
 			if(string) {
 				if(escaped) {
@@ -199,7 +236,7 @@ class CommandDispatcher {
 		}
 		args.push(str);
 
-		return this.dispatch(args, source);
+		return this.__dispatch(source, args);
 	}
 
 	/**
@@ -207,10 +244,12 @@ class CommandDispatcher {
 	 * @param {string[]} args 
 	 * @private
 	 */
-	dispatch(args) {
+	__dispatch(source, args) {
 		if(args.length > 0) {
-			let name = args.shift(),
-				totalArgs = [];
+			/** @type {string} */
+			let name = args.shift();
+			/** @type {string[]} */
+			let totalArgs = [];
 			if(this.__commands.has(name)) {
 				let command = this.__commands.get(name);
 
@@ -245,9 +284,9 @@ class CommandDispatcher {
 				//console.log(`Exécution de ${command.name} avec ${cmdArgs.length} argument${cmdArgs.length == 1 ? '' : 's'}: ${cmdArgs}`);
 
 				if(totalArgs.length)
-					return command.execute(...totalArgs);
+					return command.execute(source, ...totalArgs);
 				else
-					return command.execute();
+					return command.execute(source);
 			} else
 				throw new Error(`Unknown command ${name}`);
 		} else
@@ -280,7 +319,7 @@ dispatcher.register(
 			argument('bar')
 				.then(
 					argument('baz')
-						.executes((bar, baz) => {
+						.executes((_, bar, baz) => {
 							console.log(`foo ${bar} ${baz}`);
 							return `foo ${bar} ${baz}`;
 						})
@@ -293,183 +332,24 @@ dispatcher.register(
 		.then(
 			literal('blyat')
 				.then(
-					argument('bite', true).executes((...bite) => {
+					argument('bite', true).executes((_, ...bite) => {
 						console.log(`foo blyat [${bite}]`);
 						return `foo blyat [${bite}]`;
 					})
 				)
 		)
-		.executes(() => {
+		.executes(_ => {
 			console.log('foo');
 			return 'foo';
 		})
 		.description('')
 );
 
-dispatcher.register(
-	literal('say')
-		.then(
-			argument('message', true)
-				.executes((message, content) => {
-					return new Promise((resolve, reject) => {
-						message.delete().catch(_=>{});
-						message.channel.send(content);
-						resolve();
-					});
-				})
-		)
-);
 
-dispatcher.register(
-	literal('tts')
-		.then(
-			argument('message', true)
-				.executes((message, content) => {
-					return new Promise((resolve, reject) => {
-						message.delete().catch(_=>{});
-						message.channel.send(content, {tts: true}).catch(_=>{});
-						resolve();
-					});
-				})
-		)
-);
+// Tests
+console.info('foo' === dispatcher.parse({}, 'foo')); // OK
+console.info('foo 123 456' === dispatcher.parse({}, 'foo 123 456')); // OK
+console.info('foo blyat [a,b,c]' === dispatcher.parse({}, 'foo blyat a b c')); // OK
 
-dispatcher.register(
-	literal('join')
-		.executes((message) => {
-			return new Promise((resolve, reject) => {
-				resolve();
-			});
-		})
-);
 
-dispatcher.register(
-	literal('leave')
-		.executes((message) => {
-			return new Promise((resolve, reject) => {
-				resolve();
-			});
-		})
-);
-
-dispatcher.register(
-	literal('play')
-		.then(
-			argument('keywords')
-				.executes((message, keywords) => {
-					return new Promise((resolve, reject) => {
-						resolve();
-					});
-				})
-		)
-);
-
-dispatcher.register(
-	literal('playing')
-		.executes((message) => {
-			return new Promise((resolve, reject) => {
-				resolve();
-			});
-		})
-);
-
-dispatcher.register(
-	literal('playlist')
-		.executes((message) => {
-			return new Promise((resolve, reject) => {
-				resolve();
-			});
-		})
-);
-
-dispatcher.register(
-	literal('cancel')
-		.executes((message) => {
-			return new Promise((resolve, reject) => {
-				resolve();
-			});
-		})
-);
-
-dispatcher.register(
-	literal('skip')
-		.executes((message) => {
-			return new Promise((resolve, reject) => {
-				resolve();
-			});
-		})
-);
-
-dispatcher.register(
-	literal('stop')
-		.executes((message) => {
-			return new Promise((resolve, reject) => {
-				resolve();
-			});
-		})
-);
-
-dispatcher.register(
-	literal('r34')
-		.then(
-			argument('keywords', true)
-				.executes((message, keywords) => {
-					return new Promise((resolve, reject) => {
-						resolve();
-					});
-				})
-		)
-);
-
-dispatcher.register(
-	literal('emojipopularity')
-		.executes((message, keyword) => {
-			return new Promise((resolve, reject) => {
-				resolve();
-			});
-		})
-);
-
-dispatcher.register(
-	literal('eval')
-		.then(
-			argument('command', true)
-				.executes((message, command) => {
-					return new Promise((resolve, reject) => {
-						resolve();
-					});
-				})
-		)
-);
-
-dispatcher.register(
-	literal('resetdb')
-		.then(
-			argument('databases', true)
-				.executes((message, databases) => {
-					return new Promise((resolve, reject) => {
-						resolve();
-					});
-				})
-		)
-);
-
-dispatcher.register(
-	literal('help')
-		.then(
-			argument('keywords', true)
-				.executes((message, keywords) => {
-					return new Promise((resolve, reject) => {
-						resolve();
-					});
-				})
-		)
-);
-
-/*
-console.info('foo' === dispatcher.parse('foo', {})); // OK
-console.info('foo 123 456' === dispatcher.parse('foo 123 456', {})); // OK
-console.info('foo blyat [a,b,c]' === dispatcher.parse('foo blyat a b c', {})); // OK
-*/
-
-module.exports = CommandDispatcher;
+module.exports = {CommandDispatcher, literal, argument};

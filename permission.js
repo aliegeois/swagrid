@@ -1,17 +1,15 @@
-/**
+/*
  * @module Permission
  */
 
-const Discord = require('discord.js');
+/**
+ * @callback permissionCallback
+ * @param {...any} args
+ * @returns {boolean}
+ */
 
 /** @class */
 class Permission {
-	/**
-	 * @callback permissionCallback
-	 * @param {Discord.User} user
-	 * @returns {boolean}
-	 */
-
 	/**
 	 * @param {permissionCallback} check
 	 */
@@ -21,6 +19,7 @@ class Permission {
 	}
 }
 
-Permission.basic = new Permission(_ => true);
+Permission.basic = new Permission(() => true);
 
 module.exports = Permission;
+

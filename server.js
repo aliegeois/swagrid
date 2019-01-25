@@ -62,7 +62,7 @@ class Music {
 			seek: 0,
 			volume: 1
 		}));
-		this._dispatcher.on('end', reason => {
+		this._dispatcher.on('end', () => {
 			if(this._musics.length) {
 				this._play();
 			} else {
@@ -162,7 +162,7 @@ class Permission {
 		this.checkPermission = fct;
 	}
 }
-Permission.basic = new Permission(userId => {
+Permission.basic = new Permission(() => {
 	return true;
 });
 Permission.advanced = new Permission(userId => {
@@ -587,6 +587,7 @@ Command.add('help', Permission.basic, (message, args) => {
 				msg += `\nUtilisation:\`\`\`\n${config.prefix}${cmd.utilisation}\`\`\``;
 		}
 		message.channel.send(msg).catch(_=>{});
+		resolve();
 	});
 }, 'Affiche ce message d\'aide');
 
