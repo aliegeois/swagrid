@@ -488,29 +488,32 @@ dispatcher.register(
 
 				let descHelp = '';
 
-				for(let [name, command] of dispatcher.commands) {
+				for(let [cname, command] of dispatcher.commands) {
 					/*if(command.permission.checkPermission(source.message.member))
 						result += `\n${name}: ${command.description}`;*/
 
 					let exploration = [{
 						command: command,
-						usage: name
+						usage: cname
 					}];
 
 					while(exploration.length > 0) {
 						let exp = exploration.shift();
 
 						if(exp.command.executable && exp.command.permission.checkPermission(message.member)) {
-							descHelp += `\n- "${exp.usage}": ${exp.command.description}`;
+							console.log(`command exécutable trouvée: ${exp.usage}`);
+							descHelp += `\n- "${config.prefix}${exp.usage}": ${exp.command.description}`;
 						}
 
-						for(let lit of exp.command.literals.values()) {
+						for(let [lname, lit] of exp.command.literals.values()) {
+							console.log(`exploration ${exp.usage} ${lname}`);
 							exploration.push({
 								command: lit,
-								usage: exp.usage + ' ' + lit.name
+								usage: exp.usage + ' ' + lname
 							});
 						}
 						if(exp.command.argument) {
+							console.log(`argument ${exp.usage} ${exp.command.argument.name}`);
 							exploration.push({
 								command: exp.command.argument,
 								usage: exp.usage + ' ' + exp.command.argument.name
@@ -588,9 +591,10 @@ client.on('message', message => {
 	
 	//Command.execute(name, message, args).catch(err => console.error(err));
 
-	dispatcher.parse({
-		message: message
-	}, content.slice(config.prefix.length).trim());
+	dispatcher.parse({ message: message }, content.slice(config.prefix.length).trim())
+		.catch(err => {
+			message.channel.send('```reject: ' + err + '```');
+		});
 });
 
 client.on('messageReactionAdd', (reaction, user) => {
