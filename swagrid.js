@@ -311,14 +311,14 @@ dispatcher.register(
 					return new Promise((resolve, reject) => {
 						/** @type {Discord.Message} */
 						let message = source.message;
-						console.log('names: [' + name + ']');
+						//console.log('names: [' + name + ']');
 
 						/*for(let member of members.values()) {
 							let guildMember = message.member.voiceChannel.members.get(member.id);
 							if(guildMember !== undefined && message.member.voiceChannelID === guildMember.voiceChannelID)
 								deletable.push(guildMember);
 						}*/
-						
+
 						let deletable = Array.from(message.mentions.members.values()).filter(member => {
 							let guildMember = message.member.voiceChannel.members.get(member.id);
 							if(guildMember !== undefined && message.member.voiceChannelID === guildMember.voiceChannelID)
@@ -493,12 +493,13 @@ dispatcher.register(
 dispatcher.register(
 	literal('help')
 		.then(
-			argument('commandName')
+			argument('command')
 				.executes((source, command) => {
 					return new Promise((resolve, reject) => {
 						/** @type {Discord.Message} */
 						
 						let message = source.message;
+						command = dispatcher.commands.get(command);
 
 						/*let command = dispatcher.commands.get(commandName);
 						if(command !== undefined) {
