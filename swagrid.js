@@ -501,7 +501,7 @@ dispatcher.register(
 						let message = source.message;
 						if(dispatcher.commands.has(command)) {
 							command = dispatcher.commands.get(command);
-							message.channel.send(`-- Aide pour la commande ${command.name} --\n${command.getUsages(config.prefix).map(({ usage, description }) => usage + ': ' + description).join('\n')}`)
+							message.channel.send(`-- Aide pour la commande ${command.getName()} --\n${command.getUsages(config.prefix).map(({ usage, description }) => usage + ': ' + description).join('\n')}`)
 								.then(resolve)
 								.catch(reject);
 						} else {
