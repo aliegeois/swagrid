@@ -545,20 +545,19 @@ dispatcher.register(
 
 					while(exploration.length > 0) {
 						let exp = exploration.shift();
+						let hasPermission = exp.command.permission.checkPermission(message.member);
 
 						if(exp.command.executable) {
 							console.log(`command exécutable trouvée: ${exp.usage}`);
-							if(exp.command.permission.checkPermission(message.member)) {
+							if(hasPermission) {
 								console.log('\tpermission accordée');
+								//console.log(`command exécutable trouvée: ${exp.usage}`);
+								descHelp += `\n- "${config.prefix}${exp.usage}": ${exp.command.description}`;
 							} else {
 								console.log('\tpas de permission :\'(');
 							}
 						} else {
 							console.log(`command non exécutable: ${exp.usage}`);
-						}
-						if(exp.command.executable && exp.command.permission.checkPermission(message.member)) {
-							//console.log(`command exécutable trouvée: ${exp.usage}`);
-							descHelp += `\n- "${config.prefix}${exp.usage}": ${exp.command.description}`;
 						}
 
 						for(let [lname, lit] of exp.command.literals.values()) {
