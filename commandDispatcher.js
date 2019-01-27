@@ -469,7 +469,8 @@ class Permission {
 
 Permission.basic = new Permission(() => true);
 
-
+/*
+// Tests
 let dispatcher = new CommandDispatcher();
 
 dispatcher.register(
@@ -516,7 +517,6 @@ dispatcher.register(
 		.description('foo tout seul')
 );
 
-// Tests
 let source = {
 	message: {
 		member: null
@@ -529,4 +529,5 @@ dispatcher.parse(source, 'foo blyat a b c').then(console.log).catch(console.erro
 for(let l of dispatcher.__commands__.values())
 	console.log(l.getUsages('+'));
 
+	*/
 module.exports = { Permission, CommandDispatcher, literal, argument };

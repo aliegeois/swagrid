@@ -567,43 +567,19 @@ dispatcher.register(
 
 				//let result = 'Liste des commandes disponibles pour vous:';
 
-				let descHelp = 'Liste des commandes disponibles pour vous:\n';
+				//let descHelp = 'Liste des commandes disponibles pour vous:\n';
 
-				for(let [cname, command] of dispatcher.commands) {
-					/*if(command.permission.checkPermission(source.message.member))
-						result += `\n${name}: ${command.description}`;*/
+				/*for(let command of dispatcher.commands.values())
+					descriptions.push(command.getUsages(config.prefix).map(({ usage, description }) => usage + ': ' + description).join('\n'));*/
 
-					/*let exploration = [{
-						command: command,
-						usage: cname
-					}];
+				let descriptions = Array.from(dispatcher.commands.values())
+					.map(command => command.getUsages(config.prefix)
+						.map(({ usage, description }) => usage + ': ' + description)
+						.join('\n'))
+					.join('\n')
+				;
 
-					while(exploration.length > 0) {
-						let exp = exploration.shift();
-						let hasPermission = Permission[exp.command.permission].checkPermission(message.member);
-
-						if(exp.command.executable)
-							if(hasPermission)
-								descHelp += `\n${config.prefix}${exp.usage}: ${exp.command.description}`;
-
-						for(let [lname, lit] of exp.command.literals) {
-							exploration.push({
-								command: lit.infos,
-								usage: exp.usage + ' ' + lname
-							});
-						}
-						if(exp.command.argument) {
-							exploration.push({
-								command: exp.command.argument.infos,
-								usage: exp.usage + ' <' + exp.command.argument.name + '>'
-							});
-						}
-					}*/
-
-					descHelp += command.getUsages(config.prefix).map(({ usage, description }) => usage + ': ' + description).join('\n');
-				}
-
-				message.channel.send(`Liste des commandes disponibles pour vous:\`\`\`${descHelp}\`\`\`\n\nPour obtenir de l'aide sur une commande, entrez "${config.prefix}help <nom de la commande>"`)
+				message.channel.send(`Liste des commandes disponibles pour vous:\`\`\`${descriptions}\`\`\`\n\nPour obtenir de l'aide sur une commande, entrez "${config.prefix}help <nom de la commande>"`)
 					.then(resolve)
 					.catch(reject);
 			});
