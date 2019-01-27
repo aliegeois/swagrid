@@ -882,7 +882,9 @@ client.on('voiceStateUpdate', (oldmember, newmember) => { // Update packages
 				if(newvoice.id == '520211457481113610')
 					newmember.addRole('520210711767678977');
 				if(newvoice.id == '539072415704154132') {
+					newmember.addRole('539072415704154132');
 					setTimeout(() => {
+						newmember.removeRole('539072415704154132');
 						newmember.setVoiceChannel(oldvoice);
 					}, 10000);
 				}
