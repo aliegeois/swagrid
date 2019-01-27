@@ -34,7 +34,7 @@ class Command {
 		 * @type {Permission}
 		 * @private
 		 */
-		this.__permission__ = Permission.basic;
+		this.__permission__ = 'basic';
 	}
 
 	/**
@@ -61,13 +61,14 @@ class Command {
 		 * @param {...string} args
 		 */
 		this.execute = (source, ...args) => {
+			//console.log('execution of ' + command + ' with arguments [' + args + '] and permission ' + Permission[this.__permission__]);
 			return new Promise((resolve, reject) => {
-				if(this.__permission__.checkPermission(source.message.member)) {
+				if(Permission[this.__permission__].checkPermission(source.message.member)) {
 					command(source, ...args)
 						.then(resolve)
 						.catch(reject);
 				} else {
-					reject(new Error('permission insuffisante'));
+					reject(new Command.InsufficientPermissionError(command.name));
 				}
 			});
 		};
@@ -150,10 +151,16 @@ class Command {
 			description: this.__description__,
 			literals: this.__literals__,
 			argument: this.__argument__,
-			permission: this.__permission__
+			permission: Permission[this.__permission__]
 		};
 	}
 }
+
+Command.InsufficientPermissionError = class InsufficientPermissionError extends Error {
+	constructor(name) {
+		super(`Insufficient permission for command ${name}`);
+	}
+};
 
 /** @class */
 class Literal extends Command {
@@ -294,7 +301,7 @@ class CommandDispatcher {
 		}
 		args.push(str);
 
-		return this.__dispatch(source, args);
+		return this.__dispatch__(source, args);
 	}
 
 	/**
@@ -302,7 +309,7 @@ class CommandDispatcher {
 	 * @param {string[]} args 
 	 * @private
 	 */
-	__dispatch(source, args) {
+	__dispatch__(source, args) {
 		if(args.length > 0) {
 			/** @type {string} */
 			let name = args.shift();
@@ -406,26 +413,17 @@ function argument(name, restString = false) {
 	return new Argument(name, restString);
 }
 
-/**
- * @callback permissionCallback
- * @param {any} verifiable l'object sur lequel on vérifie la permission
- * @returns {boolean}
- */
-
 /** @class */
 class Permission {
-	/**
-	 * @param {permissionCallback} check
-	 */
 	constructor(check) {
-		/** @type {permissionCallback} */
+		/** @type {function(any): boolean} */
 		this.checkPermission = check;
 	}
 }
 
 Permission.basic = new Permission(() => true);
 
-
+/*
 let dispatcher = new CommandDispatcher();
 
 dispatcher.register(
@@ -468,7 +466,7 @@ dispatcher.register(
 		})
 		.description('')
 );
-/*
+
 // Tests
 let source = {
 	message: {

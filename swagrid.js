@@ -1,5 +1,6 @@
 /* jshint -W061 */
 /* jshint -W083 */
+// glitch: node v10.15.0, npm 6.4.1
 
 /** @type {boolean} */
 const local = typeof process.env.TOKEN === 'undefined';
@@ -33,14 +34,14 @@ var sequelize;
 /** @type {Sequelize.Model} */
 var Emoji;
 
-Permission.expert = new Permission();
+Permission.expert = new Permission(user => user.id === config.owner);
 const dispatcher = new CommandDispatcher();
 
 dispatcher.register(
 	literal('say')
 		.then(
 			argument('message', true)
-				.executes((source, args) => {
+				.executes((source, ...args) => {
 					return new Promise((resolve, reject) => {
 						source.message.delete()
 							.then(() => {
@@ -51,7 +52,7 @@ dispatcher.register(
 							.catch(reject);
 					});
 				})
-				.permission(Permission.advanced)
+				.permission('advanced')
 				.description('Fait dire des choses à Swagrid')
 		)
 );
@@ -60,7 +61,7 @@ dispatcher.register(
 	literal('tts')
 		.then(
 			argument('message', true)
-				.executes((source, args) => {
+				.executes((source, ...args) => {
 					return new Promise((resolve, reject) => {
 						source.message.delete()
 							.then(() => {
@@ -71,7 +72,7 @@ dispatcher.register(
 							.catch(_=>{});
 					});
 				})
-				.permission(Permission.advanced)
+				.permission('advanced')
 				.description('Comme "say" mais avec du tts en plus')
 		)
 );
@@ -126,7 +127,7 @@ dispatcher.register(
 	literal('play')
 		.then(
 			argument('keywords', true)
-				.executes((source, keywords) => {
+				.executes((source, ...keywords) => {
 					return new Promise((resolve, reject) => {
 						/** @type {Discord.Message} */
 						let message = source.message;
@@ -260,7 +261,7 @@ dispatcher.register(
 	literal('danbooru')
 		.then(
 			argument('keywords', true)
-				.executes((source, keywords) => {
+				.executes((source, ...keywords) => {
 					return new Promise((resolve, reject) => {
 						request(`https://danbooru.donmai.us/posts.json?tags=${keywords.join(' ')}&limit=1&random=true`)
 							.then(result => {
@@ -342,7 +343,7 @@ dispatcher.register(
 						}
 					});
 				})
-				.permission(Permission.advanced)
+				.permission('advanced')
 				.description('Vire une personne du vocal')
 		)
 );
@@ -426,7 +427,7 @@ dispatcher.register(
 	literal('eval')
 		.then(
 			argument('command', true)
-				.executes((_, command) => {
+				.executes((_, ...command) => {
 					return new Promise((resolve, reject) => {
 						try {
 							eval(command.join(' '));
@@ -436,7 +437,7 @@ dispatcher.register(
 						}
 					});
 				})
-				.permission(Permission.expert)
+				.permission('expert')
 		)
 );
 
@@ -444,12 +445,12 @@ dispatcher.register(
 	literal('resetdb')
 		.then(
 			argument('databases', true)
-				.executes((message, databases) => {
+				.executes((source, ...databases) => {
 					return new Promise((resolve, reject) => {
 						resolve();
 					});
 				})
-				.permission(Permission.expert)
+				.permission('expert')
 		)
 );
 
@@ -599,13 +600,15 @@ client.on('ready', _ => {
 	client.user.setActivity('de la magie', {type: 'WATCHING'});
 
 	for(let [id, guild] of client.guilds) {
+		//console.log('check config for ' + guild.name);
 		let guildConfig = config.guilds[id];
 
 		if(guildConfig === undefined)
 			continue;
 		if(typeof guildConfig.permissions !== 'object' || !(Symbol.iterator in guildConfig.permissions))
 			continue;
-		
+		//console.log('config found');
+
 		for(let perm of guildConfig.permissions) {
 			if(typeof perm.name !== 'string' || typeof perm.roleId !== 'string')
 				continue;
@@ -613,6 +616,7 @@ client.on('ready', _ => {
 				continue;
 			if(!guild.roles.has(perm.roleId))
 				continue;
+			//console.log('checking permission ' + perm.name);
 			
 			Permission[perm.name] = new Permission(user => {
 				let role = guild.roles.get(perm.roleId);
@@ -623,6 +627,8 @@ client.on('ready', _ => {
 			});
 		}
 	}
+
+	//console.log(Permission);
 
 	console.info('Prêt à défoncer des mères');
 });
@@ -638,17 +644,13 @@ client.on('message', message => {
 		//countEmojis(message);
 		return;
 	}
-	
-	/** @type {string[]} */
-	//let args = message.content.slice(config.prefix.length).trim().split(/ +/g);
-	/** @type {string} */
-	//let name = args.shift().toLowerCase();
-	
-	//Command.execute(name, message, args).catch(err => console.error(err));
 
-	dispatcher.parse({ message: message }, content.slice(config.prefix.length).trim())
+	let command = content.slice(config.prefix.length);
+	//console.log('parse command "' + command + '"');
+
+	dispatcher.parse({ message: message }, command)
 		.catch(err => {
-			message.channel.send('```reject: ' + err + '```');
+			message.channel.send('```' + err + '```');
 			throw err;
 		});
 });
