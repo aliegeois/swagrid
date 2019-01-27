@@ -881,6 +881,11 @@ client.on('voiceStateUpdate', (oldmember, newmember) => { // Update packages
 			} else {
 				if(newvoice.id == '520211457481113610')
 					newmember.addRole('520210711767678977');
+				if(newvoice.id == '539072415704154132') {
+					setTimeout(() => {
+						newmember.setVoiceChannel(oldvoice);
+					}, 10000);
+				}
 			}
 		} else {
 			// update genre mute/demute
