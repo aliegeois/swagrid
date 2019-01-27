@@ -1,49 +1,40 @@
+/* jshint -W083 */
+
 //const Permission = require('./permission');
 
 /**
- * 
- * @class */
+ * @class
+ */
 class Command {
 	/** @param {string} name Nom de la commande */
 	constructor(name) {
 		/** @type {string} */
 		this.name = name;
 		/**
-		 * @type {Map.<string, LiteralCommand>}
+		 * @type {Map.<string, Command>}
 		 * @private
 		 */
-		this.__literals = new Map();
+		this.__literals__ = new Map();
 		/**
-		 * @type {?ArgumentCommand}
+		 * @type {?Argument}
 		 * @private
 		 */
-		this.__argument = null;
+		this.__argument__ = null;
 		/**
 		 * @type {boolean}
 		 * @private
 		 */
-		this.__canBeLast = false;
+		this.__executable__ = false;
 		/**
 		 * @type {string}
 		 * @private
 		 */
-		this.__description = '(aucune description disponible)';
+		this.__description__ = '(aucune description disponible)';
 		/**
 		 * @type {Permission}
 		 * @private
 		 */
-		this.__permission = Permission.basic;
-	}
-
-	/**
-	 * @param {any} source
-	 * @param {string[]} args
-	 * @returns {Promise<void>}
-	 */
-	execute(source, args) {
-		return new Promise((resolve, reject) => {
-			resolve();
-		});
+		this.__permission__ = Permission.basic;
 	}
 
 	/**
@@ -51,30 +42,28 @@ class Command {
 	 * @returns {this}
 	 */
 	then(command) {
-		if(command instanceof LiteralCommand) {
-			this.__literals.set(command.name, command);
-		} else if(command instanceof ArgumentCommand) {
-			this.__argument = command;
+		if(command instanceof Literal) {
+			this.__literals__.set(command.name, command);
+		} else if(command instanceof Argument) {
+			this.__argument__ = command;
 		}
-		this.__last = false;
 
 		return this;
 	}
 
 	/**
 	 * What appens when you execute the command
-	 * @param {function(source, ...string): Promise<void>} command La commande à exécuter
+	 * @param {function(any, ...string): Promise<void>} command La commande à exécuter
 	 * @returns {this}
 	 */
 	executes(command) {
 		/**
-		 * @type {function(source: any, args: string[]): void}
-		 * @private
+		 * @param {...string} args
 		 */
-		this.execute = (source, args) => {
+		this.execute = (source, ...args) => {
 			return new Promise((resolve, reject) => {
-				if(this.__permission.checkPermission(source.message.member)) {
-					command(source, args)
+				if(this.__permission__.checkPermission(source.message.member)) {
+					command(source, ...args)
 						.then(resolve)
 						.catch(reject);
 				} else {
@@ -82,7 +71,7 @@ class Command {
 				}
 			});
 		};
-		this.__canBeLast = true;
+		this.__executable__ = true;
 
 		return this;
 	}
@@ -93,7 +82,7 @@ class Command {
 	 * @returns {this}
 	 */
 	permission(perm) {
-		this.__permission = perm;
+		this.__permission__ = perm;
 
 		return this;
 	}
@@ -104,70 +93,70 @@ class Command {
 	 * @returns {this}
 	 */
 	description(text) {
-		this.__description = text;
+		this.__description__ = text;
 
 		return this;
 	}
 
 	/**
-	 * @returns {Map.<string, LiteralCommand>}
+	 * @returns {Map.<string, Command>}
 	 */
 	get literals() {
-		return this.__literals;
+		return this.__literals__;
 	}
 
 	/**
-	 * @returns {ArgumentCommand}
+	 * @returns {Argument}
 	 */
 	get argument() {
-		return this.__argument;
+		return this.__argument__;
 	}
 
 	/** @param {string} name */
 	hasSubCommand(name) {
-		return this.__literals.has(name);
+		return this.__literals__.has(name);
 	}
 
 	/** @param {string} name */
 	getSubCommand(name) {
-		return this.__literals.get(name);
+		return this.__literals__.get(name);
 	}
 
 	/** @returns {boolean} */
 	hasArgument() {
-		return this.__argument !== null;
+		return this.__argument__ !== null;
 	}
 
 	/**
 	 * Retourne l'argument suivant
-	 * @return {ArgumentCommand}
+	 * @return {Argument}
 	 */
 	getArgument() {
-		return this.__argument;
+		return this.__argument__;
 	}
 
 	/**
 	 * Indique si cette commande peut être exécutée toute seule
 	 * @returns {boolean}
 	 */
-	canBeLast() {
-		return this.__canBeLast;
+	isExecutable() {
+		return this.__executable__;
 	}
 
 	get infos() {
 		return {
 			name: this.name,
-			executable: this.__canBeLast,
-			description: this.__description,
-			literals: this.__literals,
-			argument: this.__argument,
-			permission: this.__permission
+			executable: this.__executable__,
+			description: this.__description__,
+			literals: this.__literals__,
+			argument: this.__argument__,
+			permission: this.__permission__
 		};
 	}
 }
 
 /** @class */
-class LiteralCommand extends Command {
+class Literal extends Command {
 	/**
 	 * @param {string} name
 	 */
@@ -177,7 +166,7 @@ class LiteralCommand extends Command {
 }
 
 /** @class */
-class ArgumentCommand extends Command {
+class Argument extends Command {
 	/**
 	 * @param {string} name 
 	 * @param {boolean} [restString=false]
@@ -185,13 +174,13 @@ class ArgumentCommand extends Command {
 	constructor(name, restString = false) {
 		super(name);
 		/** @type {boolean} */
-		//this.__restString = restString;
-		this.__restString = restString = restString === undefined ? false : restString;
+		this.__restString__ = restString;
+		//this.__restString = restString = restString === undefined ? false : restString;
 	}
 
 	/** @returns {boolean} */
 	isRestString() {
-		return this.__restString;
+		return this.__restString__;
 	}
 }
 
@@ -201,26 +190,70 @@ class CommandDispatcher {
 		 * @type {Map.<string, Command>}
 		 * @private
 		 */
-		this.__commands = new Map();
+		this.__commands__ = new Map();
 	}
 
 	/** @returns {Map<string, Command>} */
 	get commands() {
 		let cmds = new Map();
-		for(let [name, command] of this.__commands)
+		for(let [name, command] of this.__commands__)
 			cmds.set(name, command.infos);
 		return cmds;
 	}
 
 	/**
 	 * Enregistre une nouvelle commande
-	 * @param {LiteralCommand} command Commande à ajouter
+	 * @param {Command} command Commande à ajouter
 	 * @throws {Error} si la commande est déjà enregistrée
 	 */
 	register(command) { // Rajouter la permission
-		if(this.__commands.has(command.name))
-			throw new Error('Command already registered');
-		this.__commands.set(command.name, command);
+		if(command instanceof Argument)
+			throw new Error('Can\'t register an argument as a command');
+		
+		if(this.__commands__.has(command.name))
+			throw new CommandDispatcher.CommandAlreadyRegisteredError(command.name);
+		this.__commands__.set(command.name, command);
+
+		/*console.log(command);
+
+		console.log(`ajout commande ${command.name}, executable: ${command.isExecutable()}`);
+
+		let usages = [];
+		if(command.literals.size) {
+			console.log(command.name + ' has ' + command.literals.size + ' sub command(s): [' + Array.from(command.literals).map(([n, c]) => n + ': ' + (c instanceof Argument ? 'argument' : 'literal')) + ']');
+			let sub = Array.from(command.literals);
+			let depth = Array.from(command.literals).map(() => 0);
+			let usg = Array.from(command.literals).map(([n]) => command.name + ' {literal:' + n + ',executable:' + command.isExecutable() + '}');
+			
+			while(sub.length) {
+				let [n, c] = sub.shift();
+				let d = depth.shift();
+				let u = usg.shift();
+				console.log('sub command ' + n + ', executable: ' + c.isExecutable());
+				if(c.literals.size) {
+					sub = sub.concat(Array.from(c.literals));
+					depth = depth.concat(Array.from(c.literals).map(() => d+1));
+					usages = usages.concat(Array.from(c.literals).map(([n]) => u + ' {literal:' + n + ',executable:' + c.isExecutable() + '}'));
+				}
+				if(c.argument) {
+					sub.push(c.argument);
+					depth.push(d+1);
+					usages.push(u + ' {argument:' + n + ',executable:' + c.isExecutable() + '}');
+				}
+			}
+		}
+		if(command.argument) {
+			let cmd = command.argument;
+			let usg = [command.name + ' {argument:' + cmd.name + '}'];
+			while(cmd) {
+				if(cmd.argument) {
+					usages.push(usg.shift() + ' {argument:' + cmd.name + ',executable:' + cmd.isExecutable() + '}');
+					console.log(cmd.name + 'has argument: ' + cmd.argument + ', executable: ' + cmd.isExecutable());
+					cmd = cmd.argument;
+				}
+			}
+		}
+		console.log('register [' + usages + ']');*/
 	}
 
 	/**
@@ -230,7 +263,7 @@ class CommandDispatcher {
 	 */
 	parse(source, cmd) {
 		if(typeof cmd !== 'string')
-			throw new TypeError();
+			throw new TypeError(`Expected string, got ${typeof cmd}`);
 		
 		cmd = cmd.trim();
 		/** @type {string[]} */
@@ -273,65 +306,104 @@ class CommandDispatcher {
 		if(args.length > 0) {
 			/** @type {string} */
 			let name = args.shift();
+			//console.log('name: ' + name);
 			/** @type {string[]} */
 			let totalArgs = [];
-			if(this.__commands.has(name)) {
-				let command = this.__commands.get(name);
+			if(this.__commands__.has(name)) {
+				//console.log('command ' + name + ' exists');
+				let command = this.__commands__.get(name);
 
 				while(args.length) {
-					if(command instanceof LiteralCommand) {
+					//console.log('next arg: ' + args[0]);
+					if(command instanceof Literal) {
+						//console.log('literal: ' + command.name);
 						let arg = args.shift();
 						totalArgs = [arg];
 						if(command.hasSubCommand(arg)) {
+							//console.log('sub command ' + arg + ' exists');
 							command = command.getSubCommand(arg);
 						} else if(command.hasArgument()) {
+							//console.log('has argument');
 							command = command.getArgument();
 						} else {
-							throw new Error('Too many arguments');
+							throw new CommandDispatcher.TooManyArgumentsError(name);
 						}
-					} else if(command instanceof ArgumentCommand) {
+					} else if(command instanceof Argument) {
+						//console.log('argument: ' + command.name);
 						if(command.isRestString()) {
 							totalArgs = totalArgs.concat(args.splice(0));
 						} else if(command.hasArgument()) {
+							//console.log('it has an argument');
 							command = command.getArgument();
 							totalArgs.push(args.shift());
 						} else {
 							console.log('???');
 						}
+					} else {
+						console.log('??????????????????????');
 					}
+					//console.log('remaining args: [' + args + ']');
 				}
-				if(!command.canBeLast()) {
-					throw new Error('Missing arguments');
+				if(!command.isExecutable()) {
+					throw new CommandDispatcher.MissingArgumentError(name);
 				}
 
-				//console.log(`Exécution de ${command.name} avec ${cmdArgs.length} argument${cmdArgs.length == 1 ? '' : 's'}: ${cmdArgs}`);
+				//console.log(`Exécution de ${command.name} avec ${totalArgs.length} argument${totalArgs.length == 1 ? '' : 's'}: [${totalArgs}]`);
 
 				if(totalArgs.length)
-					return command.execute(source, totalArgs);
+					return command.execute(source, ...totalArgs);
 				else
 					return command.execute(source);
 			} else
-				throw new Error(`Unknown command ${name}`);
+				throw new CommandDispatcher.UnknownCommandError(name);
 		} else
-			throw new Error('No command');
+			throw new CommandDispatcher.EmptyCommandError();
 	}
 }
 
+CommandDispatcher.EmptyCommandError = class EmptyCommandError extends Error {
+	constructor() {
+		super('Empty command');
+	}
+};
+
+CommandDispatcher.UnknownCommandError = class UnknownCommandError extends Error {
+	constructor(name) {
+		super(`Unknown command ${name}`);
+	}
+};
+
+CommandDispatcher.MissingArgumentError = class MissingArgumentError extends Error {
+	constructor(name) {
+		super(`Missing argument(s) for command ${name}`);
+	}
+};
+
+CommandDispatcher.TooManyArgumentsError = class TooManyArgumentsError extends Error {
+	constructor(name) {
+		super(`Too many argument(s) for command ${name}`);
+	}
+};
+
+CommandDispatcher.CommandAlreadyRegisteredError = class CommandAlreadyRegisteredError extends Error {
+	constructor(name) {
+		super(`Command ${name} already registered`);
+	}
+};
+
 /**
- * 
  * @param {string} name
  */
 function literal(name) {
-	return new LiteralCommand(name);
+	return new Literal(name);
 }
 
 /**
- * 
  * @param {string} name
  * @param {string} [restString=false]
  */
 function argument(name, restString = false) {
-	return new ArgumentCommand(name, restString);
+	return new Argument(name, restString);
 }
 
 /**
@@ -353,7 +425,7 @@ class Permission {
 
 Permission.basic = new Permission(() => true);
 
-/*
+
 let dispatcher = new CommandDispatcher();
 
 dispatcher.register(
@@ -363,35 +435,50 @@ dispatcher.register(
 				.then(
 					argument('baz')
 						.executes((_, bar, baz) => {
-							console.log(`foo ${bar} ${baz}`);
-							return `foo ${bar} ${baz}`;
+							return new Promise((resolve, reject) => {
+								//console.log(`ouioui la fonction: foo "${bar}" "${baz}"`);
+								resolve(`"foo ${bar} ${baz}"`);
+							});
 						})
 				)
-				.executes(c => {
-					console.log(`foo ${c}`);
-					return `foo ${c}`;
+				.executes((_, bar) => {
+					return new Promise((resolve, reject) => {
+						//console.log(`ouioui la fonction: foo ${bar}`);
+						resolve(`"foo ${bar}"`);
+					});
 				})
 		)
 		.then(
 			literal('blyat')
 				.then(
-					argument('bite', true).executes((_, ...bite) => {
-						console.log(`foo blyat [${bite}]`);
-						return `foo blyat [${bite}]`;
-					})
+					argument('bite', true)
+						.executes((_, ...bite) => {
+							return new Promise((resolve, reject) => {
+								//console.log(`ouioui la fonction: foo blyat [${bite}]`);
+								resolve(`"foo blyat [${bite}]"`);
+							});
+						})
 				)
 		)
 		.executes(_ => {
-			console.log('foo');
-			return 'foo';
+			return new Promise((resolve, reject) => {
+				//console.log('ouioui la fonction: foo');
+				resolve('"foo"');
+			});
 		})
 		.description('')
 );
-
+/*
 // Tests
-console.info('foo' === dispatcher.parse({}, 'foo')); // OK
-console.info('foo 123 456' === dispatcher.parse({}, 'foo 123 456')); // OK
-console.info('foo blyat [a,b,c]' === dispatcher.parse({}, 'foo blyat a b c')); // OK
+let source = {
+	message: {
+		member: null
+	}
+};
+dispatcher.parse(source, 'foo').then(console.log).catch(console.error);
+dispatcher.parse(source, 'foo aya').then(console.log).catch(console.error);
+dispatcher.parse(source, 'foo 123 456').then(console.log).catch(console.error);
+dispatcher.parse(source, 'foo blyat a b c').then(console.log).catch(console.error);
 */
 
-module.exports = {Permission, CommandDispatcher, literal, argument};
+module.exports = { Permission, CommandDispatcher, literal, argument };

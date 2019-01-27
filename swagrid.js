@@ -1,4 +1,5 @@
 /* jshint -W061 */
+/* jshint -W083 */
 
 /** @type {boolean} */
 const local = typeof process.env.TOKEN === 'undefined';
@@ -302,6 +303,51 @@ dispatcher.register(
 );
 
 dispatcher.register(
+	literal('delete')
+		.then(
+			argument('name')
+				.executes((source, name) => {
+					return new Promise((resolve, reject) => {
+						/** @type {Discord.Message} */
+						let message = source.message;
+
+						if(name.match(/<@![0-9]+>/g) instanceof Array) {
+							let member = message.member.voiceChannel.members.get(name.slice(3, -1));
+
+							if(member !== undefined) {
+								if(message.member.voiceChannelID != member.voiceChannelID) {
+									message.reply('Vous devez être dans le même channel vocal que la personne à virer')
+										.then(resolve)
+										.catch(reject);
+								} else {
+									message.guild.createChannel('SUCC', 'voice')
+										.then(channel => {
+											member.setVoiceChannel(message.member.voiceChannel)
+												.then(() => {
+													channel.delete()
+														.then(resolve)
+														.catch(reject);
+												}).catch(reject);
+										}).catch(reject);
+								}
+							} else {
+								message.reply('Membre inconnu')
+									.then(resolve)
+									.catch(reject);
+							}
+						} else {
+							message.reply('Nom invalide')
+								.then(resolve)
+								.catch(reject);
+						}
+					});
+				})
+				.permission(Permission.advanced)
+				.description('Vire une personne du vocal')
+		)
+);
+
+dispatcher.register(
 	literal('emojipopularity')
 		.executes((source, keyword) => {
 			return new Promise((resolve, reject) => {
@@ -500,8 +546,18 @@ dispatcher.register(
 					while(exploration.length > 0) {
 						let exp = exploration.shift();
 
-						if(exp.command.executable && exp.command.permission.checkPermission(message.member)) {
+						if(exp.command.executable) {
 							console.log(`command exécutable trouvée: ${exp.usage}`);
+							if(exp.command.permission.checkPermission(message.member)) {
+								console.log('\tpermission accordée');
+							} else {
+								console.log('\tpas de permission :\'(');
+							}
+						} else {
+							console.log(`command non exécutable: ${exp.usage}`);
+						}
+						if(exp.command.executable && exp.command.permission.checkPermission(message.member)) {
+							//console.log(`command exécutable trouvée: ${exp.usage}`);
 							descHelp += `\n- "${config.prefix}${exp.usage}": ${exp.command.description}`;
 						}
 
@@ -673,8 +729,17 @@ client.on('voiceStateUpdate', (oldmember, newmember) => { // Update packages
 				// Swagrid a été déplacé
 				Music.voiceChannel = newvoice;
 			} else {
-				if(newvoice.id == '520211457481113610')
+				// Quelqu'un d'autre est déplacé
+				if(newvoice.id == '520211457481113610') {
 					newmember.addRole('520210711767678977');
+				}
+				if(newvoice.id == '539072415704154132') {
+					newmember.addRole('520210711767678977');
+					setTimeout(() => {
+						newmember.removeRole('520210711767678977');
+						newmember.setVoiceChannel(oldvoice);
+					}, 10000);
+				}
 			}
 		} else {
 			// update genre mute/demute
