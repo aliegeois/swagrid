@@ -499,7 +499,17 @@ dispatcher.register(
 						/** @type {Discord.Message} */
 						
 						let message = source.message;
-						command = dispatcher.commands.get(command);
+						if(dispatcher.commands.has(command)) {
+							command = dispatcher.commands.get(command);
+							message.channel.send(`-- Aide pour la commande ${command.name} --\n${command.getUsages(config.prefix).map(({ usage, description }) => usage + ': ' + description).join('\n')}`)
+								.then(resolve)
+								.catch(reject);
+						} else {
+							message.reply(`commande inconnue: "${command}"`)
+								.then(resolve)
+								.catch(reject);
+						}
+						
 
 						/*let command = dispatcher.commands.get(commandName);
 						if(command !== undefined) {
@@ -543,9 +553,7 @@ dispatcher.register(
 								.catch(reject);
 						}*/
 
-						message.channel.send(`-- Aide pour la commande ${command.name} --\n${command.getUsages(config.prefix).map(({ usage, description }) => usage + ': ' + description).join('\n')}`)
-							.then(resolve)
-							.catch(reject);
+						
 
 						/*
 						let command = dispatcher.commands.get(commandName);
