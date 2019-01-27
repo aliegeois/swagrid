@@ -313,14 +313,17 @@ dispatcher.register(
 						let message = source.message;
 						console.log('names: [' + name + ']');
 
-						let members = message.mentions.members;
-						let deletable = [];
-
-						for(let member of members) {
+						/*for(let member of members.values()) {
 							let guildMember = message.member.voiceChannel.members.get(member.id);
 							if(guildMember !== undefined && message.member.voiceChannelID === guildMember.voiceChannelID)
 								deletable.push(guildMember);
-						}
+						}*/
+						
+						let deletable = Array.from(message.mentions.members.values()).filter(member => {
+							let guildMember = message.member.voiceChannel.members.get(member.id);
+							if(guildMember !== undefined && message.member.voiceChannelID === guildMember.voiceChannelID)
+								return guildMember;
+						});
 
 						if(deletable.length) {
 							message.guild.createChannel('SUCC', 'voice')
@@ -573,13 +576,14 @@ dispatcher.register(
 					descriptions.push(command.getUsages(config.prefix).map(({ usage, description }) => usage + ': ' + description).join('\n'));*/
 
 				let descriptions = Array.from(dispatcher.commands.values())
+					.filter(command =>Permission[command.getPermission()].checkPermission(message.member))
 					.map(command => command.getUsages(config.prefix)
 						.map(({ usage, description }) => usage + ': ' + description)
 						.join('\n'))
 					.join('\n')
 				;
 
-				message.channel.send(`Liste des commandes disponibles pour vous:\`\`\`${descriptions}\`\`\`\n\nPour obtenir de l'aide sur une commande, entrez "${config.prefix}help <nom de la commande>"`)
+				message.channel.send(`Liste des commandes disponibles pour vous:\`\`\`${descriptions}\`\`\`Pour obtenir de l'aide sur une commande, entrez "${config.prefix}help <nom de la commande>"`)
 					.then(resolve)
 					.catch(reject);
 			});
