@@ -9,7 +9,7 @@ module.exports = class Music {
 		 * @type {music[]}
 		 * @private
 		 */
-		this.__musics = [];
+		this.__musics__ = [];
 		/** @type {?Discord.VoiceChannel} */
 		this.voiceChannel = null;
 		/** @type {?Discord.VoiceConnection} */
@@ -18,17 +18,17 @@ module.exports = class Music {
 		 * @type {string}
 		 * @private
 		 */
-		this.__status = 'stop';
+		this.__status__ = 'stop';
 		/**
 		 * @type {?Discord.StreamDispatcher}
 		 * @private
 		 */
-		this.__dispatcher = null;
+		this.__dispatcher__ = null;
 		/**
 		 * @type {music}
 		 * @private
 		 */
-		this.__playing = null;
+		this.__playing__ = null;
 	}
 
 	/**
@@ -37,58 +37,59 @@ module.exports = class Music {
 	 * @param {string} title Le titre de la vidéo
 	 */
 	add(url, title) {
-		this.__musics.push({url: url, title: title});
-		if(this.__status == 'stop')
+		this.__musics__.push({url: url, title: title});
+		if(this.__status__ == 'stop')
 			this._play();
 	}
 
 	/** @private */
 	_play() {
 		/** @type {music} */
-		let song = this.__musics.shift();
-		this.__status = 'play';
-		this.__playing = song;
-		this.__dispatcher = this.voiceConnection.playStream(ytdl(song.url, {
+		let song = this.__musics__.shift();
+		this.__status__ = 'play';
+		this.__playing__ = song;
+		this.__dispatcher__ = this.voiceConnection.playStream(ytdl(song.url, {
 			seek: 0,
 			volume: 1
 		}));
-		this.__dispatcher.on('end', reason => {
-			if(this.__musics.length) {
+		this.__dispatcher__.on('end', reason => {
+			console.log(`music ended with reason "${reason}"`);
+			if(this.__musics__.length) {
 				this._play();
 			} else {
-				this.__status = 'stop';
-				this.__playing = null;
+				this.__status__ = 'stop';
+				this.__playing__ = null;
 			}
 		});
 	}
 	
 	/** Annule la dernière action */
 	cancel() {
-		if(this.__status == 'play') {
-			if(this.__musics.length) {
-				this.__musics.pop();
+		if(this.__status__ == 'play') {
+			if(this.__musics__.length) {
+				this.__musics__.pop();
 			} else {
-				this.__status = 'stop';
-				this.__playing = null;
-				this.__dispatcher.end();
+				this.__status__ = 'stop';
+				this.__playing__ = null;
+				this.__dispatcher__.end();
 			}
 		}
 	}
 	
 	/** Passe la vidéo en cours de lecture */
 	skip() {
-		if(this.__status == 'play')
-			this.__dispatcher.end('_');
-		if(this.__musics.length)
+		if(this.__status__ == 'play')
+			this.__dispatcher__.end('_');
+		if(this.__musics__.length)
 			this._play();
 	}
 	
 	/** Stoppe la vidéo en cours de lecture */
 	stop() {
-		this.__status = 'stop';
-		this.__playing = null;
-		this.__dispatcher.end('_');
-		this.__musics = [];
+		this.__status__ = 'stop';
+		this.__playing__ = null;
+		this.__dispatcher__.end('_');
+		this.__musics__ = [];
 	}
 
 	/**
@@ -96,7 +97,7 @@ module.exports = class Music {
 	 * @returns {string}
 	 */
 	get playing() {
-		return this.__playing.title;
+		return this.__playing__.title;
 	}
 	
 	/**
@@ -105,8 +106,10 @@ module.exports = class Music {
 	 */
 	get playlist() {
 		/** @type {music[]} */
-		let musicNames = Array.from(this.__musics);
-		musicNames.push(this.__playing);
+		let musicNames = Array.from(this.__musics__);
+
+		musicNames.push(this.__playing__);
+
 		return musicNames.reduce(el => `${el.title}\n`);
 	}
 };

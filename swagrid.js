@@ -306,14 +306,46 @@ dispatcher.register(
 dispatcher.register(
 	literal('delete')
 		.then(
-			argument('name')
-				.executes((source, name) => {
+			argument('name', true)
+				.executes((source, ...name) => {
 					return new Promise((resolve, reject) => {
 						/** @type {Discord.Message} */
 						let message = source.message;
-						console.log('name: ' + name);
+						console.log('names: [' + name + ']');
 
-						if(name.match(/<@[0-9]+>/g) instanceof Array) {
+						let members = message.mentions.members;
+						let deletable = [];
+
+						for(let member of members) {
+							let guildMember = message.member.voiceChannel.members.get(member.id);
+							if(guildMember !== undefined && message.member.voiceChannelID === guildMember.voiceChannelID)
+								deletable.push(guildMember);
+						}
+
+						if(deletable.length) {
+							message.guild.createChannel('SUCC', 'voice')
+								.then(channel => {
+									let remaining = deletable.length;
+									for(let member of deletable) {
+										member.setVoiceChannel(channel)
+											.then(() => {
+												remaining--;
+												if(remaining === 0) {
+													channel.delete()
+														.then(resolve)
+														.catch(reject);
+												}
+											}).catch(reject);
+									}
+								}).catch(reject);
+						} else {
+							message.reply('Personne à supprimer')
+								.then(resolve)
+								.catch(reject);
+						}
+						
+
+						/*if(name.match(/<@[0-9]+>/g) instanceof Array) {
 							let member = message.member.voiceChannel.members.get(name.slice(2, -1));
 
 							if(member !== undefined) {
@@ -341,7 +373,7 @@ dispatcher.register(
 							message.reply('Nom invalide')
 								.then(resolve)
 								.catch(reject);
-						}
+						}*/
 					});
 				})
 				.permission('advanced')
@@ -459,13 +491,13 @@ dispatcher.register(
 	literal('help')
 		.then(
 			argument('commandName')
-				.executes((source, commandName) => {
+				.executes((source, command) => {
 					return new Promise((resolve, reject) => {
 						/** @type {Discord.Message} */
-						/*
+						
 						let message = source.message;
 
-						let command = dispatcher.commands.get(commandName);
+						/*let command = dispatcher.commands.get(commandName);
 						if(command !== undefined) {
 							let descHelp = '';
 							let exploration = [{
@@ -507,8 +539,9 @@ dispatcher.register(
 								.catch(reject);
 						}*/
 
-						console.log(`help ${commandName}`);
-						resolve();
+						message.channel.send(`-- Aide pour la commande ${command.name} --\n${command.getUsages(config.prefix).map(({ usage, description }) => usage + ': ' + description).join('\n')}`)
+							.then(resolve)
+							.catch(reject);
 
 						/*
 						let command = dispatcher.commands.get(commandName);
@@ -534,71 +567,51 @@ dispatcher.register(
 
 				//let result = 'Liste des commandes disponibles pour vous:';
 
-				let descHelp = '';
+				let descHelp = 'Liste des commandes disponibles pour vous:\n';
 
 				for(let [cname, command] of dispatcher.commands) {
 					/*if(command.permission.checkPermission(source.message.member))
 						result += `\n${name}: ${command.description}`;*/
 
-					let exploration = [{
+					/*let exploration = [{
 						command: command,
 						usage: cname
 					}];
 
 					while(exploration.length > 0) {
 						let exp = exploration.shift();
-						//console.log('checking permission for command ' + exp.command.name + ': ' + exp.command.permission);
-						//console.log(Permission[exp.command.permission]);
 						let hasPermission = Permission[exp.command.permission].checkPermission(message.member);
 
-						if(exp.command.executable) {
-							//console.log(`command exécutable trouvée: ${exp.usage}`);
-							if(hasPermission) {
-								//console.log('\tpermission accordée');
-								//console.log(`command exécutable trouvée: ${exp.usage}`);
-								descHelp += `\n- "${config.prefix}${exp.usage}": ${exp.command.description}`;
-							} else {
-								//console.log('\tpas de permission :\'(');
-							}
-						} else {
-							//console.log(`command non exécutable: ${exp.usage}`);
-						}
+						if(exp.command.executable)
+							if(hasPermission)
+								descHelp += `\n${config.prefix}${exp.usage}: ${exp.command.description}`;
 
 						for(let [lname, lit] of exp.command.literals) {
-							//console.log(`exploration ${exp.usage} ${lname}`);
 							exploration.push({
 								command: lit.infos,
 								usage: exp.usage + ' ' + lname
 							});
 						}
 						if(exp.command.argument) {
-							//console.log(`argument ${exp.usage} ${exp.command.argument.name}`);
 							exploration.push({
 								command: exp.command.argument.infos,
-								usage: exp.usage + ' ' + exp.command.argument.name
+								usage: exp.usage + ' <' + exp.command.argument.name + '>'
 							});
 						}
-					}
+					}*/
+
+					descHelp += command.getUsages(config.prefix).map(({ usage, description }) => usage + ': ' + description).join('\n');
 				}
 
-				if(descHelp === '') {
-					reject('permission insuffisante pour voir cette commande');
-				} else {
-					message.channel.send(`Liste des commandes disponibles pour vous:${descHelp}`)
-						.then(resolve)
-						.catch(reject);
-				}
-				/*result += `\n\nPour obtenir de l'aide sur une commande, entrez "${config.prefix}help <nom de la commande>"`;
-
-				message.channel.send(result)
+				message.channel.send(`Liste des commandes disponibles pour vous:\`\`\`${descHelp}\`\`\`\n\nPour obtenir de l'aide sur une commande, entrez "${config.prefix}help <nom de la commande>"`)
 					.then(resolve)
-					.catch(reject);*/
+					.catch(reject);
 			});
 		})
 		.description('Affiche ce message d\'aide')
 );
 
-client.on('ready', _ => {
+client.on('ready', () => {
 	console.log('Initialisation de Swagrid...');
 	client.user.setActivity('de la magie', {type: 'WATCHING'});
 

@@ -8,8 +8,11 @@
 class Command {
 	/** @param {string} name Nom de la commande */
 	constructor(name) {
-		/** @type {string} */
-		this.name = name;
+		/**
+		 * @type {string}
+		 * @private
+		 */
+		this.__name__ = name;
 		/**
 		 * @type {Map.<string, Command>}
 		 * @private
@@ -43,7 +46,7 @@ class Command {
 	 */
 	then(command) {
 		if(command instanceof Literal) {
-			this.__literals__.set(command.name, command);
+			this.__literals__.set(command.__name__, command);
 		} else if(command instanceof Argument) {
 			this.__argument__ = command;
 		}
@@ -101,60 +104,133 @@ class Command {
 	}
 
 	/**
+	 * Name of the command
+	 * @returns {string}
+	 */
+	getName() {
+		return this.__name__;
+	}
+
+	/**
 	 * @returns {Map.<string, Command>}
 	 */
-	get literals() {
+	getLiterals() {
 		return this.__literals__;
 	}
 
 	/**
-	 * @returns {Argument}
+	 * @param {string} name 
+	 * @returns {boolean}
+	 *
 	 */
-	get argument() {
-		return this.__argument__;
-	}
-
-	/** @param {string} name */
-	hasSubCommand(name) {
+	hasLiteral(name) {
 		return this.__literals__.has(name);
 	}
 
-	/** @param {string} name */
-	getSubCommand(name) {
+	/**
+	 * 
+	 * @param {tring} name 
+	 * @returns {Literal}
+	 */
+	getLiteral(name) {
 		return this.__literals__.get(name);
 	}
 
-	/** @returns {boolean} */
+	/**
+	 * @returns {boolean}
+	 */
 	hasArgument() {
 		return this.__argument__ !== null;
 	}
 
 	/**
-	 * Retourne l'argument suivant
-	 * @return {Argument}
+	 * @returns {?Argument}
 	 */
 	getArgument() {
 		return this.__argument__;
 	}
 
 	/**
-	 * Indique si cette commande peut être exécutée toute seule
 	 * @returns {boolean}
 	 */
 	isExecutable() {
 		return this.__executable__;
 	}
 
-	get infos() {
+	/**
+	 * @returns {string}
+	 */
+	getDesciption() {
+		return this.__description__;
+	}
+
+	/**
+	 * @returns {string}
+	 */
+	getPermission() {
+		return this.__permission__;
+	}
+
+	/**
+	 * @param {string} prefix 
+	 * @returns {[{usage: string, description: string}]}
+	 */
+	getUsages(prefix) {
+		let exploration = [{
+			command: this,
+			usage: this.__name__
+		}];
+		let result = [];
+
+		while(exploration.length > 0) {
+			let { command, usage } = exploration.shift();
+
+			if(command.__executable__) {
+				result.push({
+					usage: `${prefix}${usage}`,
+					description: command.__description__
+				});
+			}
+
+			for(let [lname, lit] of command.__literals__) {
+				exploration.push({
+					command: lit,
+					usage: `${usage} ${lname}`
+				});
+			}
+			if(command.__argument__) {
+				exploration.push({
+					command: command.__argument__,
+					usage: `${usage} <${command.__argument__.__name__}>`
+				});
+			}
+		}
+
+		return result.sort((u1, u2) => u1.usage < u2.usage ? -1 : (u1.usage > u2.usage ? 1 : 0));
+	}
+
+	/*hasSubCommand(name) {
+		return this.__literals__.has(name);
+	}
+
+	getSubCommand(name) {
+		return this.__literals__.get(name);
+	}
+
+	hasArgument() {
+		return this.__argument__ !== null;
+	}*/
+
+	/*get infos() {
 		return {
-			name: this.name,
+			name: this.__name__,
 			executable: this.__executable__,
 			description: this.__description__,
 			literals: this.__literals__,
 			argument: this.__argument__,
 			permission: this.__permission__
 		};
-	}
+	}*/
 }
 
 Command.InsufficientPermissionError = class InsufficientPermissionError extends Error {
@@ -201,73 +277,34 @@ class Argument extends Command {
 class CommandDispatcher {
 	constructor() {
 		/**
-		 * @type {Map.<string, Command>}
+		 * @type {Map.<string, Literal>}
 		 * @private
 		 */
 		this.__commands__ = new Map();
 	}
 
-	/** @returns {Map<string, {name: string, executable: boolean, description: string, literals: Map.<string, Literal>, argument: ?Argument, permission: string}>} */
+	/** @returns {Map<string, Literal>} */
 	get commands() {
 		let cmds = new Map();
+
 		for(let [name, command] of this.__commands__)
-			cmds.set(name, command.infos);
+			cmds.set(name, command);
+		
 		return cmds;
 	}
 
 	/**
 	 * Enregistre une nouvelle commande
-	 * @param {Command} command Commande à ajouter
+	 * @param {Literal} command Commande à ajouter
 	 * @throws {Error} si la commande est déjà enregistrée
 	 */
 	register(command) { // Rajouter la permission
 		if(command instanceof Argument)
 			throw new Error('Can\'t register an argument as a command');
 		
-		if(this.__commands__.has(command.name))
-			throw new CommandDispatcher.CommandAlreadyRegisteredError(command.name);
-		this.__commands__.set(command.name, command);
-
-		/*console.log(command);
-
-		console.log(`ajout commande ${command.name}, executable: ${command.isExecutable()}`);
-
-		let usages = [];
-		if(command.literals.size) {
-			console.log(command.name + ' has ' + command.literals.size + ' sub command(s): [' + Array.from(command.literals).map(([n, c]) => n + ': ' + (c instanceof Argument ? 'argument' : 'literal')) + ']');
-			let sub = Array.from(command.literals);
-			let depth = Array.from(command.literals).map(() => 0);
-			let usg = Array.from(command.literals).map(([n]) => command.name + ' {literal:' + n + ',executable:' + command.isExecutable() + '}');
-			
-			while(sub.length) {
-				let [n, c] = sub.shift();
-				let d = depth.shift();
-				let u = usg.shift();
-				console.log('sub command ' + n + ', executable: ' + c.isExecutable());
-				if(c.literals.size) {
-					sub = sub.concat(Array.from(c.literals));
-					depth = depth.concat(Array.from(c.literals).map(() => d+1));
-					usages = usages.concat(Array.from(c.literals).map(([n]) => u + ' {literal:' + n + ',executable:' + c.isExecutable() + '}'));
-				}
-				if(c.argument) {
-					sub.push(c.argument);
-					depth.push(d+1);
-					usages.push(u + ' {argument:' + n + ',executable:' + c.isExecutable() + '}');
-				}
-			}
-		}
-		if(command.argument) {
-			let cmd = command.argument;
-			let usg = [command.name + ' {argument:' + cmd.name + '}'];
-			while(cmd) {
-				if(cmd.argument) {
-					usages.push(usg.shift() + ' {argument:' + cmd.name + ',executable:' + cmd.isExecutable() + '}');
-					console.log(cmd.name + 'has argument: ' + cmd.argument + ', executable: ' + cmd.isExecutable());
-					cmd = cmd.argument;
-				}
-			}
-		}
-		console.log('register [' + usages + ']');*/
+		if(this.__commands__.has(command.getName()))
+			throw new CommandDispatcher.CommandAlreadyRegisteredError(command.getName());
+		this.__commands__.set(command.getName(), command);
 	}
 
 	/**
@@ -333,9 +370,9 @@ class CommandDispatcher {
 						//console.log('literal: ' + command.name);
 						let arg = args.shift();
 						totalArgs = [arg];
-						if(command.hasSubCommand(arg)) {
+						if(command.hasLiteral(arg)) {
 							//console.log('sub command ' + arg + ' exists');
-							command = command.getSubCommand(arg);
+							command = command.getLiteral(arg);
 						} else if(command.hasArgument()) {
 							//console.log('has argument');
 							command = command.getArgument();
@@ -368,10 +405,12 @@ class CommandDispatcher {
 					return command.execute(source, ...totalArgs);
 				else
 					return command.execute(source);
-			} else
+			} else {
 				throw new CommandDispatcher.UnknownCommandError(name);
-		} else
+			}
+		} else {
 			throw new CommandDispatcher.EmptyCommandError();
+		}
 	}
 }
 
@@ -430,7 +469,7 @@ class Permission {
 
 Permission.basic = new Permission(() => true);
 
-/*
+
 let dispatcher = new CommandDispatcher();
 
 dispatcher.register(
@@ -445,6 +484,7 @@ dispatcher.register(
 								resolve(`"foo ${bar} ${baz}"`);
 							});
 						})
+						.description('le trio fbb')
 				)
 				.executes((_, bar) => {
 					return new Promise((resolve, reject) => {
@@ -452,6 +492,7 @@ dispatcher.register(
 						resolve(`"foo ${bar}"`);
 					});
 				})
+				.description('foo et du bar')
 		)
 		.then(
 			literal('blyat')
@@ -463,6 +504,7 @@ dispatcher.register(
 								resolve(`"foo blyat [${bite}]"`);
 							});
 						})
+						.description('foo puis blyat et des trucs')
 				)
 		)
 		.executes(_ => {
@@ -471,7 +513,7 @@ dispatcher.register(
 				resolve('"foo"');
 			});
 		})
-		.description('')
+		.description('foo tout seul')
 );
 
 // Tests
@@ -484,6 +526,7 @@ dispatcher.parse(source, 'foo').then(console.log).catch(console.error);
 dispatcher.parse(source, 'foo aya').then(console.log).catch(console.error);
 dispatcher.parse(source, 'foo 123 456').then(console.log).catch(console.error);
 dispatcher.parse(source, 'foo blyat a b c').then(console.log).catch(console.error);
-*/
+for(let l of dispatcher.__commands__.values())
+	console.log(l.getUsages('+'));
 
 module.exports = { Permission, CommandDispatcher, literal, argument };

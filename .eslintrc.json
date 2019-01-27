@@ -29,6 +29,9 @@
 		"no-console": [
 			"off"
 		],
+		"no-empty": [
+			"off"
+		],
 		"no-unused-vars": [
 			"off"
 		]
