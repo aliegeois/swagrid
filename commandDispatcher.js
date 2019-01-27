@@ -31,7 +31,7 @@ class Command {
 		 */
 		this.__description__ = '(aucune description disponible)';
 		/**
-		 * @type {Permission}
+		 * @type {string}
 		 * @private
 		 */
 		this.__permission__ = 'basic';
@@ -79,10 +79,11 @@ class Command {
 
 	/**
 	 * Définit la permission nécessaire pour exécuter cette commande
-	 * @param {Permission} perm
+	 * @param {string} perm
 	 * @returns {this}
 	 */
 	permission(perm) {
+		console.log('command ' + this.name + ' changing permission to "' + perm + '"');
 		this.__permission__ = perm;
 
 		return this;
@@ -151,7 +152,7 @@ class Command {
 			description: this.__description__,
 			literals: this.__literals__,
 			argument: this.__argument__,
-			permission: Permission[this.__permission__]
+			permission: this.__permission__
 		};
 	}
 }
@@ -189,6 +190,12 @@ class Argument extends Command {
 	isRestString() {
 		return this.__restString__;
 	}
+
+	get infos() {
+		let top = super.infos;
+		top.restIsString = this.__restString__;
+		return top;
+	}
 }
 
 class CommandDispatcher {
@@ -200,7 +207,7 @@ class CommandDispatcher {
 		this.__commands__ = new Map();
 	}
 
-	/** @returns {Map<string, Command>} */
+	/** @returns {Map<string, {name: string, executable: boolean, description: string, literals: Map.<string, Literal>, argument: ?Argument, permission: string}>} */
 	get commands() {
 		let cmds = new Map();
 		for(let [name, command] of this.__commands__)

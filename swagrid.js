@@ -546,7 +546,9 @@ dispatcher.register(
 
 					while(exploration.length > 0) {
 						let exp = exploration.shift();
-						let hasPermission = exp.command.permission.checkPermission(message.member);
+						console.log('checking permission for command ' + exp.command.name + ': ' + exp.command.permission);
+						console.log(Permission[exp.command.permission]);
+						let hasPermission = Permission[exp.command.permission].checkPermission(message.member);
 
 						if(exp.command.executable) {
 							console.log(`command exécutable trouvée: ${exp.usage}`);
