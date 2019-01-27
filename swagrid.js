@@ -563,17 +563,17 @@ dispatcher.register(
 							console.log(`command non exécutable: ${exp.usage}`);
 						}
 
-						for(let [lname, lit] of exp.command.literals.values()) {
+						for(let [lname, lit] of exp.command.literals) {
 							console.log(`exploration ${exp.usage} ${lname}`);
 							exploration.push({
-								command: lit,
+								command: lit.infos,
 								usage: exp.usage + ' ' + lname
 							});
 						}
 						if(exp.command.argument) {
 							console.log(`argument ${exp.usage} ${exp.command.argument.name}`);
 							exploration.push({
-								command: exp.command.argument,
+								command: exp.command.argument.infos,
 								usage: exp.usage + ' ' + exp.command.argument.name
 							});
 						}

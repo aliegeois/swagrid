@@ -191,11 +191,11 @@ class Argument extends Command {
 		return this.__restString__;
 	}
 
-	get infos() {
+	/*get infos() {
 		let top = super.infos;
 		top.restIsString = this.__restString__;
 		return top;
-	}
+	}*/
 }
 
 class CommandDispatcher {
