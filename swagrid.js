@@ -20,7 +20,7 @@ const Discord = require('discord.js'),
 const Music = new (require('./music'))(),
 	{ Permission, CommandDispatcher, literal, argument } = require('./commandDispatcher');
 
-/** @type {{prefix: string, owner: string, guilds: [{id: string, permissions: [{name: string, roleId: string}]}]}} */
+//** @type {{prefix: string, owner: string, guilds: [{id: string, permissions: [{name: string, roleId: string}]}]}} */
 const config = require('./config.json');
 /** @type {{}|{TOKEN: string, YT: string}} */
 const env = local ? require('./env.json') : {};
@@ -650,6 +650,7 @@ client.on('message', message => {
 	dispatcher.parse({ message: message }, content.slice(config.prefix.length).trim())
 		.catch(err => {
 			message.channel.send('```reject: ' + err + '```');
+			throw err;
 		});
 });
 
@@ -689,14 +690,14 @@ client.on('messageReactionRemove', (reaction, user) => {
 	/** @type {string} */
 	let emojiId = reaction.emoji.id;
 	if(reaction.message.member.guild.emojis.has(emojiId)) {
-		console.log(`remove ${reaction.emoji.name}`);
+		//console.log(`remove ${reaction.emoji.name}`);
 		Emoji.findOne({
 			where: {
 				emojiId: emojiId
 			}
 		}).then(emoji => {
 			if(emoji != null) {
-				console.log(`emoji number (before): ${emoji.count}`);
+				//console.log(`emoji number (before): ${emoji.count}`);
 				Emoji.update({
 					count: emoji.count - 1
 				}, {
@@ -764,9 +765,7 @@ sequelize.authenticate().then(() => {
 		count: Sequelize.INTEGER
 	});
 	//resetDB(['emoji']);
-}).catch(err => {
-	console.error(err);
-});
+}).catch(console.log);
 
 app.get('/', (request, response) => {
 	response.sendFile(`${__dirname}/index.html`);
