@@ -311,25 +311,26 @@ dispatcher.register(
 					return new Promise((resolve, reject) => {
 						/** @type {Discord.Message} */
 						let message = source.message;
+						console.log('name: ' + name);
 
-						if(name.match(/<@![0-9]+>/g) instanceof Array) {
-							let member = message.member.voiceChannel.members.get(name.slice(3, -1));
+						if(name.match(/<@[0-9]+>/g) instanceof Array) {
+							let member = message.member.voiceChannel.members.get(name.slice(2, -1));
 
 							if(member !== undefined) {
-								if(message.member.voiceChannelID != member.voiceChannelID) {
-									message.reply('Vous devez être dans le même channel vocal que la personne à virer')
-										.then(resolve)
-										.catch(reject);
-								} else {
+								if(message.member.voiceChannelID === member.voiceChannelID) {
 									message.guild.createChannel('SUCC', 'voice')
 										.then(channel => {
-											member.setVoiceChannel(message.member.voiceChannel)
+											member.setVoiceChannel(channel)
 												.then(() => {
 													channel.delete()
 														.then(resolve)
 														.catch(reject);
 												}).catch(reject);
 										}).catch(reject);
+								} else {
+									message.reply('Vous devez être dans le même channel vocal que la personne à virer')
+										.then(resolve)
+										.catch(reject);
 								}
 							} else {
 								message.reply('Membre inconnu')
@@ -546,32 +547,32 @@ dispatcher.register(
 
 					while(exploration.length > 0) {
 						let exp = exploration.shift();
-						console.log('checking permission for command ' + exp.command.name + ': ' + exp.command.permission);
-						console.log(Permission[exp.command.permission]);
+						//console.log('checking permission for command ' + exp.command.name + ': ' + exp.command.permission);
+						//console.log(Permission[exp.command.permission]);
 						let hasPermission = Permission[exp.command.permission].checkPermission(message.member);
 
 						if(exp.command.executable) {
-							console.log(`command exécutable trouvée: ${exp.usage}`);
+							//console.log(`command exécutable trouvée: ${exp.usage}`);
 							if(hasPermission) {
-								console.log('\tpermission accordée');
+								//console.log('\tpermission accordée');
 								//console.log(`command exécutable trouvée: ${exp.usage}`);
 								descHelp += `\n- "${config.prefix}${exp.usage}": ${exp.command.description}`;
 							} else {
-								console.log('\tpas de permission :\'(');
+								//console.log('\tpas de permission :\'(');
 							}
 						} else {
-							console.log(`command non exécutable: ${exp.usage}`);
+							//console.log(`command non exécutable: ${exp.usage}`);
 						}
 
 						for(let [lname, lit] of exp.command.literals) {
-							console.log(`exploration ${exp.usage} ${lname}`);
+							//console.log(`exploration ${exp.usage} ${lname}`);
 							exploration.push({
 								command: lit.infos,
 								usage: exp.usage + ' ' + lname
 							});
 						}
 						if(exp.command.argument) {
-							console.log(`argument ${exp.usage} ${exp.command.argument.name}`);
+							//console.log(`argument ${exp.usage} ${exp.command.argument.name}`);
 							exploration.push({
 								command: exp.command.argument.infos,
 								usage: exp.usage + ' ' + exp.command.argument.name
@@ -653,7 +654,7 @@ client.on('message', message => {
 	dispatcher.parse({ message: message }, command)
 		.catch(err => {
 			message.channel.send('```' + err + '```');
-			throw err;
+			console.error(err);
 		});
 });
 
@@ -719,35 +720,39 @@ client.on('messageReactionRemove', (reaction, user) => {
 });
 
 client.on('voiceStateUpdate', (oldmember, newmember) => { // Update packages
-	let oldvoice = oldmember.voiceChannel;
-	let newvoice = newmember.voiceChannel;
-	
-	if(!oldvoice && newvoice) {
-		//join
-	} else if(oldvoice && !newvoice) {
-		//leave
-	} else {
-		if(oldvoice.id != newvoice.id) {
-			// move
-			if(newvoice.id == client.user.id) {
-				// Swagrid a été déplacé
-				Music.voiceChannel = newvoice;
-			} else {
-				// Quelqu'un d'autre est déplacé
-				if(newvoice.id == '520211457481113610') {
-					newmember.addRole('520210711767678977');
-				}
-				if(newvoice.id == '539072415704154132') {
-					newmember.addRole('520210711767678977');
-					setTimeout(() => {
-						newmember.removeRole('520210711767678977');
-						newmember.setVoiceChannel(oldvoice);
-					}, 10000);
-				}
-			}
+	try {
+		let oldvoice = oldmember.voiceChannel;
+		let newvoice = newmember.voiceChannel;
+		
+		if(!oldvoice && newvoice) {
+			//join
+		} else if(oldvoice && !newvoice) {
+			//leave
 		} else {
-			// update genre mute/demute
+			if(oldvoice.id != newvoice.id) {
+				// move
+				if(newvoice.id == client.user.id) {
+					// Swagrid a été déplacé
+					Music.voiceChannel = newvoice;
+				} else {
+					// Quelqu'un d'autre est déplacé
+					if(newvoice.id == '520211457481113610') {
+						newmember.addRole('520210711767678977');
+					}
+					if(newvoice.id == '539072415704154132') {
+						newmember.addRole('520210711767678977');
+						setTimeout(() => {
+							newmember.removeRole('520210711767678977');
+							newmember.setVoiceChannel(oldvoice);
+						}, 10000);
+					}
+				}
+			} else {
+				// update genre mute/demute
+			}
 		}
+	} catch(e) {
+		// Channel supprimé entre temps
 	}
 });
 

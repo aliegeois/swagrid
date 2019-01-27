@@ -83,7 +83,7 @@ class Command {
 	 * @returns {this}
 	 */
 	permission(perm) {
-		console.log('command ' + this.name + ' changing permission to "' + perm + '"');
+		//console.log('command ' + this.name + ' changing permission to "' + perm + '"');
 		this.__permission__ = perm;
 
 		return this;
