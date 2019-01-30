@@ -350,7 +350,7 @@ class CommandDispatcher {
 
 	/**
 	 * Vérifie que la commande est correcte
-	 * @param {string[]} args 
+	 * @param {string[]} args
 	 * @private
 	 */
 	__dispatch__(source, args) {

@@ -259,6 +259,20 @@ dispatcher.register(
 
 dispatcher.register(
 	literal('danbooru')
+		/*.then(
+			literal('tag')
+				.then(
+					literal('character')
+						.then(
+							argument('keyword')
+								.executes((source, keyword) => {
+									return new Promise((resolve, reject) => {
+
+									});
+								})
+						)
+				)
+		)*/
 		.then(
 			argument('keywords', true)
 				.executes((source, ...keywords) => {
@@ -656,7 +670,7 @@ client.on('message', message => {
 	dispatcher.parse({ message: message }, command)
 		.catch(err => {
 			message.channel.send('```' + err + '```');
-			console.error(err);
+			console.error(err.message);
 		});
 });
 
