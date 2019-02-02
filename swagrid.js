@@ -753,13 +753,13 @@ client.on('voiceStateUpdate', (oldmember, newmember) => { // Update packages
 				} else {
 					// Quelqu'un d'autre est déplacé
 					if(newvoice.id == '520211457481113610') {
-						newmember.addRole('520210711767678977');
+						newmember.addRole('520210711767678977').catch(()=>{});
 					}
 					if(newvoice.id == '539072415704154132') {
-						newmember.addRole('520210711767678977');
+						newmember.addRole('520210711767678977').catch(()=>{});
 						setTimeout(() => {
-							newmember.removeRole('520210711767678977');
-							newmember.setVoiceChannel(oldvoice);
+							newmember.removeRole('520210711767678977').catch(()=>{});
+							newmember.setVoiceChannel(oldvoice).catch(()=>{});
 						}, 10000);
 					}
 				}
