@@ -53,7 +53,9 @@ module.exports = class Music {
 			volume: 1
 		}));
 		this.__dispatcher__.on('end', reason => {
-			console.log(`music ended with reason "${reason}"`);
+			if(reason != '_') // Arrêté manuellement
+				console.log(`music ended with reason "${reason}"`);
+			
 			if(this.__musics__.length) {
 				this._play();
 			} else {

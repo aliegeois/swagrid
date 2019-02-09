@@ -325,72 +325,38 @@ dispatcher.register(
 					return new Promise((resolve, reject) => {
 						/** @type {Discord.Message} */
 						let message = source.message;
-						//console.log('names: [' + name + ']');
 
-						/*for(let member of members.values()) {
-							let guildMember = message.member.voiceChannel.members.get(member.id);
-							if(guildMember !== undefined && message.member.voiceChannelID === guildMember.voiceChannelID)
-								deletable.push(guildMember);
-						}*/
-
-						let deletable = Array.from(message.mentions.members.values()).filter(member => {
-							let guildMember = message.member.voiceChannel.members.get(member.id);
-							if(guildMember !== undefined && message.member.voiceChannelID === guildMember.voiceChannelID)
-								return guildMember;
-						});
-
-						if(deletable.length) {
-							message.guild.createChannel('SUCC', 'voice')
-								.then(channel => {
-									let remaining = deletable.length;
-									for(let member of deletable) {
-										member.setVoiceChannel(channel)
-											.then(() => {
-												remaining--;
-												if(remaining === 0) {
-													channel.delete()
-														.then(resolve)
-														.catch(reject);
-												}
-											}).catch(reject);
-									}
-								}).catch(reject);
+						if(!message.member.voiceChannel) {
+							reject('Vous devez être dans un channel vocal pour exécuter cette commande');
 						} else {
-							message.reply('Personne à supprimer')
-								.then(resolve)
-								.catch(reject);
-						}
-						
-
-						/*if(name.match(/<@[0-9]+>/g) instanceof Array) {
-							let member = message.member.voiceChannel.members.get(name.slice(2, -1));
-
-							if(member !== undefined) {
-								if(message.member.voiceChannelID === member.voiceChannelID) {
-									message.guild.createChannel('SUCC', 'voice')
-										.then(channel => {
+							let deletable = Array.from(message.mentions.members.values()).filter(member => {
+								let guildMember = message.member.voiceChannel.members.get(member.id);
+								if(guildMember !== undefined && message.member.voiceChannelID === guildMember.voiceChannelID)
+									return guildMember;
+							});
+	
+							if(deletable.length) {
+								message.guild.createChannel('SUCC', 'voice')
+									.then(channel => {
+										let remaining = deletable.length;
+										for(let member of deletable) {
 											member.setVoiceChannel(channel)
 												.then(() => {
-													channel.delete()
-														.then(resolve)
-														.catch(reject);
+													remaining--;
+													if(remaining === 0) {
+														channel.delete()
+															.then(resolve)
+															.catch(reject);
+													}
 												}).catch(reject);
-										}).catch(reject);
-								} else {
-									message.reply('Vous devez être dans le même channel vocal que la personne à virer')
-										.then(resolve)
-										.catch(reject);
-								}
+										}
+									}).catch(reject);
 							} else {
-								message.reply('Membre inconnu')
+								message.reply('Personne à supprimer')
 									.then(resolve)
 									.catch(reject);
 							}
-						} else {
-							message.reply('Nom invalide')
-								.then(resolve)
-								.catch(reject);
-						}*/
+						}
 					});
 				})
 				.permission('advanced')
@@ -614,6 +580,68 @@ dispatcher.register(
 		.description('Affiche ce message d\'aide')
 );
 
+/** @param {Discord.Message} message */
+function countEmojis(message) {
+	/** @type {RegExpMatchArray} */
+	let strs = message.content.match(/<:[A-Za-z]+:[0-9]+>/g);
+	if(strs != null) {
+		strs.reduce((previous, current, index, array) => {
+			let [name, id] = current.slice(2, -1).split(':');
+			if(message.guild.emojis.has(id)) {
+				return previous.then(() => {
+					return new Promise((resolve, reject) => {
+						Emoji.findOne({
+							where: {
+								emojiId: id
+							}
+						}).then(emoji => {
+							if(emoji == null) {
+								Emoji.create({
+									emojiId: id,
+									count: 1
+								}).then(() => {
+									resolve();
+								}).catch(err => {
+									console.error(`erreur create emoji: ${err}`);
+									reject(err);
+								});
+							} else {
+								Emoji.update({
+									count: emoji.count + 1
+								}, {
+									where: {
+										emojiId: id
+									}
+								}).then(() => {
+									resolve();
+								}).catch(err => {
+									console.error(`erreur update emoji: ${err}`);
+									reject(err);
+								});
+							}
+						}).catch(err => {
+							console.error(`erreur find emoji: ${err}`);
+							reject(err);
+						});
+					});
+				}).catch(err => {
+					console.error(`arg: ${err}`);
+					return new Promise((resolve, reject) => {
+						resolve();
+					});
+				});
+			} else {
+				console.error('Emoji invalide');
+				return new Promise((resolve, reject) => {
+					resolve();
+				});
+			}
+		}, new Promise((resolve, reject) => {
+			resolve();
+		}));
+	}
+}
+
 client.on('ready', () => {
 	console.log('Initialisation de Swagrid...');
 	client.user.setActivity('de la magie', {type: 'WATCHING'});
@@ -647,8 +675,6 @@ client.on('ready', () => {
 		}
 	}
 
-	//console.log(Permission);
-
 	console.info('Prêt à défoncer des mères');
 });
 
@@ -660,7 +686,7 @@ client.on('message', message => {
 	
 	if(content.indexOf(config.prefix) !== 0) {
 		//testForMio(message);
-		//countEmojis(message);
+		countEmojis(message);
 		return;
 	}
 
@@ -669,7 +695,7 @@ client.on('message', message => {
 
 	dispatcher.parse({ message: message }, command)
 		.catch(err => {
-			message.channel.send('```' + err + '```');
+			message.channel.send('```' + err + '```').catch(()=>{});
 			console.error(err.message);
 		});
 });
