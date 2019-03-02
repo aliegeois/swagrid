@@ -771,9 +771,9 @@ client.on('voiceStateUpdate', (oldmember, newmember) => { // Update packages
 		} else if(oldvoice && !newvoice) {
 			//leave
 		} else {
-			if(oldvoice.id != newvoice.id) {
+			if(oldvoice.id !== newvoice.id) {
 				// move
-				if(newvoice.id == client.user.id) {
+				if(newvoice.id === client.user.id) {
 					// Swagrid a été déplacé
 					Music.voiceChannel = newvoice;
 				} else {
@@ -781,10 +781,23 @@ client.on('voiceStateUpdate', (oldmember, newmember) => { // Update packages
 					if(newvoice.id == '520211457481113610') {
 						newmember.addRole('520210711767678977').catch(()=>{});
 					}
-					if(newvoice.id == '539072415704154132') {
-						newmember.addRole('520210711767678977').catch(()=>{});
+					if(newvoice.id === '539072415704154132') {
+						newmember.guild.channels.get('470676824532320256').send(`${newmember.user.username}#${newmember.user.tag} va devenir prisonnier`);
+						newmember.addRole('520210711767678977')
+							.then(() => {
+								newmember.guild.channels.get('470676824532320256').send(`${newmember.user.username}#${newmember.user.tag} est devenu prisonnier`);
+							})
+							.catch(()=>{
+								newmember.guild.channels.get('470676824532320256').send(`${newmember.user.username}#${newmember.user.tag} n'est pas devenu prisonnier :'(`);
+							});
 						setTimeout(() => {
-							newmember.removeRole('520210711767678977').catch(()=>{});
+							newmember.removeRole('520210711767678977')
+								.then(() => {
+									newmember.guild.channels.get('470676824532320256').send(`${newmember.user.username}#${newmember.user.tag} a perdu le rôle prisonnier (normal)`);
+								})
+								.catch(()=>{
+									newmember.guild.channels.get('470676824532320256').send(`impossible d'enlever le rôle prisonnier à ${newmember.user.username}#${newmember.user.tag} (???)`);
+								});
 							newmember.setVoiceChannel(oldvoice).catch(()=>{});
 						}, 10000);
 					}
