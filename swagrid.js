@@ -834,7 +834,7 @@ sequelize.authenticate().then(() => {
 app.get('/', (request, response) => {
 	response.sendFile(`${__dirname}/index.html`);
 });
-var listener = app.listen(3000, () => {
+var listener = app.listen(80, () => {
 	console.info('Swagrid présent sur le port ' + listener.address().port);
 });
 
