@@ -2,8 +2,8 @@
 /* jshint -W083 */
 // glitch: node v10.15.0, npm 6.4.1
 
-/** @type {boolean} */
-const local = typeof process.env.TOKEN === 'undefined';
+//** @type {boolean} */
+//const local = typeof process.env.TOKEN === 'undefined';
 
 // Dependances
 const Discord = require('discord.js'),
@@ -23,11 +23,12 @@ const Music = new (require('./music'))(),
 
 //** @type {{prefix: string, owner: string, guilds: [{id: string, permissions: [{name: string, roleId: string}]}]}} */
 const config = require('./config.json');
-/** @type {{}|{TOKEN: string, YT: string}} */
-const env = local ? require('./env.json') : {};
+//** @type {{}|{TOKEN: string, YT: string}} */
+//const env = local ? require('./env.json') : {};
 
 /** @type {string} */
-var ytKey = (local ? env : process.env).YT;
+//var ytKey = (local ? env : process.env).YT;
+var ytKey = process.env.YT;
 
 /** @type {Sequelize} */
 var sequelize;
@@ -838,4 +839,5 @@ var listener = app.listen(3000, () => {
 });
 
 
-client.login((local ? env : process.env).TOKEN);
+//client.login((local ? env : process.env).TOKEN);
+client.login(process.env.TOKEN);
