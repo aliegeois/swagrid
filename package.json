@@ -2,11 +2,8 @@
 	"name": "swagrid",
 	"version": "0.1.0",
 	"description": "Swag + Hagrid = Swagrid",
-	"main": "swagrid.js",
-	"web": "swagrid.js",
 	"scripts": {
-		"start": "node swagrid.js",
-		"web": "node swagrid.js"
+		"start": "node swagrid.js"
 	},
 	"dependencies": {
 		"discord.js": "^11.3.2",
