@@ -838,6 +838,5 @@ var listener = app.listen(process.env.PORT, () => {
 	console.info('Swagrid présent sur le port ' + listener.address().port);
 });
 
-
 //client.login((local ? env : process.env).TOKEN);
 client.login(process.env.TOKEN);
