@@ -3,7 +3,7 @@
 // glitch: node v10.15.0, npm 6.4.1
 
 //** @type {boolean} */
-//const local = typeof process.env.TOKEN === 'undefined';
+//const local = typeof process.env.PORT === 'undefined';
 
 // Dependances
 const Discord = require('discord.js'),
@@ -834,7 +834,7 @@ sequelize.authenticate().then(() => {
 app.get('/', (request, response) => {
 	response.sendFile(`${__dirname}/index.html`);
 });
-var listener = app.listen(80, () => {
+var listener = app.listen(process.env.PORT, () => {
 	console.info('Swagrid présent sur le port ' + listener.address().port);
 });
 
