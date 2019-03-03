@@ -1,1 +1,1 @@
-web: node main.js
+web: node swagrid.js
