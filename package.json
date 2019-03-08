@@ -6,17 +6,17 @@
 		"start": "node swagrid.js"
 	},
 	"dependencies": {
-		"discord.js": "^11.3.2",
-		"eslint": "^5.12.1",
-		"express": "^4.16.3",
-		"jshint": "^2.9.7",
-		"node-opus": "*",
-		"request-promise-native": "^1.0.5",
-		"sequelize": "^4.40.0",
-		"sqlite3": "^4.0.2",
+		"discord.js": "^11.4.2",
+		"eslint": "^5.15.0",
+		"express": "^4.16.4",
+		"jshint": "^2.10.1",
+		"node-opus": "^0.3.1",
+		"request-promise-native": "^1.0.7",
+		"sequelize": "^4.43.0",
+		"sqlite3": "^4.0.6",
 		"xml2js": "^0.4.19",
-		"youtube-api-v3-search": "^1.0.2",
-		"ytdl-core": "^0.24.0"
+		"youtube-api-v3-search": "^1.2.1",
+		"ytdl-core": "^0.29.1"
 	},
 	"repository": {
 		"type": "git",

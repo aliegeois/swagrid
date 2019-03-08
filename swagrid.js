@@ -2,8 +2,8 @@
 //* jshint -W083 */
 // glitch: node v10.15.0, npm 6.4.1
 
-/** @type {boolean} */
-const local = typeof process.env.TOKEN === 'undefined';
+//** @type {boolean} */
+//const local = typeof process.env.PORT === 'undefined';
 
 // Dependances
 const Discord = require('discord.js'),
@@ -23,11 +23,12 @@ const Music = new (require('./music'))(),
 
 //** @type {{prefix: string, owner: string, guilds: [{id: string, permissions: [{name: string, roleId: string}]}]}} */
 const config = require('./config.json');
-/** @type {{}|{TOKEN: string, YT: string}} */
-const env = local ? require('./env.json') : {};
+//** @type {{}|{TOKEN: string, YT: string}} */
+//const env = local ? require('./env.json') : {};
 
 /** @type {string} */
-var ytKey = (local ? env : process.env).YT;
+//var ytKey = (local ? env : process.env).YT;
+var ytKey = process.env.YT;
 
 /** @type {Sequelize} */
 var sequelize;
@@ -772,9 +773,9 @@ client.on('voiceStateUpdate', (oldmember, newmember) => { // Update packages
 		} else if(oldvoice && !newvoice) {
 			//leave
 		} else {
-			if(oldvoice.id != newvoice.id) {
+			if(oldvoice.id !== newvoice.id) {
 				// move
-				if(newvoice.id == client.user.id) {
+				if(newvoice.id === client.user.id) {
 					// Swagrid a été déplacé
 					Music.voiceChannel = newvoice;
 				} else {
@@ -782,10 +783,23 @@ client.on('voiceStateUpdate', (oldmember, newmember) => { // Update packages
 					if(newvoice.id == '520211457481113610') {
 						newmember.addRole('520210711767678977').catch(()=>{});
 					}
-					if(newvoice.id == '539072415704154132') {
-						newmember.addRole('520210711767678977').catch(()=>{});
+					if(newvoice.id === '539072415704154132') {
+						newmember.guild.channels.get('470676824532320256').send(`${newmember.user.username}#${newmember.user.tag} va devenir prisonnier`);
+						newmember.addRole('520210711767678977')
+							.then(() => {
+								newmember.guild.channels.get('470676824532320256').send(`${newmember.user.username}#${newmember.user.tag} est devenu prisonnier`);
+							})
+							.catch(()=>{
+								newmember.guild.channels.get('470676824532320256').send(`${newmember.user.username}#${newmember.user.tag} n'est pas devenu prisonnier :'(`);
+							});
 						setTimeout(() => {
-							newmember.removeRole('520210711767678977').catch(()=>{});
+							newmember.removeRole('520210711767678977')
+								.then(() => {
+									newmember.guild.channels.get('470676824532320256').send(`${newmember.user.username}#${newmember.user.tag} a perdu le rôle prisonnier (normal)`);
+								})
+								.catch(()=>{
+									newmember.guild.channels.get('470676824532320256').send(`impossible d'enlever le rôle prisonnier à ${newmember.user.username}#${newmember.user.tag} (???)`);
+								});
 							newmember.setVoiceChannel(oldvoice).catch(()=>{});
 						}, 10000);
 					}
@@ -821,9 +835,9 @@ sequelize.authenticate().then(() => {
 app.get('/', (request, response) => {
 	response.sendFile(`${__dirname}/index.html`);
 });
-var listener = app.listen(3000, () => {
+var listener = app.listen(process.env.PORT, () => {
 	console.info('Swagrid présent sur le port ' + listener.address().port);
 });
 
-
-client.login((local ? env : process.env).TOKEN);
+//client.login((local ? env : process.env).TOKEN);
+client.login(process.env.TOKEN);

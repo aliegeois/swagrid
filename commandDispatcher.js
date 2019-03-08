@@ -314,7 +314,7 @@ class CommandDispatcher {
 	 */
 	parse(source, cmd) {
 		if(typeof cmd !== 'string')
-			throw new TypeError(`Expected string, got ${typeof cmd}`);
+			return Promise.reject(new TypeError(`Expected string, got ${typeof cmd}`));
 		
 		cmd = cmd.trim();
 		/** @type {string[]} */
@@ -377,7 +377,7 @@ class CommandDispatcher {
 							//console.log('has argument');
 							command = command.getArgument();
 						} else {
-							throw new CommandDispatcher.TooManyArgumentsError(name);
+							return Promise.reject(new CommandDispatcher.TooManyArgumentsError(name));
 						}
 					} else if(command instanceof Argument) {
 						//console.log('argument: ' + command.name);
@@ -396,7 +396,7 @@ class CommandDispatcher {
 					//console.log('remaining args: [' + args + ']');
 				}
 				if(!command.isExecutable()) {
-					throw new CommandDispatcher.MissingArgumentError(name);
+					return Promise.reject(new CommandDispatcher.MissingArgumentError(name));
 				}
 
 				//console.log(`Exécution de ${command.name} avec ${totalArgs.length} argument${totalArgs.length == 1 ? '' : 's'}: [${totalArgs}]`);
@@ -406,10 +406,10 @@ class CommandDispatcher {
 				else
 					return command.execute(source);
 			} else {
-				throw new CommandDispatcher.UnknownCommandError(name);
+				return Promise.reject(new CommandDispatcher.UnknownCommandError(name));
 			}
 		} else {
-			throw new CommandDispatcher.EmptyCommandError();
+			return Promise.reject(new CommandDispatcher.EmptyCommandError());
 		}
 	}
 }
