@@ -1,5 +1,5 @@
-/* jshint -W061 */
-/* jshint -W083 */
+//* jshint -W061 */
+//* jshint -W083 */
 // glitch: node v10.15.0, npm 6.4.1
 
 /** @type {boolean} */
@@ -586,7 +586,8 @@ function countEmojis(message) {
 	let strs = message.content.match(/<:[A-Za-z]+:[0-9]+>/g);
 	if(strs != null) {
 		strs.reduce((previous, current, index, array) => {
-			let [name, id] = current.slice(2, -1).split(':');
+			//let [name, id] = current.slice(2, -1).split(':');
+			let [, id] = current.slice(2, -1).split(':');
 			if(message.guild.emojis.has(id)) {
 				return previous.then(() => {
 					return new Promise((resolve, reject) => {
