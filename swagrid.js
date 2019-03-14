@@ -79,6 +79,14 @@ dispatcher.register(
 );
 
 dispatcher.register(
+	literal('fanta').executes((source) => {
+		return new Promise((resolve, reject) => {
+			dispatcher.parse('+play tSKCyEOESCI').then(resolve);
+		});
+	})
+);
+
+dispatcher.register(
 	literal('join')
 		.executes((source) => {
 			return new Promise((resolve, reject) => {
