@@ -63,9 +63,9 @@ module.exports = class Music {
 				break;
 			case 'Stream is not generating quickly enough.':
 				console.log('Stream génère pas assez vite');
-				this.__musics__.unshift(song);
+				/*this.__musics__.unshift(song);
 				this.__lastTime__ = this.__dispatcher__.time;
-				this.__play__();
+				this.__play__();*/
 				break;
 			default:
 				console.log(`music ended with reason "${reason}"`);
