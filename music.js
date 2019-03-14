@@ -29,6 +29,8 @@ module.exports = class Music {
 		 * @private
 		 */
 		this.__playing__ = null;
+
+		this.__lastTime__ = -1;
 	}
 
 	/**
@@ -39,35 +41,40 @@ module.exports = class Music {
 	add(url, title) {
 		this.__musics__.push({url: url, title: title});
 		if(this.__status__ == 'stop')
-			this._play();
+			this.__play__();
 	}
 
 	/** @private */
-	_play() {
+	__play__() {
 		/** @type {music} */
 		let song = this.__musics__.shift();
 		this.__status__ = 'play';
 		this.__playing__ = song;
 		this.__dispatcher__ = this.voiceConnection.playStream(ytdl(song.url, {
+			filter: 'audioonly'
+		}), {
 			seek: 0,
 			volume: 1
-		}));
+		});
 		this.__dispatcher__.on('end', reason => {
 			switch(reason) {
-			case '_':
-				// Arrêt manuel
+			case '_': // Arrêt manuel
+				//console.log(this.__dispatcher__.time);
 				break;
 			case 'Stream is not generating quickly enough.':
-				console.log(song);
+				console.log('Stream génère pas assez vite');
+				this.__musics__.unshift(song);
+				this.__lastTime__ = this.__dispatcher__.time;
+				this.__play__();
 				break;
 			default:
 				console.log(`music ended with reason "${reason}"`);
 			}
-			if(reason != '_') // Arrêté manuellement
-				console.log(`music ended with reason "${reason}"`);
+			/*if(reason != '_') // Arrêté manuellement
+				console.log(`music ended with reason "${reason}"`);*/
 			
 			if(this.__musics__.length) {
-				this._play();
+				this.__play__();
 			} else {
 				this.__status__ = 'stop';
 				this.__playing__ = null;
@@ -93,7 +100,7 @@ module.exports = class Music {
 		if(this.__status__ == 'play')
 			this.__dispatcher__.end('_');
 		if(this.__musics__.length)
-			this._play();
+			this.__play__();
 	}
 	
 	/** Stoppe la vidéo en cours de lecture */
