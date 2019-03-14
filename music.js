@@ -53,6 +53,16 @@ module.exports = class Music {
 			volume: 1
 		}));
 		this.__dispatcher__.on('end', reason => {
+			switch(reason) {
+			case '_':
+				// Arrêt manuel
+				break;
+			case 'Stream is not generating quickly enough.':
+				console.log(song);
+				break;
+			default:
+				console.log(`music ended with reason "${reason}"`);
+			}
 			if(reason != '_') // Arrêté manuellement
 				console.log(`music ended with reason "${reason}"`);
 			
