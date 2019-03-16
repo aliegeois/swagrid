@@ -156,6 +156,7 @@ dispatcher.register(
 								part: 'snippet',
 								type: 'video'
 							}).then(res => {
+								Music.add(res.items[0].id.videoId, res.items[0].snippet.title);
 								message.channel.send(`Recherche de \`${keywords}\``, new Discord.RichEmbed({
 									author: {
 										'name': 'Ajout à la file d\'attente'
@@ -165,10 +166,7 @@ dispatcher.register(
 									},
 									title: `${res.items[0].snippet.title}`,
 									url: `https://youtu.be/${res.items[0].id.videoId}/`
-								})).then(() => {
-									Music.add(res.items[0].id.videoId, res.items[0].snippet.title);
-									resolve();
-								}).catch(reject);
+								})).then(resolve).catch(reject);
 							}).catch(reject);
 						}
 					});
@@ -472,9 +470,11 @@ dispatcher.register(
 	literal('resetdb')
 		.then(
 			argument('databases', true)
-				.executes((source, ...databases) => {
+				.executes((_, ...databases) => {
 					return new Promise((resolve, reject) => {
-						resolve();
+						resetDB(databases)
+							.then(resolve)
+							.catch(reject);
 					});
 				})
 				.permission('expert')
@@ -596,7 +596,7 @@ function countEmojis(message) {
 	/** @type {RegExpMatchArray} */
 	let strs = message.content.match(/<:[A-Za-z]+:[0-9]+>/g);
 	if(strs != null) {
-		strs.reduce((previous, current, index, array) => {
+		strs.reduce((previous, current) => {
 			//let [name, id] = current.slice(2, -1).split(':');
 			let [, id] = current.slice(2, -1).split(':');
 			if(message.guild.emojis.has(id)) {
@@ -638,20 +638,40 @@ function countEmojis(message) {
 					});
 				}).catch(err => {
 					console.error(`arg: ${err}`);
-					return new Promise((resolve, reject) => {
-						resolve();
-					});
+					return Promise.resolve();
 				});
 			} else {
 				console.error('Emoji invalide');
-				return new Promise((resolve, reject) => {
-					resolve();
-				});
+				return Promise.resolve();
 			}
 		}, new Promise((resolve, reject) => {
 			resolve();
 		}));
 	}
+}
+
+/** @param {string[]} tables */
+function resetDB(tables) {
+	let synced = 0;
+	return new Promise((resolve, reject) => {
+		for(let table of tables) {
+			if(tables.includes(table)) {
+				console.log('reset ' + table);
+				Emoji.sync({force: true})
+					.then(() => {
+						console.log(table + ' has been reset');
+					})
+					.catch(_ => {
+						console.log(table + ' has been reset');
+						reject();
+					}).finally(() => {
+						synced++;
+						if(synced == tables.length)
+							resolve();
+					});
+			}
+		}
+	});
 }
 
 client.on('ready', () => {
@@ -685,6 +705,16 @@ client.on('ready', () => {
 				return role.members.some(m => m.user.id === user.id);
 			});
 		}
+	}
+
+	for(let [,vc] of client.voiceConnections) {
+		Music.voiceChannel = vc;
+		Music.voiceChannel.join().then(connection => {
+			Music.voiceConnection = connection;
+		}).catch(_ => {
+			Music.voiceChannel = null;
+			Music.voiceConnection = null;
+		});
 	}
 
 	console.info('Prêt à défoncer des mères');
