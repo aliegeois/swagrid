@@ -3,10 +3,12 @@
 	"version": "0.1.0",
 	"description": "Swag + Hagrid = Swagrid",
 	"scripts": {
-		"start": "node swagrid.js"
+		"start": "node swagrid.js",
+		"local": "node -r dotenv/config swagrid.js"
 	},
 	"dependencies": {
 		"discord.js": "^11.4.2",
+		"dotenv": "^7.0.0",
 		"eslint": "^5.15.2",
 		"express": "^4.16.4",
 		"jshint": "^2.10.2",
