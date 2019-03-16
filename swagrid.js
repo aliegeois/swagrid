@@ -29,7 +29,7 @@ const config = require('./config.json');
 /** @type {string} */
 //var ytKey = (local ? env : process.env).YT;
 var ytKey = process.env.YT;
-
+console.log(process.env.D);
 /** @type {Sequelize} */
 var sequelize;
 /** @type {Sequelize.Model} */
@@ -139,12 +139,13 @@ dispatcher.register(
 		.then(
 			argument('keywords', true)
 				.executes((source, ...keywords) => {
-					return new Promise((resolve, reject) => {
+					return new Promise(async (resolve, reject) => {
 						/** @type {Discord.Message} */
 						let message = source.message;
 						if(Music.voiceConnection == null) {
-							reject('Swagrid n\'est pas dans un channel');
-						} else if(message.member.voiceChannelID != Music.voiceChannel.id) {
+							await dispatcher.parse(source, 'join');
+						}
+						if(message.member.voiceChannelID != Music.voiceChannel.id) {
 							message.reply('Petit boloss, arrête de mettre des sons si tu n\'es pas dans le channel')
 								.then(resolve)
 								.catch(reject);
@@ -864,8 +865,9 @@ client.on('voiceStateUpdate', (oldmember, newmember) => { // Update packages
 	}
 });
 
-sequelize = new Sequelize('postgres://gmiaztwpvmpafz:ba380e7de5993573ee792151d1f30e5e62539ab5e24fa19d78ad2c8da3866534@ec2-54-197-232-203.compute-1.amazonaws.com:5432/daqq5f0ptbd16f', {
-	dialect: 'postgres'/*,
+sequelize = new Sequelize(process.env.DATABASE_URL, {
+	dialect: 'postgres',
+	operatorsAliases: false/*,
 	logging: false*/
 });
 
