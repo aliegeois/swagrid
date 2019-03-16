@@ -3,9 +3,9 @@
 // glitch: node v10.15.0, npm 6.4.1
 
 //** @type {boolean} */
-//const local = typeof process.env.PORT === 'undefined';
+//const local = process.env.LOCAL === 'true';
 
-// Dependances
+// Dependencies
 const Discord = require('discord.js'),
 	Sequelize = require('sequelize'),
 	search = require('youtube-api-v3-search'),
@@ -740,13 +740,11 @@ client.on('message', message => {
 	let content = message.content.trim();
 	
 	if(content.indexOf(config.prefix) !== 0) {
-		//testForMio(message);
 		countEmojis(message);
 		return;
 	}
 
 	let command = content.slice(config.prefix.length);
-	//console.log('parse command "' + command + '"');
 
 	dispatcher.parse({ message: message }, command)
 		.catch(err => {
@@ -866,11 +864,16 @@ client.on('voiceStateUpdate', (oldmember, newmember) => { // Update packages
 	}
 });
 
-sequelize = new Sequelize('postgres://gmiaztwpvmpafz:ba380e7de5993573ee792151d1f30e5e62539ab5e24fa19d78ad2c8da3866534@ec2-54-197-232-203.compute-1.amazonaws.com:5432/daqq5f0ptbd16f', {
-	dialect: 'postgres'/*,
-	storage: '.data/database.sqlite',
-	logging: false*/
-});
+if(process.env.LOCAL) {
+	sequelize = new Sequelize('database', 'nero', null, {
+		dialect: 'postgres'
+	});
+} else {
+	sequelize = new Sequelize('postgres://gmiaztwpvmpafz:ba380e7de5993573ee792151d1f30e5e62539ab5e24fa19d78ad2c8da3866534@ec2-54-197-232-203.compute-1.amazonaws.com:5432/daqq5f0ptbd16f', {
+		dialect: 'postgres'/*,
+		logging: false*/
+	});
+}
 
 sequelize.authenticate().then(() => {
 	console.info('Authentication to database successful');
@@ -884,7 +887,7 @@ sequelize.authenticate().then(() => {
 	});
 }).catch(console.log);
 
-app.get('/', (request, response) => {
+app.get('/', (_, response) => {
 	response.sendFile(`${__dirname}/index.html`);
 });
 var listener = app.listen(process.env.PORT, () => {

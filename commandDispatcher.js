@@ -208,29 +208,6 @@ class Command {
 
 		return result.sort((u1, u2) => u1.usage < u2.usage ? -1 : (u1.usage > u2.usage ? 1 : 0));
 	}
-
-	/*hasSubCommand(name) {
-		return this.__literals__.has(name);
-	}
-
-	getSubCommand(name) {
-		return this.__literals__.get(name);
-	}
-
-	hasArgument() {
-		return this.__argument__ !== null;
-	}*/
-
-	/*get infos() {
-		return {
-			name: this.__name__,
-			executable: this.__executable__,
-			description: this.__description__,
-			literals: this.__literals__,
-			argument: this.__argument__,
-			permission: this.__permission__
-		};
-	}*/
 }
 
 Command.InsufficientPermissionError = class InsufficientPermissionError extends Error {
@@ -241,9 +218,7 @@ Command.InsufficientPermissionError = class InsufficientPermissionError extends 
 
 /** @class */
 class Literal extends Command {
-	/**
-	 * @param {string} name
-	 */
+	/** @param {string} name Nom de la commande */
 	constructor(name) {
 		super(name);
 	}
@@ -252,26 +227,19 @@ class Literal extends Command {
 /** @class */
 class Argument extends Command {
 	/**
-	 * @param {string} name 
-	 * @param {boolean} [restString=false]
+	 * @param {string} name Nom de l'argument
+	 * @param {boolean} [restString=false] Le reste de la commande est-il concatené ?
 	 */
 	constructor(name, restString = false) {
 		super(name);
 		/** @type {boolean} */
 		this.__restString__ = restString;
-		//this.__restString = restString = restString === undefined ? false : restString;
 	}
 
 	/** @returns {boolean} */
 	isRestString() {
 		return this.__restString__;
 	}
-
-	/*get infos() {
-		let top = super.infos;
-		top.restIsString = this.__restString__;
-		return top;
-	}*/
 }
 
 class CommandDispatcher {
@@ -311,6 +279,7 @@ class CommandDispatcher {
 	 * Analyse une commande et l'exécute si elle est bien formée
 	 * @param {any} source L'environnement dont à besoin la commande
 	 * @param {string} cmd La chaîne de caractères à parser
+	 * @returns {Promise<void>}
 	 */
 	parse(source, cmd) {
 		if(typeof cmd !== 'string')
@@ -351,40 +320,33 @@ class CommandDispatcher {
 	/**
 	 * Vérifie que la commande est correcte
 	 * @param {string[]} args
+	 * @returns {Promise<void>}
 	 * @private
 	 */
 	__dispatch__(source, args) {
 		if(args.length > 0) {
 			/** @type {string} */
 			let name = args.shift();
-			//console.log('name: ' + name);
 			/** @type {string[]} */
 			let totalArgs = [];
 			if(this.__commands__.has(name)) {
-				//console.log('command ' + name + ' exists');
 				let command = this.__commands__.get(name);
 
 				while(args.length) {
-					//console.log('next arg: ' + args[0]);
 					if(command instanceof Literal) {
-						//console.log('literal: ' + command.name);
 						let arg = args.shift();
 						totalArgs = [arg];
 						if(command.hasLiteral(arg)) {
-							//console.log('sub command ' + arg + ' exists');
 							command = command.getLiteral(arg);
 						} else if(command.hasArgument()) {
-							//console.log('has argument');
 							command = command.getArgument();
 						} else {
 							return Promise.reject(new CommandDispatcher.TooManyArgumentsError(name));
 						}
 					} else if(command instanceof Argument) {
-						//console.log('argument: ' + command.name);
 						if(command.isRestString()) {
 							totalArgs = totalArgs.concat(args.splice(0));
 						} else if(command.hasArgument()) {
-							//console.log('it has an argument');
 							command = command.getArgument();
 							totalArgs.push(args.shift());
 						} else {
@@ -393,18 +355,12 @@ class CommandDispatcher {
 					} else {
 						console.log('??????????????????????');
 					}
-					//console.log('remaining args: [' + args + ']');
 				}
+
 				if(!command.isExecutable()) {
 					return Promise.reject(new CommandDispatcher.MissingArgumentError(name));
 				}
-
-				//console.log(`Exécution de ${command.name} avec ${totalArgs.length} argument${totalArgs.length == 1 ? '' : 's'}: [${totalArgs}]`);
-
-				if(totalArgs.length)
-					return command.execute(source, ...totalArgs);
-				else
-					return command.execute(source);
+				return command.execute(source, ...totalArgs);
 			} else {
 				return Promise.reject(new CommandDispatcher.UnknownCommandError(name));
 			}
