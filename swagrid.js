@@ -29,7 +29,7 @@ const config = require('./config.json');
 /** @type {string} */
 //var ytKey = (local ? env : process.env).YT;
 var ytKey = process.env.YT;
-console.log(process.env.D);
+console.log('DATABASE_URL: ' + process.env.DATABASE_URL);
 /** @type {Sequelize} */
 var sequelize;
 /** @type {Sequelize.Model} */
@@ -786,18 +786,16 @@ client.on('messageReactionAdd', (reaction, user) => {
 	}
 });
 
-client.on('messageReactionRemove', (reaction, user) => {
+client.on('messageReactionRemove', (reaction, _) => {
 	/** @type {string} */
 	let emojiId = reaction.emoji.id;
 	if(reaction.message.member.guild.emojis.has(emojiId)) {
-		//console.log(`remove ${reaction.emoji.name}`);
 		Emoji.findOne({
 			where: {
 				emojiId: emojiId
 			}
 		}).then(emoji => {
 			if(emoji != null) {
-				//console.log(`emoji number (before): ${emoji.count}`);
 				Emoji.update({
 					count: emoji.count - 1
 				}, {
@@ -835,7 +833,8 @@ client.on('voiceStateUpdate', (oldmember, newmember) => { // Update packages
 					if(newvoice.id == '520211457481113610') {
 						newmember.addRole('520210711767678977').catch(()=>{});
 					}
-					if(newvoice.id === '539072415704154132') {
+					// Vestiges du 10s
+					/*if(newvoice.id === '539072415704154132') {
 						newmember.guild.channels.get('470676824532320256').send(`${newmember.user.username}#${newmember.user.tag} va devenir prisonnier`);
 						newmember.addRole('520210711767678977')
 							.then(() => {
@@ -854,7 +853,7 @@ client.on('voiceStateUpdate', (oldmember, newmember) => { // Update packages
 								});
 							newmember.setVoiceChannel(oldvoice).catch(()=>{});
 						}, 10000);
-					}
+					}*/
 				}
 			} else {
 				// update genre mute/demute
