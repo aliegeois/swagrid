@@ -705,9 +705,22 @@ client.on('ready', () => {
 				return role.members.some(m => m.user.id === user.id);
 			});
 		}
+
+		// Se reconnecter après un timeout
+		for(let [,channel] of guild.channels) {
+			if(channel instanceof Discord.VoiceChannel) {
+				Music.voiceChannel = channel;
+				Music.voiceChannel.join().then(connection => {
+					Music.voiceConnection = connection;
+				}).catch(_ => {
+					Music.voiceChannel = null;
+					Music.voiceConnection = null;
+				});
+			}
+		}
 	}
 
-	for(let [,vc] of client.voiceConnections) {
+	/*for(let [,vc] of client.voiceConnections) {
 		Music.voiceChannel = vc;
 		Music.voiceChannel.join().then(connection => {
 			Music.voiceConnection = connection;
@@ -715,7 +728,7 @@ client.on('ready', () => {
 			Music.voiceChannel = null;
 			Music.voiceConnection = null;
 		});
-	}
+	}*/
 
 	console.info('Prêt à défoncer des mères');
 });
