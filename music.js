@@ -84,7 +84,7 @@ module.exports = class Music {
 	
 	/** Annule la dernière action */
 	cancel() {
-		if(this.__status__ == 'play') {
+		if(this.__status__ === 'play') {
 			if(this.__musics__.length) {
 				this.__musics__.pop();
 			} else {
@@ -97,7 +97,7 @@ module.exports = class Music {
 	
 	/** Passe la vidéo en cours de lecture */
 	skip() {
-		if(this.__status__ == 'play')
+		if(this.__status__ === 'play')
 			this.__dispatcher__.end('_');
 		if(this.__musics__.length)
 			this.__play__();
@@ -129,6 +129,6 @@ module.exports = class Music {
 
 		musicNames.push(this.__playing__);
 
-		return musicNames.reduce(el => `${el.title}\n`);
+		return musicNames.reduce((total, el) => `${total}${el.title}\n`);
 	}
 };

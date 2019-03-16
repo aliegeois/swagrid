@@ -318,7 +318,7 @@ class CommandDispatcher {
 	}
 
 	/**
-	 * Vérifie que la commande est correcte
+	 * Exécute une commande
 	 * @param {string[]} args
 	 * @returns {Promise<void>}
 	 * @private

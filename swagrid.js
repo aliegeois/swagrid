@@ -79,13 +79,15 @@ dispatcher.register(
 );
 
 dispatcher.register(
-	literal('fanta').executes((source) => {
-		return new Promise((resolve, reject) => {
-			dispatcher.parse(source, 'play tSKCyEOESCI')
-				.then(resolve)
-				.catch(reject);
-		});
-	})
+	literal('fanta')
+		.executes((source) => {
+			return new Promise((resolve, reject) => {
+				dispatcher.parse(source, 'play tSKCyEOESCI')
+					.then(resolve)
+					.catch(reject);
+			});
+		})
+		.description('MAIS TA GUEULE !')
 );
 
 dispatcher.register(
