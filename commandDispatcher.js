@@ -445,15 +445,15 @@ CommandDispatcher.CommandAlreadyRegisteredError = class CommandAlreadyRegistered
 };
 
 /**
- * @param {string} name
+ * @param {string} name Nom de la commande
  */
 function literal(name) {
 	return new Literal(name);
 }
 
 /**
- * @param {string} name
- * @param {string} [restString=false]
+ * @param {string} name Nom de l'argument
+ * @param {string} [restString=false] Le reste de la commande est-il concatené ?
  */
 function argument(name, restString = false) {
 	return new Argument(name, restString);
