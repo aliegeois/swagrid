@@ -867,8 +867,8 @@ client.on('voiceStateUpdate', (oldmember, newmember) => { // Update packages
 });
 
 sequelize = new Sequelize('postgres://gmiaztwpvmpafz:ba380e7de5993573ee792151d1f30e5e62539ab5e24fa19d78ad2c8da3866534@ec2-54-197-232-203.compute-1.amazonaws.com:5432/daqq5f0ptbd16f', {
-	dialect: 'sqlite',
-	storage: '.data/database.sqlite'/*,
+	dialect: 'postgres'/*,
+	storage: '.data/database.sqlite',
 	logging: false*/
 });
 
