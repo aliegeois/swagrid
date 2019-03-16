@@ -708,7 +708,7 @@ client.on('ready', () => {
 
 		// Se reconnecter après un timeout
 		for(let [,channel] of guild.channels) {
-			if(channel instanceof Discord.VoiceChannel) {
+			if(channel instanceof Discord.VoiceChannel && channel.members.find('id', client.user.id)) {
 				Music.voiceChannel = channel;
 				Music.voiceChannel.join().then(connection => {
 					Music.voiceConnection = connection;
