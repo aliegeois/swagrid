@@ -120,7 +120,7 @@ dispatcher.register(
 						for(let [,chan] of guild.channels) {
 							if(chan instanceof Discord.VoiceChannel) {
 								for(let word of channel) {
-									if(chan.name.match(new RegExp(word, 'i'))) {
+									if(chan.name.match(new RegExp(word, 'i')) !== null) {
 										if(count.has(chan.id)) {
 											count.set(chan.id, 1);
 										} else {
@@ -131,12 +131,16 @@ dispatcher.register(
 							}
 						}
 
+						console.log('map', count);
+
 						let sorted = [...count.entries()].sort(([ ,v1 ], [ ,v2 ]) => {
 							return v2 - v1;
-						});
+						}).map(([ id ]) => id);
+
+						console.log('sorted', sorted);
 
 						if(sorted.length > 0) {
-							Music.voiceChannel = guild.channels.find(chan => chan.id === sorted[0][0]).voiceChannel;
+							Music.voiceChannel = guild.channels.find(chan => chan.id === sorted[0]).voiceChannel;
 							Music.voiceChannel.join().then(connection => {
 								Music.voiceConnection = connection;
 								resolve();
