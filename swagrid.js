@@ -10,9 +10,8 @@ const Discord = require('discord.js'),
 	Sequelize = require('sequelize'),
 	search = require('youtube-api-v3-search'),
 	request = require('request-promise-native'),
-	//parseString = require('xml2js').parseString,
+	parseString = require('xml2js').parseString,
 	express = require('express'),
-	//ytdl = require('ytdl-core'),
 	app = express(),
 	client = new Discord.Client({
 		disabledEvents: ['TYPING_START']
@@ -271,20 +270,6 @@ dispatcher.register(
 
 dispatcher.register(
 	literal('danbooru')
-		/*.then(
-			literal('tag')
-				.then(
-					literal('character')
-						.then(
-							argument('keyword')
-								.executes((source, keyword) => {
-									return new Promise((resolve, reject) => {
-
-									});
-								})
-						)
-				)
-		)*/
 		.then(
 			argument('keywords', true)
 				.executes((source, ...keywords) => {

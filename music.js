@@ -1,4 +1,5 @@
-const ytdl = require('ytdl-core');
+//const ytdl = require('ytdl-core');
+const ytdl = require('ytdl-core-discord');
 const Discord = require('discord.js');
 
 /** @typedef {{url: string, title: string}} music */
@@ -50,36 +51,36 @@ module.exports = class Music {
 		let song = this.__musics__.shift();
 		this.__status__ = 'play';
 		this.__playing__ = song;
-		this.__dispatcher__ = this.voiceConnection.playStream(ytdl(song.url, {
+		ytdl(song.url).then(stream => {
+			this.__dispatcher__ = this.voiceConnection.playOpusStream(stream);
+			this.__dispatcher__.on('end', reason => {
+				switch(reason) {
+				case '_': // Arrêt manuel
+					break;
+				case 'Stream is not generating quickly enough.':
+					console.log('Stream génère pas assez vite');
+					/*this.__musics__.unshift(song);
+					this.__lastTime__ = this.__dispatcher__.time;
+					this.__play__();*/
+					break;
+				default:
+					console.log(`music ended with reason "${reason}"`);
+				}
+				
+				if(this.__musics__.length) {
+					this.__play__();
+				} else {
+					this.__status__ = 'stop';
+					this.__playing__ = null;
+				}
+			});
+		}).catch(console.log);
+		/*this.__dispatcher__ = this.voiceConnection.playStream(ytdl(song.url, {
 			filter: 'audioonly'
 		}), {
 			seek: 0,
 			volume: 1
-		});
-		this.__dispatcher__.on('end', reason => {
-			switch(reason) {
-			case '_': // Arrêt manuel
-				//console.log(this.__dispatcher__.time);
-				break;
-			case 'Stream is not generating quickly enough.':
-				console.log('Stream génère pas assez vite');
-				/*this.__musics__.unshift(song);
-				this.__lastTime__ = this.__dispatcher__.time;
-				this.__play__();*/
-				break;
-			default:
-				console.log(`music ended with reason "${reason}"`);
-			}
-			/*if(reason != '_') // Arrêté manuellement
-				console.log(`music ended with reason "${reason}"`);*/
-			
-			if(this.__musics__.length) {
-				this.__play__();
-			} else {
-				this.__status__ = 'stop';
-				this.__playing__ = null;
-			}
-		});
+		});*/
 	}
 	
 	/** Annule la dernière action */
