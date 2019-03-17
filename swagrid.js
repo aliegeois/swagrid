@@ -123,9 +123,9 @@ dispatcher.register(
 								for(let word of channel) {
 									if(chan.name.match(new RegExp(word, 'i')) !== null) {
 										if(count.has(chan.id)) {
-											count.set(chan.id, [chan, 1]);
-										} else {
 											count.set(chan.id, [chan, count.get(chan.id)[1] + 1]);
+										} else {
+											count.set(chan.id, [chan, 1]);
 										}
 									}
 								}
