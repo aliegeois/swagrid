@@ -90,6 +90,22 @@ dispatcher.register(
 );
 
 dispatcher.register(
+	literal('force')
+		.then(
+			argument('command', true)
+				.executes((source, ...command) => {
+					return new Promise((resolve, reject) => {
+						dispatcher.parse({...source, ...{ force: true }}, command)
+							.then(resolve)
+							.catch(reject);
+					});
+				})
+				.permission('expert')
+				.description('Force une commande')
+		)
+);
+
+dispatcher.register(
 	literal('join')
 		.executes((source) => {
 			return new Promise((resolve, reject) => {
@@ -120,8 +136,8 @@ dispatcher.register(
 			return new Promise((resolve, reject) => {
 				/** @type {Discord.Message} */
 				let message = source.message;
-				if(message.member.voiceChannelID == null) {
-					message.reply('vous devez être dans un channel vocal pour déplacer Swagrid')
+				if(message.member.voiceChannelID == null && !source.force) {
+					message.reply('vous devez être dans le même channel vocal que Swagrid pour exécuter cetet action')
 						.then(resolve)
 						.catch(reject);
 				} else {
@@ -146,7 +162,7 @@ dispatcher.register(
 						if(Music.voiceConnection == null) {
 							await dispatcher.parse(source, 'join');
 						}
-						if(message.member.voiceChannelID != Music.voiceChannel.id) {
+						if(message.member.voiceChannelID != Music.voiceChannel.id && !source.force) {
 							message.reply('Petit boloss, arrête de mettre des sons si tu n\'es pas dans le channel')
 								.then(resolve)
 								.catch(reject);
@@ -217,8 +233,8 @@ dispatcher.register(
 			return new Promise((resolve, reject) => {
 				/** @type {Discord.Message} */
 				let message = source.message;
-				if(message.member.voiceChannelID == null) {
-					message.reply('vous devez être dans un channel vocal pour déplacer Swagrid')
+				if(message.member.voiceChannelID == null && !source.force) {
+					message.reply('vous devez être dans un channel vocal pour effectuer cette action')
 						.then(resolve)
 						.catch(reject);
 				} else {
@@ -236,8 +252,8 @@ dispatcher.register(
 			return new Promise((resolve, reject) => {
 				/** @type {Discord.Message} */
 				let message = source.message;
-				if(message.member.voiceChannelID == null) {
-					message.reply('vous devez être dans un channel vocal pour déplacer Swagrid')
+				if(message.member.voiceChannelID == null && !source.force) {
+					message.reply('vous devez être dans un channel vocal pour effectuer cette action')
 						.then(resolve)
 						.catch(reject);
 				} else {
@@ -256,7 +272,7 @@ dispatcher.register(
 				/** @type {Discord.Message} */
 				let message = source.message;
 				if(message.member.voiceChannelID == null) {
-					message.reply('vous devez être dans un channel vocal pour déplacer Swagrid')
+					message.reply('vous devez être dans un channel vocal pour effectuer cette action')
 						.then(resolve)
 						.catch(reject);
 				} else {
@@ -317,13 +333,13 @@ dispatcher.register(
 dispatcher.register(
 	literal('delete')
 		.then(
-			argument('name', true)
-				.executes((source, ...name) => {
+			argument('names', true)
+				.executes((source, ...names) => {
 					return new Promise((resolve, reject) => {
 						/** @type {Discord.Message} */
 						let message = source.message;
 
-						if(!message.member.voiceChannel) {
+						if(!message.member.voiceChannel && !source.force) {
 							reject('Vous devez être dans un channel vocal pour exécuter cette commande');
 						} else {
 							let deletable = Array.from(message.mentions.members.values()).filter(member => {
@@ -363,7 +379,7 @@ dispatcher.register(
 
 dispatcher.register(
 	literal('emojipopularity')
-		.executes((source, keyword) => {
+		.executes((source) => {
 			return new Promise((resolve, reject) => {
 				/** @type {Discord.Message} */
 				let message = source.message;
@@ -488,65 +504,6 @@ dispatcher.register(
 								.then(resolve)
 								.catch(reject);
 						}
-						
-
-						/*let command = dispatcher.commands.get(commandName);
-						if(command !== undefined) {
-							let descHelp = '';
-							let exploration = [{
-								command: command,
-								usage: command.name
-							}];
-
-							while(exploration.length > 0) {
-								let exp = exploration.shift();
-
-								if(exp.command.executable && exp.command.permission.checkPermission(message.member)) {
-									descHelp += `- "${exp.usage}": ${exp.command.description}\n`;
-								}
-
-								for(let lit of exp.command.literals.values()) {
-									exploration.push({
-										command: lit,
-										usage: exp.usage + ' ' + lit.name
-									});
-								}
-								if(exp.command.argument) {
-									exploration.push({
-										command: exp.command.argument,
-										usage: exp.usage + ' ' + exp.command.argument.name
-									});
-								}
-							}
-
-							if(descHelp === '') {
-								reject('permission insuffisante pour voir cette commande');
-							} else {
-								message.channel.send(`-- Aide pour la commande "${command.name}" --\n${descHelp}`)
-									.then(resolve)
-									.catch(reject);
-							}
-						} else {
-							message.reply(`commande inconnue: "${commandName}"`)
-								.then(resolve)
-								.catch(reject);
-						}*/
-
-						
-
-						/*
-						let command = dispatcher.commands.get(commandName);
-						if(command === undefined) {
-							message.reply(`commande inconnue: "${commandName}"`)
-								.then(resolve)
-								.catch(reject);
-						} else if(command.permission.checkPermission(message.member)) {
-							message.channel.send(`-- Aide pour ${command.name} --\nDescription:\`\`\`\n${command.description}\`\`\``)
-								.then(resolve)
-								.catch(reject);
-						} else {
-							reject('permission insuffisante pour voir cette commande');
-						}*/
 					});
 				})
 				.description('Affiche l\'aide d\'une commande en particulier')
@@ -556,22 +513,16 @@ dispatcher.register(
 				/** @type {Discord.Message} */
 				let message = source.message;
 
-				//let result = 'Liste des commandes disponibles pour vous:';
-
-				//let descHelp = 'Liste des commandes disponibles pour vous:\n';
-
-				/*for(let command of dispatcher.commands.values())
-					descriptions.push(command.getUsages(config.prefix).map(({ usage, description }) => usage + ': ' + description).join('\n'));*/
-
 				let descriptions = Array.from(dispatcher.commands.values())
-					.filter(command =>Permission[command.getPermission()].checkPermission(message.member))
-					.map(command => command.getUsages(config.prefix)
-						.map(({ usage, description }) => usage + ': ' + description)
-						.join('\n'))
-					.join('\n')
-				;
+					.filter(command => Permission[command.getPermission()].checkPermission(message.member))
+					.map(command =>
+						command.getUsages(config.prefix)
+							.map(({ usage, description }) => usage + ': ' + description)
+							.join('\n')
+					)
+					.join('\n');
 
-				message.channel.send(`Liste des commandes disponibles pour vous:\`\`\`${descriptions}\`\`\`Pour obtenir de l'aide sur une commande, entrez "${config.prefix}help <nom de la commande>"`)
+				message.channel.send(`Liste des commandes disponibles pour vous:\`\`\`${descriptions}\`\`\``)
 					.then(resolve)
 					.catch(reject);
 			});
