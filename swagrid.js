@@ -107,7 +107,53 @@ dispatcher.register(
 
 dispatcher.register(
 	literal('join')
-		.executes((source) => {
+		.then(
+			argument('channel', true)
+				.executes((source, ...channel) => {
+					return new Promise((resolve, reject) => {
+						/** @type {Discord.Guild} */
+						let guild = source.message.guild;
+
+						/** @type {Map<string, number} */
+						let count = new Map();
+
+						for(let [,chan] of guild.channels) {
+							if(chan instanceof Discord.VoiceChannel) {
+								for(let word of channel) {
+									if(chan.name.match(new RegExp(word, 'i'))) {
+										if(count.has(chan.id)) {
+											count.set(chan.id, 1);
+										} else {
+											count.set(chan.id, count.get(chan.id) + 1);
+										}
+									}
+								}
+							}
+						}
+
+						let sorted = [...count.entries()].sort(([ ,v1 ], [ ,v2 ]) => {
+							return v2 - v1;
+						});
+
+						if(sorted.length > 0) {
+							Music.voiceChannel = guild.channels.find(chan => chan.id === sorted[0][0]).voiceChannel;
+							Music.voiceChannel.join().then(connection => {
+								Music.voiceConnection = connection;
+								resolve();
+							}).catch(err => {
+								Music.voiceChannel = null;
+								Music.voiceConnection = null;
+								reject(err);
+							});
+						} else {
+							reject('channel non trouvé');
+						}
+					});
+				})
+				.permission('expert')
+				.description('Fait rejoindre à Swagrid le channel passé en paramètre')
+		)
+		.executes(source => {
 			return new Promise((resolve, reject) => {
 				/** @type {Discord.GuildMember} */
 				let member = source.message.member;
