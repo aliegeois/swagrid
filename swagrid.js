@@ -141,7 +141,7 @@ dispatcher.register(
 						console.log('sorted', sorted);
 
 						if(sorted.length > 0) {
-							Music.voiceChannel = sorted[0].voiceChannel;
+							Music.voiceChannel = sorted[0];
 							Music.voiceChannel.join().then(connection => {
 								Music.voiceConnection = connection;
 								resolve();
