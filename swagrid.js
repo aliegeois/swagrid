@@ -95,7 +95,7 @@ dispatcher.register(
 			argument('command', true)
 				.executes((source, ...command) => {
 					return new Promise((resolve, reject) => {
-						dispatcher.parse({...source, ...{ force: true }}, command)
+						dispatcher.parse({...source, ...{ force: true }}, command.join(' '))
 							.then(resolve)
 							.catch(reject);
 					});
