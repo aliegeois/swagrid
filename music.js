@@ -52,7 +52,7 @@ module.exports = class Music {
 		this.__status__ = 'play';
 		this.__playing__ = song;
 		ytdl(song.url).then(stream => {
-			console.log('stream', stream);
+			//console.log('stream', stream);
 			this.__dispatcher__ = this.voiceConnection.playOpusStream(stream);
 			this.__dispatcher__.on('end', reason => {
 				switch(reason) {
