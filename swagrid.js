@@ -90,6 +90,21 @@ dispatcher.register(
 );
 
 dispatcher.register(
+	literal('ouaismaiscestpastoiquidecide')
+		.executes((source) => {
+			return new Promise((resolve, reject) => {
+				dispatcher.parse(source, 'join')
+					.then(() => {
+						Music.voiceConnection.playFile('ouaismaiscestpastoiquidecide.m4a');
+						resolve();
+					})
+					.catch(reject);
+			});
+		})
+		.description('OUAIS MAIS C\'EST PAS TOI QUI DÉCIDE !')
+);
+
+dispatcher.register(
 	literal('force')
 		.then(
 			argument('command', true)
