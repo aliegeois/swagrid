@@ -35,6 +35,33 @@ module.exports = class Music {
 	}
 
 	/**
+	 * Fait rejoindre un channel vocal
+	 * @param {Discord.VoiceChannel} voiceChannel Le channel vocal à rejoindre
+	 * @returns {Promise<Discord.VoiceConnection>}
+	 */
+	join(voiceChannel) {
+		return new Promise((resolve, reject) => {
+			this.voiceChannel = voiceChannel;
+			this.voiceChannel.join()
+				.then(connection => {
+					this.voiceConnection = connection;
+					resolve(connection);
+				}).catch(err => {
+					this.voiceChannel = null;
+					this.voiceConnection = null;
+					reject(err);
+				});
+		});
+	}
+
+	leave() {
+		if(this.voiceChannel instanceof Discord.VoiceChannel)
+			this.voiceChannel.leave();
+		this.voiceChannel = null;
+		this.voiceConnection = null;
+	}
+
+	/**
 	 * Ajoute une vidéo à la file d'attente. Joue la vidéo si la file est vide
 	 * @param {string} url L'URL de la vidéo
 	 * @param {string} title Le titre de la vidéo

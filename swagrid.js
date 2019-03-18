@@ -21,14 +21,11 @@ const Music = new (require('./music'))(),
 	{ Permission, CommandDispatcher, literal, argument } = require('./commandDispatcher');
 
 //** @type {{prefix: string, owner: string, guilds: [{id: string, permissions: [{name: string, roleId: string}]}]}} */
+/** @type {{prefix: string, owner: string, errorMessages: any, guilds: any}} */
 const config = require('./config.json');
-//** @type {{}|{TOKEN: string, YT: string}} */
-//const env = local ? require('./env.json') : {};
 
 /** @type {string} */
-//var ytKey = (local ? env : process.env).YT;
 var ytKey = process.env.YT;
-console.log('DATABASE_URL: ' + process.env.DATABASE_URL);
 /** @type {Sequelize} */
 var sequelize;
 /** @type {Sequelize.Model} */
@@ -116,8 +113,6 @@ dispatcher.register(
 						/** @type {Map<string, [Discord.VoiceChannel, number]} */
 						let count = new Map();
 
-						console.log('channel: ', channel);
-
 						for(let [,chan] of guild.channels) {
 							if(chan instanceof Discord.VoiceChannel) {
 								for(let word of channel) {
@@ -132,26 +127,16 @@ dispatcher.register(
 							}
 						}
 
-						console.log('map', count);
-
 						let sorted = [...count.entries()].sort(([ ,[ ,v1 ] ], [ ,[ ,v2 ] ]) => {
 							return v2 - v1;
 						}).map(([ ,[ chan ] ]) => chan);
 
-						console.log('sorted', sorted);
-
 						if(sorted.length > 0) {
-							Music.voiceChannel = sorted[0];
-							Music.voiceChannel.join().then(connection => {
-								Music.voiceConnection = connection;
-								resolve();
-							}).catch(err => {
-								Music.voiceChannel = null;
-								Music.voiceConnection = null;
-								reject(err);
-							});
+							Music.join(sorted[0])
+								.then(resolve)
+								.catch(reject);
 						} else {
-							reject('channel non trouvé');
+							reject('channel non trouvé'); // TODO err
 						}
 					});
 				})
@@ -162,19 +147,13 @@ dispatcher.register(
 			return new Promise((resolve, reject) => {
 				/** @type {Discord.GuildMember} */
 				let member = source.message.member;
-				if(member.voiceChannelID == null) {
-					source.message.reply('vous devez être dans un channel vocal pour invoquer Swagrid').catch(_=>{});
+				if(member.voiceChannelID === null) {
+					source.message.reply('vous devez être dans un channel vocal pour invoquer Swagrid').catch(_=>{}); // TODO err
 					resolve();
 				} else {
-					Music.voiceChannel = member.voiceChannel;
-					Music.voiceChannel.join().then(connection => {
-						Music.voiceConnection = connection;
-						resolve();
-					}).catch(err => {
-						Music.voiceChannel = null;
-						Music.voiceConnection = null;
-						reject(err);
-					});
+					Music.join(member.voiceChannel)
+						.then(resolve)
+						.catch(reject);
 				}
 			});
 		})
@@ -187,14 +166,12 @@ dispatcher.register(
 			return new Promise((resolve, reject) => {
 				/** @type {Discord.Message} */
 				let message = source.message;
-				if(message.member.voiceChannelID == null && !source.force) {
-					message.reply('vous devez être dans le même channel vocal que Swagrid pour exécuter cetet action')
+				if(message.member.voiceChannelID === null && !source.force) {
+					message.reply('vous devez être dans le même channel vocal que Swagrid pour exécuter cetet action') // TODO err
 						.then(resolve)
 						.catch(reject);
 				} else {
-					Music.voiceChannel.leave();
-					Music.voiceChannel = null;
-					Music.voiceConnection = null;
+					Music.leave();
 					resolve();
 				}
 			});
@@ -210,11 +187,11 @@ dispatcher.register(
 					return new Promise(async (resolve, reject) => {
 						/** @type {Discord.Message} */
 						let message = source.message;
-						if(Music.voiceConnection == null) {
+						if(Music.voiceConnection === null) {
 							await dispatcher.parse(source, 'join');
 						}
-						if(message.member.voiceChannelID != Music.voiceChannel.id && !source.force) {
-							message.reply('Petit boloss, arrête de mettre des sons si tu n\'es pas dans le channel')
+						if(message.member.voiceChannelID !== Music.voiceChannel.id && !source.force) {
+							message.reply('Petit boloss, arrête de mettre des sons si tu n\'es pas dans le channel') // TODO err
 								.then(resolve)
 								.catch(reject);
 						} else {
@@ -250,12 +227,12 @@ dispatcher.register(
 			return new Promise((resolve, reject) => {
 				/** @type {Discord.Message} */
 				let message = source.message;
-				if(Music.playing == '') {
-					message.reply('Aucune musique en cours de lecture')
+				if(Music.playing === '') {
+					message.reply('Aucune musique en cours de lecture') // TODO err
 						.then(resolve)
 						.catch(reject);
 				} else {
-					message.reply(`"${Music.playing}" est en cours de lecture`)
+					message.reply(`"${Music.playing}" est en cours de lecture`) // TODO msg
 						.then(resolve)
 						.catch(reject);
 				}
@@ -284,8 +261,8 @@ dispatcher.register(
 			return new Promise((resolve, reject) => {
 				/** @type {Discord.Message} */
 				let message = source.message;
-				if(message.member.voiceChannelID == null && !source.force) {
-					message.reply('vous devez être dans un channel vocal pour effectuer cette action')
+				if(message.member.voiceChannelID === null && !source.force) {
+					message.reply('vous devez être dans un channel vocal pour effectuer cette action') // TODO err
 						.then(resolve)
 						.catch(reject);
 				} else {
@@ -303,8 +280,8 @@ dispatcher.register(
 			return new Promise((resolve, reject) => {
 				/** @type {Discord.Message} */
 				let message = source.message;
-				if(message.member.voiceChannelID == null && !source.force) {
-					message.reply('vous devez être dans un channel vocal pour effectuer cette action')
+				if(message.member.voiceChannelID === null && !source.force) {
+					message.reply('vous devez être dans un channel vocal pour effectuer cette action') // TODO err
 						.then(resolve)
 						.catch(reject);
 				} else {
@@ -322,8 +299,8 @@ dispatcher.register(
 			return new Promise((resolve, reject) => {
 				/** @type {Discord.Message} */
 				let message = source.message;
-				if(message.member.voiceChannelID == null) {
-					message.reply('vous devez être dans un channel vocal pour effectuer cette action')
+				if(message.member.voiceChannelID === null) {
+					message.reply('vous devez être dans un channel vocal pour effectuer cette action') //TODO err
 						.then(resolve)
 						.catch(reject);
 				} else {
@@ -345,33 +322,32 @@ dispatcher.register(
 							.then(result => {
 								/** @type {Discord.Message} */
 								let message = source.message;
-								let post;
 
 								try {
-									post = JSON.parse(result);
-								} catch(e) {
-									reject('erreur durant l\'analyse des données');
-								}
+									let post = JSON.parse(result);
 
-								if(post == []) {
-									message.reply('aucun résultat')
-										.then(resolve)
-										.catch(reject);
-								} else if(post.success === false) {
-									if(post.message === 'You cannot search for more than 2 tags at a time') {
-										message.reply('recherche limitée à 2 tags')
+									if(post.length === 0) {
+										message.reply('aucun résultat') // TODO err
 											.then(resolve)
 											.catch(reject);
+									} else if(post.success === false) {
+										if(post.message === 'You cannot search for more than 2 tags at a time') {
+											message.reply('recherche limitée à 2 tags') // TODO err
+												.then(resolve)
+												.catch(reject);
+										} else {
+											message.reply(`erreur: ${post.message}`) // TODO err
+												.then(resolve)
+												.catch(reject);
+										}
 									} else {
-										message.reply(`erreur: ${post.message}`)
-											.then(resolve)
-											.catch(reject);
+										let url = post[0].file_url;
+										message.channel.send({
+											file: url
+										}).then(resolve).catch(reject);
 									}
-								} else {
-									let url = post[0].file_url;
-									message.channel.send({
-										file: url
-									}).then(resolve).catch(reject);
+								} catch(e) {
+									reject('erreur durant l\'analyse des données'); // TODO err
 								}
 							})
 							.catch(reject);
@@ -391,7 +367,7 @@ dispatcher.register(
 						let message = source.message;
 
 						if(!message.member.voiceChannel && !source.force) {
-							reject('Vous devez être dans un channel vocal pour exécuter cette commande');
+							reject('Vous devez être dans un channel vocal pour exécuter cette commande'); // TODO err
 						} else {
 							let deletable = Array.from(message.mentions.members.values()).filter(member => {
 								let guildMember = message.member.voiceChannel.members.get(member.id);
@@ -416,7 +392,7 @@ dispatcher.register(
 										}
 									}).catch(reject);
 							} else {
-								message.reply('Personne à supprimer')
+								message.reply('Personne à supprimer') // TODO err
 									.then(resolve)
 									.catch(reject);
 							}
@@ -436,11 +412,9 @@ dispatcher.register(
 				let message = source.message;
 
 				Emoji.findAll().then(emojis => {
-					emojis.sort((e1, e2) => {
-						return e2.count - e1.count;
-					});
+					emojis.sort((e1, e2) => e2.count - e1.count);
 
-					let msg = 'Popularité des émojis par nombre d\'utilisations:';
+					let msg = 'Popularité des émojis par nombre d\'utilisations:'; // TODO msg
 					for(let emoji of emojis)
 						if(emoji.count > 0)
 							msg += `\n${emoji.count} : ${message.member.guild.emojis.get(emoji.emojiId)}`;
@@ -449,59 +423,13 @@ dispatcher.register(
 						.then(resolve)
 						.catch(reject);
 				}).catch(err => {
-					console.error(`erreur retrieve all emojis: ${err}`);
+					console.error(`erreur retrieve all emojis: ${err}`); // TODO err
 					reject(err);
 				});
 			});
 		})
 		.description('Affiche la popularité des émojis du serveur')
 );
-
-/*dispatcher.register(
-	literal('addpermission')
-		.then(
-			argument('name')
-				.then(
-					argument('role')
-						.executes((message, name, role) => {
-							return new Promise((resolve, reject) => {
-								resolve();
-							});
-						})
-				)
-				
-		)
-);
-
-dispatcher.register(
-	literal('setpermission')
-		.then(
-			argument('command')
-				.then(
-					argument('roleName')
-						.executes((message, command, roleName) => {
-							return new Promise((resolve, reject) => {
-								resolve();
-							});
-						})
-				)
-				
-		)
-);
-
-dispatcher.register(
-	literal('removepermission')
-		.then(
-			argument('name')
-				.executes((message, name) => {
-					return new Promise((resolve, reject) => {
-						resolve();
-					});
-				})
-		)
-);*/
-
-
 
 dispatcher.register(
 	literal('eval')
@@ -551,7 +479,7 @@ dispatcher.register(
 								.then(resolve)
 								.catch(reject);
 						} else {
-							message.reply(`commande inconnue: "${command}"`)
+							message.reply(`commande inconnue: "${command}"`) // TODO err
 								.then(resolve)
 								.catch(reject);
 						}
@@ -573,7 +501,7 @@ dispatcher.register(
 					)
 					.join('\n');
 
-				message.channel.send(`Liste des commandes disponibles pour vous:\`\`\`${descriptions}\`\`\``)
+				message.channel.send(`Liste des commandes disponibles pour vous:\`\`\`${descriptions}\`\`\``) // TODO msg
 					.then(resolve)
 					.catch(reject);
 			});
@@ -585,7 +513,7 @@ dispatcher.register(
 function countEmojis(message) {
 	/** @type {RegExpMatchArray} */
 	let strs = message.content.match(/<:[A-Za-z]+:[0-9]+>/g);
-	if(strs != null) {
+	if(strs !== null) {
 		strs.reduce((previous, current) => {
 			//let [name, id] = current.slice(2, -1).split(':');
 			let [, id] = current.slice(2, -1).split(':');
@@ -597,14 +525,14 @@ function countEmojis(message) {
 								emojiId: id
 							}
 						}).then(emoji => {
-							if(emoji == null) {
+							if(emoji === null) {
 								Emoji.create({
 									emojiId: id,
 									count: 1
 								}).then(() => {
 									resolve();
 								}).catch(err => {
-									console.error(`erreur create emoji: ${err}`);
+									console.error(`erreur create emoji: ${err}`); // TODO err
 									reject(err);
 								});
 							} else {
@@ -617,26 +545,24 @@ function countEmojis(message) {
 								}).then(() => {
 									resolve();
 								}).catch(err => {
-									console.error(`erreur update emoji: ${err}`);
+									console.error(`erreur update emoji: ${err}`); // TODO err
 									reject(err);
 								});
 							}
 						}).catch(err => {
-							console.error(`erreur find emoji: ${err}`);
+							console.error(`erreur find emoji: ${err}`); // TODO err
 							reject(err);
 						});
 					});
 				}).catch(err => {
-					console.error(`arg: ${err}`);
+					console.error(`arg: ${err}`); // TODO err
 					return Promise.resolve();
 				});
 			} else {
-				console.error('Emoji invalide');
+				console.error('Emoji invalide'); // TODO err
 				return Promise.resolve();
 			}
-		}, new Promise((resolve, reject) => {
-			resolve();
-		}));
+		}, Promise.resolve());
 	}
 }
 
@@ -651,12 +577,11 @@ function resetDB(tables) {
 					.then(() => {
 						console.log(table + ' has been reset');
 					})
-					.catch(_ => {
-						console.log(table + ' has been reset');
-						reject();
+					.catch(err => {
+						reject(err);
 					}).finally(() => {
 						synced++;
-						if(synced == tables.length)
+						if(synced === tables.length)
 							resolve();
 					});
 			}
@@ -668,15 +593,15 @@ client.on('ready', () => {
 	console.log('Initialisation de Swagrid...');
 	client.user.setActivity('de la magie', {type: 'WATCHING'});
 
+	// Récupérer la config de chaque guild
 	for(let [id, guild] of client.guilds) {
-		//console.log('check config for ' + guild.name);
+		/** @type {{permissions: Array.<{name: string, roleId: string}>, loggingChannel: string}} */
 		let guildConfig = config.guilds[id];
 
 		if(guildConfig === undefined)
 			continue;
 		if(typeof guildConfig.permissions !== 'object' || !(Symbol.iterator in guildConfig.permissions))
 			continue;
-		//console.log('config found');
 
 		for(let perm of guildConfig.permissions) {
 			if(typeof perm.name !== 'string' || typeof perm.roleId !== 'string')
@@ -685,7 +610,6 @@ client.on('ready', () => {
 				continue;
 			if(!guild.roles.has(perm.roleId))
 				continue;
-			//console.log('checking permission ' + perm.name);
 			
 			Permission[perm.name] = new Permission(user => {
 				let role = guild.roles.get(perm.roleId);
@@ -710,16 +634,6 @@ client.on('ready', () => {
 		}
 	}
 
-	/*for(let [,vc] of client.voiceConnections) {
-		Music.voiceChannel = vc;
-		Music.voiceChannel.join().then(connection => {
-			Music.voiceConnection = connection;
-		}).catch(_ => {
-			Music.voiceChannel = null;
-			Music.voiceConnection = null;
-		});
-	}*/
-
 	console.info('Prêt à défoncer des mères');
 });
 
@@ -729,7 +643,7 @@ client.on('message', message => {
 	
 	let content = message.content.trim();
 	
-	if(content.indexOf(config.prefix) !== 0) {
+	if(content.indexOf(config.prefix) !== 0 || content.length > 1 && content[1] === ' ') {
 		countEmojis(message);
 		return;
 	}
@@ -751,12 +665,12 @@ client.on('messageReactionAdd', (reaction, user) => {
 				emojiId: emojiId
 			}
 		}).then(emoji => {
-			if(emoji == null) {
+			if(emoji === null) {
 				Emoji.create({
 					emojiId: emojiId,
 					count: 1
 				}).catch(err => {
-					console.error(`erreur create emoji: ${err}`);
+					console.error(`erreur create emoji: ${err}`); // TODO err
 				});
 			} else {
 				Emoji.update({
@@ -766,11 +680,11 @@ client.on('messageReactionAdd', (reaction, user) => {
 						emojiId: emojiId
 					}
 				}).catch(err => {
-					console.error(`erreur update emoji: ${err}`);
+					console.error(`erreur update emoji: ${err}`); // TODO err
 				});
 			}
 		}).catch(err => {
-			console.error(`erreur find emoji: ${err}`);
+			console.error(`erreur find emoji: ${err}`); // TODO err
 		});
 	}
 });
@@ -784,7 +698,7 @@ client.on('messageReactionRemove', (reaction, _) => {
 				emojiId: emojiId
 			}
 		}).then(emoji => {
-			if(emoji != null) {
+			if(emoji !== null) {
 				Emoji.update({
 					count: emoji.count - 1
 				}, {
@@ -792,12 +706,11 @@ client.on('messageReactionRemove', (reaction, _) => {
 						emojiId: emojiId
 					}
 				}).catch(err => {
-					console.error(`erreur update emoji: ${err}`);
+					console.error(`erreur update emoji: ${err}`); // TODO err
 				});
-				console.log(`emoji number (after): ${emoji.count - 1}`);
 			}
 		}).catch(err => {
-			console.error(`erreur find emoji: ${err}`);
+			console.error(`erreur find emoji: ${err}`); // TODO err
 		});
 	}
 });
@@ -817,9 +730,10 @@ client.on('voiceStateUpdate', (oldmember, newmember) => { // Update packages
 				if(newvoice.id === client.user.id) {
 					// Swagrid a été déplacé
 					Music.voiceChannel = newvoice;
+					Music.voiceConnection = newvoice.connection;
 				} else {
 					// Quelqu'un d'autre est déplacé
-					if(newvoice.id == '520211457481113610') {
+					if(newvoice.id === '520211457481113610') {
 						newmember.addRole('520210711767678977').catch(()=>{});
 					}
 					// Vestiges du 10s
@@ -878,5 +792,4 @@ var listener = app.listen(process.env.PORT, () => {
 	console.info('Swagrid présent sur le port ' + listener.address().port);
 });
 
-//client.login((local ? env : process.env).TOKEN);
 client.login(process.env.TOKEN);

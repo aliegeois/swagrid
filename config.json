@@ -1,6 +1,9 @@
 {
 	"prefix": "+",
 	"owner": "239844879688007681",
+	"errorMessages": {
+		
+	},
 	"guilds": {
 		"307821648835248130": {
 			"permissions": [
