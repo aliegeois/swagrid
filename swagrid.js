@@ -78,11 +78,12 @@ dispatcher.register(
 	literal('fanta')
 		.executes((source) => {
 			return new Promise((resolve, reject) => {
-				Music.voiceConnection.playFile('fanta.m4a');
-				resolve();
-				/*dispatcher.parse(source, 'play tSKCyEOESCI')
-					.then(resolve)
-					.catch(reject);*/
+				dispatcher.parse(source, 'join')
+					.then(() => {
+						Music.voiceConnection.playFile('fanta.m4a');
+						resolve();
+					})
+					.catch(reject);
 			});
 		})
 		.description('MAIS TA GUEULE !')
