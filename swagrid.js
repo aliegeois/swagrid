@@ -78,9 +78,11 @@ dispatcher.register(
 	literal('fanta')
 		.executes((source) => {
 			return new Promise((resolve, reject) => {
-				dispatcher.parse(source, 'play tSKCyEOESCI')
+				Music.voiceConnection.playFile('fanta.m4a');
+				resolve();
+				/*dispatcher.parse(source, 'play tSKCyEOESCI')
 					.then(resolve)
-					.catch(reject);
+					.catch(reject);*/
 			});
 		})
 		.description('MAIS TA GUEULE !')
@@ -657,7 +659,7 @@ client.on('message', message => {
 		});
 });
 
-client.on('messageReactionAdd', (reaction, user) => {
+client.on('messageReactionAdd', (reaction, _) => {
 	let emojiId = reaction.emoji.id;
 	if(reaction.message.member.guild.emojis.has(emojiId)) {
 		Emoji.findOne({
