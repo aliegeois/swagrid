@@ -428,7 +428,7 @@ dispatcher.register(
 						/** @type {Discord.Message} */
 						let message = source.message;
 
-						let sEmbed = embed.join(' ').slice(3, -3);
+						let sEmbed = embed.join(' ')/*.slice(3, -3)*/;
 						try {
 							let oEmbed = JSON.parse(sEmbed);
 							message.channel.send(oEmbed)
