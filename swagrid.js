@@ -420,30 +420,6 @@ dispatcher.register(
 );
 
 dispatcher.register(
-	literal('embed')
-		.then(
-			argument('embed', true)
-				.executes((source, ...embed) => {
-					return new Promise((resolve, reject) => {
-						/** @type {Discord.Message} */
-						let message = source.message;
-
-						let sEmbed = embed.join(' ').slice(3, -3).replace('\n', '');
-						try {
-							let oEmbed = JSON.parse(sEmbed);
-							message.channel.send(oEmbed)
-								.then(resolve)
-								.catch(reject);
-						} catch(err) {
-							reject(err);
-						}
-					});
-				})
-				.description('envoie un message embed')
-		)
-);
-
-dispatcher.register(
 	literal('emojipopularity')
 		.executes((source) => {
 			return new Promise((resolve, reject) => {
