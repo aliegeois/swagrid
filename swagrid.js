@@ -29,7 +29,7 @@ var ytKey = process.env.YT;
 /** @type {Sequelize} */
 var sequelize;
 /** @type {Sequelize.Model} */
-var Emoji;
+var Emoji, Battle;
 
 Permission.expert = new Permission(user => user.id === config.owner);
 const dispatcher = new CommandDispatcher();
@@ -77,13 +77,10 @@ dispatcher.register(
 dispatcher.register(
 	literal('fanta')
 		.executes((source) => {
-			return new Promise((resolve, reject) => {
-				dispatcher.parse(source, 'join')
-					.then(() => {
-						Music.voiceConnection.playFile('fanta.m4a');
-						resolve();
-					})
-					.catch(reject);
+			return new Promise(async (resolve, reject) => {
+				if(Music.voiceChannel === null)
+					await Music.join();
+				Music.voiceConnection.playFile('fanta.m4a');
 			});
 		})
 		.description('MAIS TA GUEULE !')
@@ -423,6 +420,30 @@ dispatcher.register(
 );
 
 dispatcher.register(
+	literal('embed')
+		.then(
+			argument('embed', true)
+				.executes((source, ...embed) => {
+					return new Promise((resolve, reject) => {
+						/** @type {Discord.Message} */
+						let message = source.message;
+
+						let sEmbed = embed.join(' ').slice(3, -3);
+						try {
+							let oEmbed = JSON.parse(sEmbed);
+							message.channel.send(oEmbed)
+								.then(resolve)
+								.catch(reject);
+						} catch(err) {
+							reject(err);
+						}
+					});
+				})
+				.description('envoie un message embed')
+		)
+);
+
+dispatcher.register(
 	literal('emojipopularity')
 		.executes((source) => {
 			return new Promise((resolve, reject) => {
@@ -607,6 +628,106 @@ function resetDB(tables) {
 	});
 }
 
+/**
+ * 
+ * @param {Discord.TextChannel} channel 
+ */
+function emojiFight(channel) {
+	Emoji.findAll({
+		order: [
+			[ 'emojiId', 'ASC' ]
+		]
+	}).then(emojis => {
+		let now = new Date().getTime();
+		emojis.map(emoji => (now - emoji.lastBattle) / now);
+	}).catch(err => {
+		console.log(err);
+	});
+	let guildEmojis = Array.from(channel.guild.emojis.values());
+	let r1 = Math.floor(Math.random() * guildEmojis.length),
+		r2 = r1 + Math.floor(Math.random() * (guildEmojis.length - 1)) + 1;
+	let e1 = guildEmojis[r1],
+		e2 = guildEmojis[r2];
+	
+	Emoji.findAll({
+		where: {
+			emojiId: [e1.id, e2.id]
+		}
+	}).then(emojis => {
+		if(emojis.length === 2) {
+			channel.send(`Bataille entre ${e1} et ${e2} !\nVotez pour votre préféré`).then(message => {
+				let t = 0;
+				function end() {
+					if((++t) === 2) {
+						Battle.findOne();
+					}
+				}
+				message.react(e1).then(end).catch(()=>{});
+				message.react(e2).then(end).catch(()=>{});
+			}).catch(()=>{});
+		} else {
+			// aled
+		}
+
+
+		/*if(emoji === null) {
+			Emoji.create({
+				emojiId: emojiId,
+				count: 1
+			}).catch(err => {
+				console.error(`erreur create emoji: ${err}`); // TODO err
+			});
+		} else {
+			Emoji.update({
+				count: emoji.count + 1
+			}, {
+				where: {
+					emojiId: emojiId
+				}
+			}).catch(err => {
+				console.error(`erreur update emoji: ${err}`); // TODO err
+			});
+		}*/
+	}).catch(err => {
+		console.error(`erreur find emoji: ${err}`); // TODO err
+	});
+}
+
+/**
+ * 
+ * @param {string} emojiId Id de l'émoji
+ * @param {boolean} add Ajout ou retrait ?
+ * @param {number} init Valeur initiale si l'émoji n'existe pas
+ */
+function updateEmoji(emojiId, add, init) {
+	Emoji.findOne({
+		where: {
+			emojiId: emojiId
+		}
+	}).then(emoji => {
+		if(emoji === null) {
+			Emoji.create({
+				emojiId: emojiId,
+				count: init
+			}).catch(err => {
+				console.error(`erreur create emoji: ${err}`); // TODO err
+			});
+		} else {
+			Emoji.update({
+				count: emoji.count += add ? 1 : -1
+			}, {
+				where: {
+					emojiId: emojiId
+				}
+			}).catch(err => {
+				console.error(`erreur update emoji: ${err}`); // TODO err
+			});
+		}
+	}).catch(err => {
+		console.error(`erreur find emoji: ${err}`); // TODO err
+	});
+}
+
 client.on('ready', () => {
 	console.log('Initialisation de Swagrid...');
 	client.user.setActivity('de la magie', {type: 'WATCHING'});
@@ -675,10 +796,13 @@ client.on('message', message => {
 		});
 });
 
-client.on('messageReactionAdd', (reaction, _) => {
+client.on('messageReactionAdd', (reaction, user) => {
+	if(user.bot)
+		return;
+	
 	let emojiId = reaction.emoji.id;
 	if(reaction.message.member.guild.emojis.has(emojiId)) {
-		Emoji.findOne({
+		/*Emoji.findOne({
 			where: {
 				emojiId: emojiId
 			}
@@ -703,15 +827,18 @@ client.on('messageReactionAdd', (reaction, _) => {
 			}
 		}).catch(err => {
 			console.error(`erreur find emoji: ${err}`); // TODO err
-		});
+		});*/
+		updateEmoji(emojiId, true, 1);
 	}
 });
 
-client.on('messageReactionRemove', (reaction, _) => {
-	/** @type {string} */
+client.on('messageReactionRemove', (reaction, user) => {
+	if(user.bot)
+		return;
+	
 	let emojiId = reaction.emoji.id;
 	if(reaction.message.member.guild.emojis.has(emojiId)) {
-		Emoji.findOne({
+		/*Emoji.findOne({
 			where: {
 				emojiId: emojiId
 			}
@@ -729,7 +856,8 @@ client.on('messageReactionRemove', (reaction, _) => {
 			}
 		}).catch(err => {
 			console.error(`erreur find emoji: ${err}`); // TODO err
-		});
+		});*/
+		updateEmoji(emojiId, false, 0);
 	}
 });
 
@@ -795,11 +923,22 @@ sequelize.authenticate().then(() => {
 	console.info('Authentication to database successful');
 	
 	Emoji = sequelize.define('emoji', {
-		emojiId: {
+		emojiId: { // Son identifiant, donné par Discord
 			type: Sequelize.STRING,
 			primaryKey: true
 		},
-		count: Sequelize.INTEGER
+		count: Sequelize.INTEGER, // Nombre d'utilisations de cet émoji
+		elo: Sequelize.INTEGER, // son elo
+		lastBattle: Sequelize.INTEGER // Date (timestamp) de la dernière bataille dans laquelle il a participé
+	});
+	Battle = sequelize.define('battle', {
+		battleId: {
+			type: Sequelize.INTEGER,
+			primaryKey: true
+		},
+		end: Sequelize.INTEGER, // Date de fin (timestamp)
+		emoji1: Sequelize.STRING, // Id de l'émoji 1
+		emoji2: Sequelize.STRING // Id de l'émoji 2
 	});
 }).catch(console.log);
 
