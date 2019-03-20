@@ -29,7 +29,9 @@ var ytKey = process.env.YT;
 /** @type {Sequelize} */
 var sequelize;
 /** @type {Sequelize.Model} */
-var Emoji, Battle;
+var Emoji;
+/** @type {Sequelize.Model} */
+var Battle;
 
 Permission.expert = new Permission(user => user.id === config.owner);
 const dispatcher = new CommandDispatcher();
@@ -426,13 +428,17 @@ dispatcher.register(
 				/** @type {Discord.Message} */
 				let message = source.message;
 
-				Emoji.findAll().then(emojis => {
+				Emoji.findAll({
+					where: {
+						guildId: message.guild.id
+					}
+				}).then(emojis => {
 					emojis.sort((e1, e2) => e2.count - e1.count);
 
 					let msg = 'Popularité des émojis par nombre d\'utilisations:'; // TODO msg
 					for(let emoji of emojis)
 						if(emoji.count > 0)
-							msg += `\n${emoji.count} : ${message.member.guild.emojis.get(emoji.emojiId)}`;
+							msg += `\n${emoji.count} : ${message.member.guild.emojis.get(emoji.id)}`;
 
 					message.channel.send(msg)
 						.then(resolve)
@@ -444,6 +450,15 @@ dispatcher.register(
 			});
 		})
 		.description('Affiche la popularité des émojis du serveur')
+);
+
+dispatcher.register(
+	literal('startBattle')
+		.executes(source => {
+			emojiFight(source.message.channel);
+		})
+		.permission('expert')
+		.description('Lance la bataille des émojis ! (à n\'utiliser qu\'une seule fois en théorie')
 );
 
 dispatcher.register(
@@ -535,14 +550,10 @@ function countEmojis(message) {
 			if(message.guild.emojis.has(id)) {
 				return previous.then(() => {
 					return new Promise((resolve, reject) => {
-						Emoji.findOne({
-							where: {
-								emojiId: id
-							}
-						}).then(emoji => {
+						Emoji.findByPk(id).then(emoji => {
 							if(emoji === null) {
 								Emoji.create({
-									emojiId: id,
+									id: id,
 									count: 1
 								}).then(() => {
 									resolve();
@@ -555,7 +566,7 @@ function countEmojis(message) {
 									count: emoji.count + 1
 								}, {
 									where: {
-										emojiId: id
+										id: id
 									}
 								}).then(() => {
 									resolve();
@@ -583,107 +594,195 @@ function countEmojis(message) {
 
 /** @param {string[]} tables */
 function resetDB(tables) {
-	let synced = 0;
 	return new Promise((resolve, reject) => {
-		for(let table of tables) {
-			if(tables.includes(table)) {
-				console.log('reset ' + table);
-				Emoji.sync({force: true})
-					.then(() => {
-						console.log(table + ' has been reset');
-					})
-					.catch(err => {
-						reject(err);
-					}).finally(() => {
-						synced++;
-						if(synced === tables.length)
-							resolve();
-					});
-			}
+		let synced = 0;
+		let increment = () => {
+			if((++synced) === tables.length)
+				resolve();
+		};
+
+		if(tables.includes('emoji')) {
+			console.log('reset emoji');
+			Emoji.sync({force: true})
+				.then(() => {
+					console.log('emoji has been reset');
+				})
+				.catch(err => {
+					reject(err);
+				}).finally(increment);
 		}
 	});
 }
 
 /**
  * 
+ * @param {Discord.TextChannel} channel
+ * @param {number} quantity 
+ * @returns {Promise<[number, number][]>}
+ */
+function selectEmojisPairs(channel, quantity) {
+	return new Promise((resolve, reject) => {
+		let battles = new Array(quantity).fill(0);
+
+		Emoji.findAll({
+			where: {
+				guildId: channel.guild.id
+			},
+			order: [
+				[ 'lastBattle', 'ASC' ] // du plus ancien au plus récent
+			]
+		}).then(emojis => {
+			let now = new Date().getTime(),
+				d_emojis = emojis.map(emoji => [emoji.id, Math.random() * (now - emoji.lastBattle) / emojis[0].lastBattle]).sort((e1, e2) => e2[1] - e1[1]);
+
+			for(let i = 0; i < quantity; i++) {
+				let e1 = d_emojis.shift()[0],
+					e2 = d_emojis.shift()[0];
+				
+				battles.push([e1, e2]);
+			}
+
+			resolve(battles);
+		}).catch(reject);
+	});
+}
+
+/**
+ * Lance une bataille entre des émojis pris "au hasard"
  * @param {Discord.TextChannel} channel 
  */
 function emojiFight(channel) {
-	Emoji.findAll({
-		order: [
-			[ 'emojiId', 'ASC' ]
-		]
-	}).then(emojis => {
-		let now = new Date().getTime();
-		emojis.map(emoji => (now - emoji.lastBattle) / now);
-	}).catch(err => {
-		console.log(err);
-	});
-	let guildEmojis = Array.from(channel.guild.emojis.values());
-	let r1 = Math.floor(Math.random() * guildEmojis.length),
-		r2 = r1 + Math.floor(Math.random() * (guildEmojis.length - 1)) + 1;
-	let e1 = guildEmojis[r1],
-		e2 = guildEmojis[r2];
-	
-	Emoji.findAll({
-		where: {
-			emojiId: [e1.id, e2.id]
-		}
-	}).then(emojis => {
-		if(emojis.length === 2) {
-			channel.send(`Bataille entre ${e1} et ${e2} !\nVotez pour votre préféré`).then(message => {
-				let t = 0;
-				function end() {
-					if((++t) === 2) {
-						Battle.findOne();
-					}
-				}
-				message.react(e1).then(end).catch(()=>{});
-				message.react(e2).then(end).catch(()=>{});
-			}).catch(()=>{});
-		} else {
-			// aled
-		}
+	const nbFights = 3;
 
+	selectEmojisPairs(nbFights).then(pairs => {
+		let dateEnd = new Date();
+		/*dateEnd.setDate(dateEnd.getDate() + 1);
+		dateEnd.setHours(0);
+		dateEnd.setMinutes(0);
+		dateEnd.setSeconds(0);
+		dateEnd.setMilliseconds(0);*/
+		// Test
+		dateEnd.setMinutes(dateEnd.getMinutes() + 1);
 
-		/*if(emoji === null) {
-			Emoji.create({
-				emojiId: emojiId,
-				count: 1
-			}).catch(err => {
-				console.error(`erreur create emoji: ${err}`); // TODO err
-			});
-		} else {
-			Emoji.update({
-				count: emoji.count + 1
-			}, {
-				where: {
-					emojiId: emojiId
-				}
-			}).catch(err => {
-				console.error(`erreur update emoji: ${err}`); // TODO err
-			});
-		}*/
-	}).catch(err => {
-		console.error(`erreur find emoji: ${err}`); // TODO err
+		let finished = 0,
+			ids = [];
+		let after = (index, battleId) => {
+			ids[index] = battleId;
+			if((++finished) === nbFights) {
+				setTimeout(endFights, dateEnd.getTime() - new Date().getTime(), channel, ids);
+			}
+		};
+
+		for(let i = 0; i < pairs.length; i++) {
+			let e1 = channel.guild.emojis.get(pairs[i][0]),
+				e2 = channel.guild.emojis.get(pairs[i][1]);
+			channel.send(`Bataille entre ${e1} et ${e2} !\nVotez pour votre préféré (fin: ${dateEnd})`).then(message => {
+				message.react(e1).catch(()=>{});
+				message.react(e2).catch(()=>{});
+
+				Battle.create({
+					messageId: message.id,
+					end: dateEnd.getTime(),
+					emoji1: e1.id,
+					emoji2: e2.id,
+					channelId: message.channel.id
+				}).then(battle => {
+					after(i, battle.id);
+				}).catch(console.log);
+			}).catch(console.log);
+		}
 	});
 }
 
 /**
- * 
- * @param {string} emojiId Id de l'émoji
+ * Calcule des elos
+ * @param {number} elo1 Elo de 1
+ * @param {number} elo2 Elo de 2
+ * @param {number} win 1 - 0 ou .5
+ */
+function calculateElo(elo1, elo2, win) {
+	let p = d => 1 / (1 + Math.pow(10, d / 400));
+	const k = 30;
+	
+	let nElo1 = elo1 + k * (win - p(elo2 - elo1)),
+		nElo2 = elo2 + k * ((1 - win) - p(elo1 - elo2));
+	
+	return [ Math.round(nElo1), Math.round(nElo2) ];
+}
+
+/**
+ * Termine une bataille d'émojis puis passe à la suivante
+ * @param {Discord.TextChannel} channel 
+ * @param {number[]} battlesId 
+ */
+function endFights(channel, battlesId) {
+	Battle.findAll({
+		where: {
+			id: battlesId
+		}
+	}).then(battles => {
+		let realEnded = 0;
+		let realEnd = () => {
+			if((++realEnded) === battles.length)
+				setTimeout(emojiFight, 1, channel);
+		};
+
+		for(let battle of battles) {
+			channel.fetchMessage(battle.messageId).then(message => {
+				let react1 = message.reactions.find(r => r.emoji.id === battle.emoji1),
+					react2 = message.reactions.find(r => r.emoji.id === battle.emoji2);
+				let n1 = react1 ? react1.count - 1 : 0,
+					n2 = react2 ? react2.count - 1 : 0;
+
+				Emoji.findAll({
+					where: {
+						id: [battle.emoji1, battle.emoji2]
+					}
+				}).then(([emoji1, emoji2]) => {
+					let nElo = calculateElo(emoji1.elo, emoji2.elo, n1 === n2 ? .5 : n1 > n2 ? 1 : 0);
+					
+					let finished = 0;
+					let after = () => {
+						if((++finished) == 2) {
+							let e1 = channel.guild.emojis.get(emoji1.id),
+								e2 = channel.guild.emojis.get(emoji2.id);
+							channel.send(`Mise à jour du elo:\n${e1}: ${nElo[0]}, ${e2}: ${nElo[1]}`);
+
+							realEnd();
+						}
+					};
+
+					Emoji.update({
+						elo: nElo[0]
+					}, {
+						where: {
+							id: emoji1.id
+						}
+					}).catch(console.log).finally(after);
+					Emoji.update({
+						elo: nElo[1]
+					}, {
+						where: {
+							id: emoji2.id
+						}
+					}).catch(console.log).finally(after);
+				}).catch(console.log);
+			}).catch(() => channel.send('Qui est l\'abruti qui supprime mes messages !?'));
+		}
+	}).catch(console.log);
+}
+
+/**
+ * Met à jour un émoji dans la BDD (+/-1 au count)
+ * @param {Discord.Emoji} emoji
  * @param {boolean} add Ajout ou retrait ?
  * @param {number} init Valeur initiale si l'émoji n'existe pas
  */
-function updateEmoji(emojiId, add, init) {
-	Emoji.findOne({
-		where: {
-			emojiId: emojiId
-		}
-	}).then(emoji => {
+function updateEmoji(emoji, add, init) {
+	Emoji.findByPk(emoji.id).then(emoji => {
 		if(emoji === null) {
 			Emoji.create({
-				emojiId: emojiId,
+				id: emoji.id,
 				count: init
 			}).catch(err => {
 				console.error(`erreur create emoji: ${err}`); // TODO err
@@ -693,7 +792,7 @@ function updateEmoji(emojiId, add, init) {
 				count: emoji.count += add ? 1 : -1
 			}, {
 				where: {
-					emojiId: emojiId
+					id: emoji.id
 				}
 			}).catch(err => {
 				console.error(`erreur update emoji: ${err}`); // TODO err
@@ -702,6 +801,42 @@ function updateEmoji(emojiId, add, init) {
 	}).catch(err => {
 		console.error(`erreur find emoji: ${err}`); // TODO err
 	});
+}
+
+let pready = 0;
+function ready() {
+	if((++pready) == 2) { // client et database ready
+		let now = new Date().getTime();
+		for(let [guildId, guild] of client.guilds) {
+			for(let [emojiId] of guild.emojis) {
+				Emoji.findOrCreate({
+					where: {
+						id: emojiId,
+						guildId: guildId
+					},
+					defaults: {
+						count: 0,
+						elo: 1000,
+						lastBattle: 0
+					}
+				}).catch(console.log);
+			}
+		}
+		Battle.findAll({
+			where: {
+				end: {
+					[Sequelize.Op.lt]: now // date fin < maintenant
+				}
+			}
+		}).then(battles => {
+			let channel = client.channels.get(battles[0].channelId);
+			if(channel) {
+				setTimeout(endFights, battles[0].end - now, channel, battles.map(battle => battle.id));
+			} else {
+				console.log('Erreur récupération channel', battles);
+			}
+		}).catch(console.log);
+	}
 }
 
 client.on('ready', () => {
@@ -726,12 +861,12 @@ client.on('ready', () => {
 			if(!guild.roles.has(perm.roleId))
 				continue;
 			
-			Permission[perm.name] = new Permission(user => {
+			Permission[perm.name] = new Permission(member => {
 				let role = guild.roles.get(perm.roleId);
 				if(role === undefined)
 					return false;
 
-				return role.members.some(m => m.user.id === user.id);
+				return role.members.some(m => m.id === member.id);
 			});
 		}
 
@@ -748,6 +883,8 @@ client.on('ready', () => {
 			}
 		}
 	}
+
+	ready();
 
 	console.info('Prêt à défoncer des mères');
 });
@@ -776,16 +913,16 @@ client.on('messageReactionAdd', (reaction, user) => {
 	if(user.bot)
 		return;
 	
-	let emojiId = reaction.emoji.id;
-	if(reaction.message.member.guild.emojis.has(emojiId)) {
+	let emoji = reaction.emoji;
+	if(reaction.message.member.guild.emojis.has(emoji.id)) {
 		/*Emoji.findOne({
 			where: {
-				emojiId: emojiId
+				id: emojiId
 			}
 		}).then(emoji => {
 			if(emoji === null) {
 				Emoji.create({
-					emojiId: emojiId,
+					id: emojiId,
 					count: 1
 				}).catch(err => {
 					console.error(`erreur create emoji: ${err}`); // TODO err
@@ -795,7 +932,7 @@ client.on('messageReactionAdd', (reaction, user) => {
 					count: emoji.count + 1
 				}, {
 					where: {
-						emojiId: emojiId
+						id: emojiId
 					}
 				}).catch(err => {
 					console.error(`erreur update emoji: ${err}`); // TODO err
@@ -804,7 +941,7 @@ client.on('messageReactionAdd', (reaction, user) => {
 		}).catch(err => {
 			console.error(`erreur find emoji: ${err}`); // TODO err
 		});*/
-		updateEmoji(emojiId, true, 1);
+		updateEmoji(emoji, true, 1);
 	}
 });
 
@@ -812,11 +949,11 @@ client.on('messageReactionRemove', (reaction, user) => {
 	if(user.bot)
 		return;
 	
-	let emojiId = reaction.emoji.id;
-	if(reaction.message.member.guild.emojis.has(emojiId)) {
+	let emoji = reaction.emoji;
+	if(reaction.message.member.guild.emojis.has(emoji.id)) {
 		/*Emoji.findOne({
 			where: {
-				emojiId: emojiId
+				id: emojiId
 			}
 		}).then(emoji => {
 			if(emoji !== null) {
@@ -824,7 +961,7 @@ client.on('messageReactionRemove', (reaction, user) => {
 					count: emoji.count - 1
 				}, {
 					where: {
-						emojiId: emojiId
+						id: emojiId
 					}
 				}).catch(err => {
 					console.error(`erreur update emoji: ${err}`); // TODO err
@@ -833,7 +970,7 @@ client.on('messageReactionRemove', (reaction, user) => {
 		}).catch(err => {
 			console.error(`erreur find emoji: ${err}`); // TODO err
 		});*/
-		updateEmoji(emojiId, false, 0);
+		updateEmoji(emoji, false, 0);
 	}
 });
 
@@ -849,7 +986,7 @@ client.on('voiceStateUpdate', (oldmember, newmember) => { // Update packages
 		} else {
 			if(oldvoice.id !== newvoice.id) {
 				// move
-				if(newvoice.id === client.user.id) {
+				if(newmember.id === client.user.id) {
 					// Swagrid a été déplacé
 					Music.voiceChannel = newvoice;
 					Music.voiceConnection = newvoice.connection;
@@ -899,23 +1036,29 @@ sequelize.authenticate().then(() => {
 	console.info('Authentication to database successful');
 	
 	Emoji = sequelize.define('emoji', {
-		emojiId: { // Son identifiant, donné par Discord
+		id: { // Son identifiant, donné par Discord
 			type: Sequelize.STRING,
 			primaryKey: true
 		},
 		count: Sequelize.INTEGER, // Nombre d'utilisations de cet émoji
 		elo: Sequelize.INTEGER, // son elo
-		lastBattle: Sequelize.INTEGER // Date (timestamp) de la dernière bataille dans laquelle il a participé
+		lastBattle: Sequelize.INTEGER, // Date (timestamp) de la dernière bataille dans laquelle il a participé
+		guildId: Sequelize.STRING
 	});
 	Battle = sequelize.define('battle', {
-		battleId: {
+		id: {
 			type: Sequelize.INTEGER,
+			autoIncrement: true,
 			primaryKey: true
 		},
+		messageId: Sequelize.STRING, // Id du message de bataille
 		end: Sequelize.INTEGER, // Date de fin (timestamp)
 		emoji1: Sequelize.STRING, // Id de l'émoji 1
-		emoji2: Sequelize.STRING // Id de l'émoji 2
+		emoji2: Sequelize.STRING, // Id de l'émoji 2
+		channelId: Sequelize.STRING
 	});
+
+	ready();
 }).catch(console.log);
 
 app.get('/', (_, response) => {
