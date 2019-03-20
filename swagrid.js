@@ -699,7 +699,7 @@ function emojiFight(channel) {
 		//dateEnd.setDate(dateEnd.getDate() + 1);
 		//dateEnd.setHours(0);
 		//dateEnd.setMinutes(0);
-		dateEnd.setMinutes(dateEnd.getMinutes() + 2);
+		dateEnd.setMinutes(dateEnd.getMinutes() + 1);
 		dateEnd.setSeconds(0);
 		dateEnd.setMilliseconds(0);
 		// Test
@@ -748,8 +748,8 @@ function calculateElo(elo1, elo2, win) {
 	let p = d => 1 / (1 + Math.pow(10, d / 400));
 	const k = 30;
 	
-	let nElo1 = elo1 + k * (win - p(elo1 - elo2)),
-		nElo2 = elo2 + k * ((1 - win) - p(elo2 - elo1));
+	let nElo1 = elo1 + k * (win - p(elo2 - elo1)),
+		nElo2 = elo2 + k * ((1 - win) - p(elo1 - elo2));
 	
 	return [ Math.round(nElo1), Math.round(nElo2) ];
 }
@@ -792,7 +792,7 @@ function endFights(channel, battlesId) {
 						if((++finished) == 2) {
 							let e1 = channel.guild.emojis.get(emoji1.id),
 								e2 = channel.guild.emojis.get(emoji2.id);
-							channel.send(`Mise à jour du elo:\n${e1}: ${nElo[0]}, ${e2}: ${nElo[1]}`);
+							channel.send(`Mise à jour du elo:\n${e1}: ${emoji1.elo} -> ${nElo[0]}, ${e2}: ${emoji2.elo} -> ${nElo[1]}`);
 
 							realEnd();
 						}
