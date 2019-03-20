@@ -455,7 +455,10 @@ dispatcher.register(
 dispatcher.register(
 	literal('startBattle')
 		.executes(source => {
-			emojiFight(source.message.channel);
+			return new Promise((resolve, reject) => {
+				emojiFight(source.message.channel);
+				resolve();
+			});
 		})
 		.permission('expert')
 		.description('Lance la bataille des émojis ! (à n\'utiliser qu\'une seule fois en théorie')
@@ -464,8 +467,11 @@ dispatcher.register(
 dispatcher.register(
 	literal('init')
 		.executes(source => {
-			resetDB(['battle']);
-			initEmoji();
+			return new Promise((resolve, reject) => {
+				resetDB(['battle']);
+				initEmoji();
+				resolve();
+			});
 		})
 		.permission('expert')
 		.description('Reset les batailles (+resetdb battle et initEmoji())')
@@ -636,6 +642,9 @@ function resetDB(tables) {
 				.catch(reject)
 				.finally(increment);
 		}
+
+		if(max === 0)
+			resolve();
 	});
 }
 
