@@ -657,6 +657,8 @@ function selectEmojisPairs(channel, quantity) {
 			for(let i = 0; i < quantity; i++) {
 				let e1 = d_emojis.shift()[0],
 					e2 = d_emojis.shift()[0];
+
+				console.log('e1', e1, 'e2', e2);
 				
 				battles.push([e1, e2]);
 			}
