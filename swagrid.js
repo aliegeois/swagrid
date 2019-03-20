@@ -823,7 +823,8 @@ function updateEmoji(emoji, add, init) {
 }
 
 let pready = 0;
-function ready() {
+function ready(name) {
+	console.log(name, 'ready');
 	if((++pready) == 2) { // client et database ready
 		console.log('database et client prêts');
 		let now = new Date().getTime();
@@ -910,7 +911,7 @@ client.on('ready', () => {
 		}
 	}
 
-	ready();
+	ready('client');
 
 	console.info('Prêt à défoncer des mères');
 });
@@ -1084,7 +1085,7 @@ sequelize.authenticate().then(() => {
 		channelId: Sequelize.STRING
 	});
 
-	ready();
+	ready('database');
 }).catch(console.log);
 
 app.get('/', (_, response) => {
