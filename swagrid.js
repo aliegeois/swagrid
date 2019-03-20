@@ -638,7 +638,7 @@ function resetDB(tables) {
 function selectEmojisPairs(channel, quantity) {
 	return new Promise((resolve, reject) => {
 		let battles = new Array(quantity).fill(0);
-		console.log('selectEmojisPairs, recherche des émojis (args', channel.id, quantity, ')');
+		console.log('selectEmojisPairs, recherche des émojis (args:', channel.id, quantity, ')');
 
 		Emoji.findAll({
 			where: {
@@ -648,7 +648,7 @@ function selectEmojisPairs(channel, quantity) {
 				[ 'lastBattle', 'ASC' ] // du plus ancien au plus récent
 			]
 		}).then(emojis => {
-			console.log('émojis trouvé:', emojis);
+			console.log('émojis trouvé:', emojis.length);
 			let now = new Date().getTime(),
 				d_emojis = emojis.map(emoji => [emoji.id, Math.random() * (now - emoji.lastBattle) / emojis[0].lastBattle]).sort((e1, e2) => e2[1] - e1[1]);
 
@@ -691,6 +691,7 @@ function emojiFight(channel) {
 		};
 
 		for(let i = 0; i < pairs.length; i++) {
+			console.log('emojiFight.selectEmojisPairs, channel:', channel.id);
 			channel.send('debug pair: ', JSON.stringify(pairs[i]));
 			let e1 = channel.guild.emojis.get(pairs[i][0]),
 				e2 = channel.guild.emojis.get(pairs[i][1]);
