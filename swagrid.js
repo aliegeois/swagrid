@@ -660,7 +660,7 @@ function selectEmojisPairs(channel, quantity) {
 
 				console.log('e1', e1, 'e2', e2);
 				
-				battles.push([e1, e2]);
+				battles[i] = [e1, e2];
 			}
 
 			resolve(battles);
