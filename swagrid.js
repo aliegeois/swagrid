@@ -621,7 +621,7 @@ function resetDB(tables) {
 			console.log('reset battle');
 			Battle.sync({force: true})
 				.then(() => {
-					console.log('attle has been reset');
+					console.log('battle has been reset');
 				})
 				.catch(reject)
 				.finally(increment);
@@ -833,7 +833,7 @@ function ready() {
 					defaults: {
 						count: 0,
 						elo: 1000,
-						lastBattle: 0
+						lastBattle: new Date(0)
 					}
 				}).catch(console.log);
 			}
@@ -1063,7 +1063,7 @@ sequelize.authenticate().then(() => {
 		},
 		count: Sequelize.INTEGER, // Nombre d'utilisations de cet émoji
 		elo: Sequelize.INTEGER, // son elo
-		lastBattle: Sequelize.INTEGER, // Date (timestamp) de la dernière bataille dans laquelle il a participé
+		lastBattle: Sequelize.DATE, // Date (timestamp) de la dernière bataille dans laquelle il a participé
 		guildId: Sequelize.STRING
 	});
 	Battle = sequelize.define('battle', {
