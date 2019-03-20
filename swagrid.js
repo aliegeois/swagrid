@@ -689,6 +689,7 @@ function emojiFight(channel) {
 		};
 
 		for(let i = 0; i < pairs.length; i++) {
+			channel.send('debug pair: ', JSON.stringify(pairs[i]));
 			let e1 = channel.guild.emojis.get(pairs[i][0]),
 				e2 = channel.guild.emojis.get(pairs[i][1]);
 			channel.send(`Bataille entre ${e1} et ${e2} !\nVotez pour votre préféré (fin: ${dateEnd})`).then(message => {
@@ -847,6 +848,7 @@ function ready() {
 			if(battles.length) {
 				let channel = client.channels.get(battles[0].channelId);
 				if(channel) {
+					console.log('retrive battle, end:', battles[0].end);
 					let interval = battles[0].end - now;
 					console.log(`start timeout of ${interval / 1000} seconds`);
 					setTimeout(endFights, interval, channel, battles.map(battle => battle.id));
@@ -1071,7 +1073,7 @@ sequelize.authenticate().then(() => {
 			primaryKey: true
 		},
 		messageId: Sequelize.STRING, // Id du message de bataille
-		end: Sequelize.INTEGER, // Date de fin (timestamp)
+		end: Sequelize.DATE, // Date de fin (timestamp)
 		emoji1: Sequelize.STRING, // Id de l'émoji 1
 		emoji2: Sequelize.STRING, // Id de l'émoji 2
 		channelId: Sequelize.STRING
