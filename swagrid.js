@@ -693,7 +693,7 @@ function emojiFight(channel) {
 		dateEnd.setSeconds(0);
 		dateEnd.setMilliseconds(0);*/
 		// Test
-		dateEnd.setMinutes(dateEnd.getMinutes() + 1);
+		dateEnd.setMinutes(dateEnd.getMinutes() + 5);
 
 		let finished = 0,
 			ids = [];
@@ -786,15 +786,19 @@ function endFights(channel, battlesId) {
 						}
 					};
 
+					let now = new Date();
+
 					Emoji.update({
-						elo: nElo[0]
+						elo: nElo[0],
+						lastBattle: now
 					}, {
 						where: {
 							id: emoji1.id
 						}
 					}).catch(console.log).finally(after);
 					Emoji.update({
-						elo: nElo[1]
+						elo: nElo[1],
+						lastBattle: now
 					}, {
 						where: {
 							id: emoji2.id
