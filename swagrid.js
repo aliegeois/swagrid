@@ -696,13 +696,14 @@ function emojiFight(channel) {
 
 	selectEmojisPairs(channel, nbFights).then(pairs => {
 		let dateEnd = new Date();
-		/*dateEnd.setDate(dateEnd.getDate() + 1);
-		dateEnd.setHours(0);
-		dateEnd.setMinutes(0);
-		dateEnd.setSeconds(0);
-		dateEnd.setMilliseconds(0);*/
-		// Test
+		//dateEnd.setDate(dateEnd.getDate() + 1);
+		//dateEnd.setHours(0);
+		//dateEnd.setMinutes(0);
 		dateEnd.setMinutes(dateEnd.getMinutes() + 2);
+		dateEnd.setSeconds(0);
+		dateEnd.setMilliseconds(0);
+		// Test
+		
 
 		let finished = 0,
 			ids = [];
@@ -747,8 +748,8 @@ function calculateElo(elo1, elo2, win) {
 	let p = d => 1 / (1 + Math.pow(10, d / 400));
 	const k = 30;
 	
-	let nElo1 = elo1 + k * (win - p(elo2 - elo1)),
-		nElo2 = elo2 + k * ((1 - win) - p(elo1 - elo2));
+	let nElo1 = elo1 + k * (win - p(elo1 - elo2)),
+		nElo2 = elo2 + k * ((1 - win) - p(elo2 - elo1));
 	
 	return [ Math.round(nElo1), Math.round(nElo2) ];
 }
@@ -769,6 +770,8 @@ function endFights(channel, battlesId) {
 			if((++realEnded) === battles.length)
 				setTimeout(emojiFight, 1, channel);
 		};
+
+		let now = new Date();
 
 		for(let battle of battles) {
 			channel.fetchMessage(battle.messageId).then(message => {
@@ -794,8 +797,6 @@ function endFights(channel, battlesId) {
 							realEnd();
 						}
 					};
-
-					let now = new Date();
 
 					Emoji.update({
 						elo: nElo[0],
