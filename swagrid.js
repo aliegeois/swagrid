@@ -822,6 +822,7 @@ function updateEmoji(emoji, add, init) {
 let pready = 0;
 function ready() {
 	if((++pready) == 2) { // client et database ready
+		console.log('database et client prêts');
 		let now = new Date().getTime();
 		for(let [guildId, guild] of client.guilds) {
 			for(let [emojiId] of guild.emojis) {
@@ -838,6 +839,7 @@ function ready() {
 				}).catch(console.log);
 			}
 		}
+		console.log('recherche de battles');
 		Battle.findAll({
 			where: {
 				end: {
