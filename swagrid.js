@@ -651,6 +651,8 @@ function selectEmojisPairs(channel, quantity) {
 			console.log('émojis trouvés:', emojis.length);
 			let now = new Date().getTime(),
 				d_emojis = emojis.map(emoji => [emoji.id, Math.random() * (now - emoji.lastBattle) / emojis[0].lastBattle]).sort((e1, e2) => e2[1] - e1[1]);
+			
+			console.log('d_emojis', d_emojis);
 
 			for(let i = 0; i < quantity; i++) {
 				let e1 = d_emojis.shift()[0],
@@ -696,8 +698,9 @@ function emojiFight(channel) {
 			let e1 = channel.guild.emojis.get(pairs[i][0]),
 				e2 = channel.guild.emojis.get(pairs[i][1]);
 			channel.send(`Bataille entre ${e1} et ${e2} !\nVotez pour votre préféré (fin: ${dateEnd})`).then(message => {
-				message.react(e1).catch(()=>{});
-				message.react(e2).catch(()=>{});
+				message.react(e1).then(() => {
+					message.react(e2).catch(()=>{});
+				}).catch(()=>{});
 
 				Battle.create({
 					messageId: message.id,
