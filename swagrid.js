@@ -595,9 +595,16 @@ function countEmojis(message) {
 /** @param {string[]} tables */
 function resetDB(tables) {
 	return new Promise((resolve, reject) => {
+		let max = 0;
+		
+		if(tables.includes('emoji'))
+			max++;
+		if(tables.includes('battle'))
+			max++;
+
 		let synced = 0;
 		let increment = () => {
-			if((++synced) === tables.length)
+			if((++synced) === max)
 				resolve();
 		};
 
@@ -607,9 +614,17 @@ function resetDB(tables) {
 				.then(() => {
 					console.log('emoji has been reset');
 				})
-				.catch(err => {
-					reject(err);
-				}).finally(increment);
+				.catch(reject)
+				.finally(increment);
+		}
+		if(tables.includes('battle')) {
+			console.log('reset battle');
+			Battle.sync({force: true})
+				.then(() => {
+					console.log('attle has been reset');
+				})
+				.catch(reject)
+				.finally(increment);
 		}
 	});
 }
