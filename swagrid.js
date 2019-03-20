@@ -462,6 +462,16 @@ dispatcher.register(
 );
 
 dispatcher.register(
+	literal('init')
+		.executes(source => {
+			resetDB(['battle']);
+			initEmoji();
+		})
+		.permission('expert')
+		.description('Reset les batailles (+resetdb battle et initEmoji())')
+);
+
+dispatcher.register(
 	literal('eval')
 		.then(
 			argument('command', true)
@@ -827,27 +837,31 @@ function updateEmoji(emoji, add, init) {
 	});
 }
 
+function initEmoji() {
+	for(let [guildId, guild] of client.guilds) {
+		for(let [emojiId] of guild.emojis) {
+			Emoji.findOrCreate({
+				where: {
+					id: emojiId,
+					guildId: guildId
+				},
+				defaults: {
+					count: 0,
+					elo: 1000,
+					lastBattle: new Date(0)
+				}
+			}).catch(console.log);
+		}
+	}
+}
+
 let pready = 0;
 function ready(name) {
 	console.log(name, 'ready');
 	if((++pready) == 2) { // client et database ready
 		console.log('database et client prêts');
 		let now = new Date().getTime();
-		for(let [guildId, guild] of client.guilds) {
-			for(let [emojiId] of guild.emojis) {
-				Emoji.findOrCreate({
-					where: {
-						id: emojiId,
-						guildId: guildId
-					},
-					defaults: {
-						count: 0,
-						elo: 1000,
-						lastBattle: new Date(0)
-					}
-				}).catch(console.log);
-			}
-		}
+		initEmoji();
 		console.log('recherche de battles');
 		Battle.findAll({
 			where: {
