@@ -693,7 +693,7 @@ function emojiFight(channel) {
 		dateEnd.setSeconds(0);
 		dateEnd.setMilliseconds(0);*/
 		// Test
-		dateEnd.setMinutes(dateEnd.getMinutes() + 5);
+		dateEnd.setMinutes(dateEnd.getMinutes() + 2);
 
 		let finished = 0,
 			ids = [];
