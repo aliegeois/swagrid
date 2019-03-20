@@ -844,11 +844,15 @@ function ready() {
 				}
 			}
 		}).then(battles => {
-			let channel = client.channels.get(battles[0].channelId);
-			if(channel) {
-				setTimeout(endFights, battles[0].end - now, channel, battles.map(battle => battle.id));
-			} else {
-				console.log('Erreur récupération channel', battles);
+			if(battles.length) {
+				let channel = client.channels.get(battles[0].channelId);
+				if(channel) {
+					let interval = battles[0].end - now;
+					console.log(`start timeout of ${interval / 1000} seconds`);
+					setTimeout(endFights, interval, channel, battles.map(battle => battle.id));
+				} else {
+					console.log('Erreur récupération channel', battles);
+				}
 			}
 		}).catch(console.log);
 	}
