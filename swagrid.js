@@ -669,7 +669,7 @@ function selectEmojisPairs(channel, quantity) {
 function emojiFight(channel) {
 	const nbFights = 3;
 
-	selectEmojisPairs(nbFights).then(pairs => {
+	selectEmojisPairs(channel, nbFights).then(pairs => {
 		let dateEnd = new Date();
 		/*dateEnd.setDate(dateEnd.getDate() + 1);
 		dateEnd.setHours(0);
