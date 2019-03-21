@@ -33,7 +33,10 @@ var Emoji;
 /** @type {Sequelize.Model} */
 var Battle;
 
-Permission.expert = new Permission(user => user.id === config.owner);
+var currentBattles;
+
+Permission.expert = new Permission(source => source.message.member.id === config.owner);
+Permission.refuse = new Permission(() => false);
 const dispatcher = new CommandDispatcher();
 
 dispatcher.register(
@@ -68,7 +71,7 @@ dispatcher.register(
 									.then(resolve)
 									.catch(reject);
 							})
-							.catch(_=>{});
+							.catch(()=>{});
 					});
 				})
 				.permission('advanced')
@@ -78,30 +81,17 @@ dispatcher.register(
 
 dispatcher.register(
 	literal('fanta')
-		.executes((source) => {
+		.executes(source => {
 			return new Promise(async (resolve, reject) => {
 				if(Music.voiceChannel === null)
 					await Music.join();
 				Music.voiceConnection.playFile('fanta.m4a');
+				resolve();
 			});
 		})
 		.description('MAIS TA GUEULE !')
 );
 
-dispatcher.register(
-	literal('ouaismaiscestpastoiquidecide')
-		.executes((source) => {
-			return new Promise((resolve, reject) => {
-				dispatcher.parse(source, 'join')
-					.then(() => {
-						Music.voiceConnection.playFile('ouaismaiscestpastoiquidecide.m4a');
-						resolve();
-					})
-					.catch(reject);
-			});
-		})
-		.description('OUAIS MAIS C\'EST PAS TOI QUI DÉCIDE !')
-);
 
 dispatcher.register(
 	literal('force')
@@ -165,7 +155,7 @@ dispatcher.register(
 				/** @type {Discord.GuildMember} */
 				let member = source.message.member;
 				if(member.voiceChannelID === null) {
-					source.message.reply('vous devez être dans un channel vocal pour invoquer Swagrid').catch(_=>{}); // TODO err
+					source.message.reply('vous devez être dans un channel vocal pour invoquer Swagrid').catch(()=>{}); // TODO err
 					resolve();
 				} else {
 					Music.join(member.voiceChannel)
@@ -453,15 +443,43 @@ dispatcher.register(
 );
 
 dispatcher.register(
-	literal('startBattle')
-		.executes(source => {
-			return new Promise((resolve, reject) => {
-				emojiFight(source.message.channel);
-				resolve();
-			});
-		})
-		.permission('expert')
-		.description('Lance la bataille des émojis ! (à n\'utiliser qu\'une seule fois en théorie')
+	literal('battle')
+		.then(
+			literal('start')
+				.executes(source => {
+					return new Promise((resolve, reject) => {
+						emojiFight(source.message.channel);
+						resolve();
+					});
+				})
+				.permission('expert')
+				.description('Lance la bataille des émojis ! (à n\'utiliser qu\'une seule fois en théorie)')
+		)
+		.then(
+			literal('reset')
+				.executes(source => {
+					return new Promise((resolve, reject) => {
+						Emoji.update({
+							lastBattle: new Date(0),
+							elo: 0
+						}, {
+							where: {}
+						}).then(() => source.message.channel.send('emoji.lastBattle & emoji.elo reset').catch(()=>{}));
+						Battle.sync({force: true}).then(() => source.message.channel.send('battle reset').catch(()=>{}));
+						resolve();
+					});
+				})
+		)
+		/*.then(
+			literal('stop')
+				.executes(source => {
+					return new Promise((resolve, reject) => {
+						resolve();
+					});
+				})
+				.permission('expert')
+				.description('Arrête la bataille des émojis')
+		)*/
 );
 
 dispatcher.register(
@@ -481,7 +499,7 @@ dispatcher.register(
 	literal('eval')
 		.then(
 			argument('command', true)
-				.executes((_, ...command) => {
+				.executes((source, ...command) => {
 					return new Promise((resolve, reject) => {
 						try {
 							eval(command.join(' '));
@@ -492,6 +510,7 @@ dispatcher.register(
 					});
 				})
 				.permission('expert')
+				.description('Exécute une commande en brut')
 		)
 );
 
@@ -499,7 +518,7 @@ dispatcher.register(
 	literal('resetdb')
 		.then(
 			argument('databases', true)
-				.executes((_, ...databases) => {
+				.executes((source, ...databases) => {
 					return new Promise((resolve, reject) => {
 						resetDB(databases)
 							.then(resolve)
@@ -507,16 +526,17 @@ dispatcher.register(
 					});
 				})
 				.permission('expert')
+				.description('Réinitialise les bases de données sélectionnées')
 		)
 );
 
 dispatcher.register(
 	literal('help')
-		.then(
+		/*.then(
 			argument('command')
 				.executes((source, command) => {
 					return new Promise((resolve, reject) => {
-						/** @type {Discord.Message} */
+						// @type {Discord.Message}
 						
 						let message = source.message;
 						if(dispatcher.commands.has(command)) {
@@ -532,21 +552,21 @@ dispatcher.register(
 					});
 				})
 				.description('Affiche l\'aide d\'une commande en particulier')
-		)
+		)*/
 		.executes(source => {
 			return new Promise((resolve, reject) => {
 				/** @type {Discord.Message} */
 				let message = source.message;
-
-				let descriptions = Array.from(dispatcher.commands.values())
-					.filter(command => Permission[command.getPermission()].checkPermission(message.member))
-					.map(command =>
-						command.getUsages(config.prefix)
-							.map(({ usage, description }) => usage + ': ' + description)
-							.join('\n')
-					)
+				
+				//** @type {{command: Command, usage: string, description: string}[]} */
+				/** @type {command.getUsages} */
+				let usableCommands = [];
+				dispatcher.commands.forEach(command => usableCommands.push(...command.getUsages(config.prefix)));
+				let descriptions = usableCommands
+					.filter(({command}) => Permission[command.getPermission()].checkPermission(source))
+					.map(({usage, description}) => `${usage}: ${description}`)
 					.join('\n');
-
+				
 				message.channel.send(`Liste des commandes disponibles pour vous:\`\`\`${descriptions}\`\`\``) // TODO msg
 					.then(resolve)
 					.catch(reject);
@@ -667,11 +687,13 @@ function selectEmojisPairs(channel, quantity) {
 				[ 'lastBattle', 'ASC' ] // du plus ancien au plus récent
 			]
 		}).then(emojis => {
-			//console.log('émojis trouvés:', emojis.length);
-			let now = new Date().getTime(),
-				d_emojis = emojis.map(emoji => [emoji.id, Math.random() * (now - emoji.lastBattle) / emojis[0].lastBattle]).sort((e1, e2) => e2[1] - e1[1]);
+			let now = new Date();
 			
-			console.log('d_emojis', d_emojis);
+			//emojis.forEach(emo => console.log('lastBattle:', (now - emo.lastBattle) / emojis[0].lastBattle));
+			//console.log('émojis trouvés:', emojis.length);
+			let d_emojis = emojis.map(emoji => [emoji.id, Math.random() * (now - emoji.lastBattle) / (now - emojis[0].lastBattle)]).sort((e1, e2) => e2[1] - e1[1]);
+			
+			//console.log('d_emojis', d_emojis);
 
 			for(let i = 0; i < quantity; i++) {
 				let e1 = d_emojis.shift()[0],
@@ -697,7 +719,7 @@ function emojiFight(channel) {
 	selectEmojisPairs(channel, nbFights).then(pairs => {
 		let dateEnd = new Date();
 		dateEnd.setDate(dateEnd.getDate() + 1);
-		dateEnd.setHours(0);
+		dateEnd.setHours(23);
 		dateEnd.setMinutes(0);
 		//dateEnd.setMinutes(dateEnd.getMinutes() + 1);
 		dateEnd.setSeconds(0);
@@ -729,7 +751,8 @@ function emojiFight(channel) {
 					end: dateEnd.getTime(),
 					emoji1: e1.id,
 					emoji2: e2.id,
-					channelId: message.channel.id
+					channelId: message.channel.id,
+					ended: false
 				}).then(battle => {
 					after(i, battle.id);
 				}).catch(console.log);
@@ -767,8 +790,17 @@ function endFights(channel, battlesId) {
 	}).then(battles => {
 		let realEnded = 0;
 		let realEnd = () => {
-			if((++realEnded) === battles.length)
-				setTimeout(emojiFight, 1, channel);
+			if((++realEnded) === battles.length) {
+				Battle.update({
+					ended: true
+				}, {
+					where: {
+						id: battlesId
+					}
+				}).catch(console.log).finally(() => {
+					setTimeout(emojiFight, 1, channel);
+				});
+			}
 		};
 
 		let now = new Date();
@@ -785,6 +817,8 @@ function endFights(channel, battlesId) {
 						id: [battle.emoji1, battle.emoji2]
 					}
 				}).then(([emoji1, emoji2]) => {
+					if(emoji1.id === battle.emoji2)
+						[emoji1, emoji2] = [emoji2, emoji1];
 					let nElo = calculateElo(emoji1.elo, emoji2.elo, n1 === n2 ? .5 : n1 > n2 ? 1 : 0);
 					
 					let finished = 0;
@@ -879,9 +913,7 @@ function ready(name) {
 		console.log('recherche de battles');
 		Battle.findAll({
 			where: {
-				end: {
-					[Sequelize.Op.lt]: now // date fin < maintenant
-				}
+				ended: false
 			}
 		}).then(battles => {
 			if(battles.length) {
@@ -921,12 +953,13 @@ client.on('ready', () => {
 			if(!guild.roles.has(perm.roleId))
 				continue;
 			
-			Permission[perm.name] = new Permission(member => {
+			Permission[perm.name] = new Permission(source => {
 				let role = guild.roles.get(perm.roleId);
+
 				if(role === undefined)
 					return false;
 
-				return role.members.some(m => m.id === member.id);
+				return role.members.some(m => m.id === source.message.member.id);
 			});
 		}
 
@@ -936,7 +969,7 @@ client.on('ready', () => {
 				Music.voiceChannel = channel;
 				Music.voiceChannel.join().then(connection => {
 					Music.voiceConnection = connection;
-				}).catch(_ => {
+				}).catch(() => {
 					Music.voiceChannel = null;
 					Music.voiceConnection = null;
 				});
@@ -1115,17 +1148,28 @@ sequelize.authenticate().then(() => {
 		end: Sequelize.DATE, // Date de fin (timestamp)
 		emoji1: Sequelize.STRING, // Id de l'émoji 1
 		emoji2: Sequelize.STRING, // Id de l'émoji 2
-		channelId: Sequelize.STRING
+		channelId: Sequelize.STRING,
+		ended: Sequelize.BOOLEAN // La bataille est-elle terminée ?
 	});
 
 	ready('database');
 }).catch(console.log);
 
-app.get('/', (_, response) => {
+app.get('/', (request, response) => {
 	response.sendFile(`${__dirname}/index.html`);
+});
+app.get('/ping', (request, response) => {
+	//response.sendFile(`${__dirname}/index.html`);
+	response.send({ok: 'ok'});
 });
 var listener = app.listen(process.env.PORT, () => {
 	console.info('Swagrid présent sur le port ' + listener.address().port);
+});
+
+process.on('SIGINT', () => {
+	client.destroy().finally(() => {
+		process.exit();
+	});
 });
 
 client.login(process.env.TOKEN);

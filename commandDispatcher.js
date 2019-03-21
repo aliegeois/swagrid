@@ -14,7 +14,7 @@ class Command {
 		 */
 		this.__name__ = name;
 		/**
-		 * @type {Map.<string, Command>}
+		 * @type {Map.<string, Literal>}
 		 * @private
 		 */
 		this.__literals__ = new Map();
@@ -66,7 +66,7 @@ class Command {
 		this.execute = (source, ...args) => {
 			//console.log('execution of ' + command + ' with arguments [' + args + '] and permission ' + Permission[this.__permission__]);
 			return new Promise((resolve, reject) => {
-				if(Permission[this.__permission__].checkPermission(source.message.member)) {
+				if(Permission[this.__permission__].checkPermission(source)) {
 					command(source, ...args)
 						.then(resolve)
 						.catch(reject);
@@ -160,7 +160,7 @@ class Command {
 	/**
 	 * @returns {string}
 	 */
-	getDesciption() {
+	getDescription() {
 		return this.__description__;
 	}
 
@@ -173,7 +173,7 @@ class Command {
 
 	/**
 	 * @param {string} prefix 
-	 * @returns {[{usage: string, description: string}]}
+	 * @returns {{command: Command, usage: string, description: string}[]]}
 	 */
 	getUsages(prefix) {
 		let exploration = [{
@@ -187,6 +187,7 @@ class Command {
 
 			if(command.__executable__) {
 				result.push({
+					command,
 					usage: `${prefix}${usage}`,
 					description: command.__description__
 				});
@@ -252,13 +253,17 @@ class CommandDispatcher {
 	}
 
 	/** @returns {Map<string, Literal>} */
-	get commands() {
+	/*getCommands() {
 		let cmds = new Map();
 
 		for(let [name, command] of this.__commands__)
 			cmds.set(name, command);
 		
 		return cmds;
+	}*/
+
+	get commands() {
+		return this.__commands__;
 	}
 
 	/**
