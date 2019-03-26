@@ -470,6 +470,30 @@ dispatcher.register(
 					});
 				})
 		)
+		.then(
+			literal('+1000')
+				.executes(source => {
+					return new Promise((resolve, reject) => {
+						Emoji.findAll().then(emojis => {
+							let ended = 0;
+							let end = () => {
+								if((++ended) === emojis.length)
+									resolve();
+							};
+
+							for(let emoji of emojis) {
+								Emoji.update({
+									elo: emoji.elo + 1000
+								}, {
+									where: {
+										id: emoji.id
+									}
+								}).catch(console.log).finally(end);
+							}
+						}).catch(reject);
+					});
+				})
+		)
 		/*.then(
 			literal('stop')
 				.executes(source => {
@@ -672,10 +696,11 @@ function resetDB(tables) {
  * 
  * @param {Discord.TextChannel} channel
  * @param {number} quantity 
- * @returns {Promise<[number, number][]>}
+ * @returns {Promise<[{id: string, count: number, elo: number, lastBattle: Date, guildId: string}, {id: string, count: number, elo: number, lastBattle: Date, guildId: string}][]>}
  */
 function selectEmojisPairs(channel, quantity) {
 	return new Promise((resolve, reject) => {
+		/** @type {[{id: string, count: number, elo: number, lastBattle: Date, guildId: string}, {id: string, count: number, elo: number, lastBattle: Date, guildId: string}][]} */
 		let battles = new Array(quantity).fill(0);
 		//console.log('selectEmojisPairs, recherche des émojis (args:', channel.id, quantity, ')');
 
@@ -691,7 +716,8 @@ function selectEmojisPairs(channel, quantity) {
 			
 			//emojis.forEach(emo => console.log('lastBattle:', (now - emo.lastBattle) / emojis[0].lastBattle));
 			//console.log('émojis trouvés:', emojis.length);
-			let d_emojis = emojis.map(emoji => [emoji.id, Math.random() * (now - emoji.lastBattle) / (now - emojis[0].lastBattle)]).sort((e1, e2) => e2[1] - e1[1]);
+			/** @type {[{id: string, count: number, elo: number, lastBattle: Date, guildId: string}, number][]} */
+			let d_emojis = emojis.map(emoji => [emoji, Math.random() * (now - emoji.lastBattle) / (now - emojis[0].lastBattle)]).sort((e1, e2) => e2[1] - e1[1]);
 			
 			//console.log('d_emojis', d_emojis);
 
@@ -724,6 +750,8 @@ function emojiFight(channel) {
 		//dateEnd.setMinutes(dateEnd.getMinutes() + 1);
 		dateEnd.setSeconds(0);
 		dateEnd.setMilliseconds(0);
+
+		let tmpDateEnd = new Date(dateEnd.setHours(dateEnd.getHours() + 1));
 		// Test
 		
 
@@ -739,9 +767,29 @@ function emojiFight(channel) {
 		for(let i = 0; i < pairs.length; i++) {
 			//console.log('emojiFight.selectEmojisPairs, channel:', channel.id);
 			//console.log(JSON.stringify(pairs[i]));
-			let e1 = channel.guild.emojis.get(pairs[i][0]),
-				e2 = channel.guild.emojis.get(pairs[i][1]);
-			channel.send(`Bataille entre ${e1} et ${e2} !\nVotez pour votre préféré (fin: ${dateEnd})`).then(message => {
+			let emos = pairs[i];
+			let e1 = channel.guild.emojis.get(emos[0].id),
+				e2 = channel.guild.emojis.get(emos[1].id);
+			channel.send({
+				embed: {
+					description: 'Nouvelle bataille !',
+					footer: {
+						text: 'Date limite'
+					},
+					timestamp: tmpDateEnd,
+					fields: [
+						{
+							name: `${e1}`,
+							value: `elo: ${emos[0].elo}`,
+							inline: true
+						}, {
+							name: `${e2}`,
+							value: `elo: ${emos[1].elo}`,
+							inline: true
+						}
+					]
+				}
+			}).then(message => {
 				message.react(e1).then(() => {
 					message.react(e2).catch(()=>{});
 				}).catch(()=>{});
@@ -757,6 +805,23 @@ function emojiFight(channel) {
 					after(i, battle.id);
 				}).catch(console.log);
 			}).catch(console.log);
+			/*
+			channel.send(`Bataille entre ${e1} et ${e2} !\nVotez pour votre préféré (fin: ${dateEnd})`).then(message => {
+				message.react(e1).then(() => {
+					message.react(e2).catch(()=>{});
+				}).catch(()=>{});
+
+				Battle.create({
+					messageId: message.id,
+					end: dateEnd.getTime(),
+					emoji1: e1.id,
+					emoji2: e2.id,
+					channelId: message.channel.id,
+					ended: false
+				}).then(battle => {
+					after(i, battle.id);
+				}).catch(console.log);
+			}).catch(console.log);*/
 		}
 	});
 }
