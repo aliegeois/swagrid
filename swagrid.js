@@ -470,40 +470,6 @@ dispatcher.register(
 					});
 				})
 		)
-		.then(
-			literal('+1000')
-				.executes(source => {
-					return new Promise((resolve, reject) => {
-						Emoji.findAll().then(emojis => {
-							let ended = 0;
-							let end = () => {
-								if((++ended) === emojis.length)
-									resolve();
-							};
-
-							for(let emoji of emojis) {
-								Emoji.update({
-									elo: emoji.elo + 1000
-								}, {
-									where: {
-										id: emoji.id
-									}
-								}).catch(console.log).finally(end);
-							}
-						}).catch(reject);
-					});
-				})
-		)
-		/*.then(
-			literal('stop')
-				.executes(source => {
-					return new Promise((resolve, reject) => {
-						resolve();
-					});
-				})
-				.permission('expert')
-				.description('Arrête la bataille des émojis')
-		)*/
 );
 
 dispatcher.register(
@@ -751,7 +717,9 @@ function emojiFight(channel) {
 		dateEnd.setSeconds(0);
 		dateEnd.setMilliseconds(0);
 
-		let tmpDateEnd = new Date(dateEnd.setHours(dateEnd.getHours() + 1));
+		//let tmpDateEnd = new Date(dateEnd.setHours(dateEnd.getHours() + 1));
+		let tmpDateEnd = new Date(dateEnd);
+		tmpDateEnd.setHours(dateEnd.getHours() + 1);
 		// Test
 		
 
