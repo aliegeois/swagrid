@@ -719,7 +719,7 @@ function emojiFight(channel) {
 
 		//let tmpDateEnd = new Date(dateEnd.setHours(dateEnd.getHours() + 1));
 		let tmpDateEnd = new Date(dateEnd);
-		tmpDateEnd.setHours(dateEnd.getHours() + 1);
+		tmpDateEnd.setHours(tmpDateEnd.getHours() + 1);
 		// Test
 		
 
