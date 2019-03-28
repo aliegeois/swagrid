@@ -365,31 +365,6 @@ dispatcher.register(
 );
 
 dispatcher.register(
-	literal('fix')
-		.executes(source => {
-			return new Promise((resolve, reject) => {
-				Battle.findAll({
-					where: {
-						ended: false
-					}
-				}).then(battles => {
-					for(let battle of battles) {
-						let dateFin = new Date(battle.end);
-						dateFin.setDate(28);
-						Battle.update({
-							end: dateFin
-						}, {
-							where: {
-								id: battle.id
-							}
-						}).catch(console.log);
-					}
-				}).catch(console.log);
-			});
-		})
-);
-
-dispatcher.register(
 	literal('delete')
 		.then(
 			argument('names', true)
