@@ -1024,9 +1024,10 @@ function ready(name) {
 	console.log(name, 'ready');
 	if((++pready) === 2) { // client et database ready
 		console.log('database et client prêts');
-		let now = new Date().getTime();
+
 		initEmoji();
-		/*
+		
+		let now = new Date().getTime();
 		console.log('recherche de battles');
 		Battle.findAll({
 			where: {
@@ -1045,7 +1046,6 @@ function ready(name) {
 				}
 			}
 		}).catch(console.log);
-		*/
 	}
 }
 
