@@ -33,8 +33,6 @@ var Emoji;
 /** @type {Sequelize.Model} */
 var Battle;
 
-var currentBattles;
-
 Permission.expert = new Permission(source => source.message.member.id === config.owner);
 Permission.refuse = new Permission(() => false);
 const dispatcher = new CommandDispatcher();
@@ -486,6 +484,68 @@ dispatcher.register(
 );
 
 dispatcher.register(
+	literal('fix')
+		.executes(source => {
+			return new Promise(async (resolve, reject) => {
+				try {
+					await Emoji.update({ // haram
+						elo: 985
+					}, {
+						where: {
+							id: '476318657018855425'
+						}
+					});
+				
+					await Emoji.update({ // boi
+						elo: 1015
+					}, {
+						where: {
+							id: '519147196181118976'
+						}
+					});
+				
+					await Emoji.update({ // mesyeux
+						elo: 985
+					}, {
+						where: {
+							id: '431252859263385612'
+						}
+					});
+				
+					await Emoji.update({ // drakeyeah
+						elo: 1015
+					}, {
+						where: {
+							id: '498930418058395649'
+						}
+					});
+				
+					await Emoji.update({ // betel
+						elo: 1015
+					}, {
+						where: {
+							id: '479390965509914624'
+						}
+					});
+				
+					await Emoji.update({ // robotnik
+						elo: 985
+					}, {
+						where: {
+							id: '531873527251337237'
+						}
+					});
+
+					resolve();
+				} catch(err) {
+					reject(err);
+				}
+			});
+		})
+		.permission('expert')
+);
+
+dispatcher.register(
 	literal('eval')
 		.then(
 			argument('command', true)
@@ -710,8 +770,9 @@ function emojiFight(channel) {
 
 	selectEmojisPairs(channel, nbFights).then(pairs => {
 		let dateEnd = new Date();
+		console.log('date', dateEnd);
 		dateEnd.setDate(dateEnd.getDate() + 1);
-		dateEnd.setHours(23);
+		dateEnd.setHours(0);
 		dateEnd.setMinutes(0);
 		//dateEnd.setMinutes(dateEnd.getMinutes() + 1);
 		dateEnd.setSeconds(0);
@@ -719,7 +780,7 @@ function emojiFight(channel) {
 
 		//let tmpDateEnd = new Date(dateEnd.setHours(dateEnd.getHours() + 1));
 		let tmpDateEnd = new Date(dateEnd);
-		tmpDateEnd.setHours(tmpDateEnd.getHours() + 1);
+		// tmpDateEnd.setHours(tmpDateEnd.getHours() + 1);
 		// Test
 		
 
@@ -856,7 +917,7 @@ function endFights(channel, battlesId) {
 					
 					let finished = 0;
 					let after = () => {
-						if((++finished) == 2) {
+						if((++finished) === 2) {
 							let e1 = channel.guild.emojis.get(emoji1.id),
 								e2 = channel.guild.emojis.get(emoji2.id);
 							channel.send(`Mise à jour du elo:\n${e1}: ${emoji1.elo} -> ${nElo[0]}, ${e2}: ${emoji2.elo} -> ${nElo[1]}`);
@@ -918,31 +979,54 @@ function updateEmoji(emoji, add, init) {
 	});
 }
 
-function initEmoji() {
+async function initEmoji() {
 	for(let [guildId, guild] of client.guilds) {
 		for(let [emojiId] of guild.emojis) {
-			Emoji.findOrCreate({
-				where: {
-					id: emojiId,
-					guildId: guildId
-				},
-				defaults: {
-					count: 0,
-					elo: 1000,
-					lastBattle: new Date(0)
-				}
-			}).catch(console.log);
+			// Ajoute dans la BBD les émojis ajoutés
+			try {
+				await Emoji.findOrCreate({
+					where: {
+						id: emojiId,
+						guildId: guildId
+					},
+					defaults: {
+						count: 0,
+						elo: 1000,
+						lastBattle: new Date(0)
+					}	
+				});
+			} catch(err) {
+				console.log(err);
+			}
 		}
+		
+		// Supprime de la BDD les émojis supprimés
+		Emoji.findAll({
+			where: {
+				guildId: guildId
+			}
+		}).then(emojis => {
+			for(let emoji of emojis) {
+				if(!guild.emojis.get(emoji.id)) {
+					Emoji.destroy({
+						where: {
+							id: emoji.id
+						}
+					}).catch(console.log);
+				}
+			}
+		}).catch(console.log);
 	}
 }
 
 let pready = 0;
 function ready(name) {
 	console.log(name, 'ready');
-	if((++pready) == 2) { // client et database ready
+	if((++pready) === 2) { // client et database ready
 		console.log('database et client prêts');
 		let now = new Date().getTime();
 		initEmoji();
+		/*
 		console.log('recherche de battles');
 		Battle.findAll({
 			where: {
@@ -961,6 +1045,7 @@ function ready(name) {
 				}
 			}
 		}).catch(console.log);
+		*/
 	}
 }
 
@@ -998,7 +1083,8 @@ client.on('ready', () => {
 
 		// Se reconnecter après un timeout
 		for(let [,channel] of guild.channels) {
-			if(channel instanceof Discord.VoiceChannel && channel.members.find(member => member.id === client.user.id)) {
+			// if(channel instanceof Discord.VoiceChannel && channel.members.find(member => member.id === client.user.id)) {
+			if(channel instanceof Discord.VoiceChannel && channel.members.get(client.user.id)) {
 				Music.voiceChannel = channel;
 				Music.voiceChannel.join().then(connection => {
 					Music.voiceConnection = connection;
