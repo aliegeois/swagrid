@@ -483,7 +483,7 @@ dispatcher.register(
 		.description('Reset les batailles (+resetdb battle et initEmoji())')
 );
 
-dispatcher.register(
+/*dispatcher.register(
 	literal('fix')
 		.executes(source => {
 			return new Promise(async (resolve, reject) => {
@@ -543,7 +543,7 @@ dispatcher.register(
 			});
 		})
 		.permission('expert')
-);
+);*/
 
 dispatcher.register(
 	literal('eval')
