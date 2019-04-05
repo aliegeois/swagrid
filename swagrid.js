@@ -33,10 +33,7 @@ var Emoji;
 /** @type {Sequelize.Model} */
 var Battle;
 
-var currentBattles;
-
 Permission.expert = new Permission(source => source.message.member.id === config.owner);
-Permission.refuse = new Permission(() => false);
 const dispatcher = new CommandDispatcher();
 
 dispatcher.register(
@@ -461,7 +458,7 @@ dispatcher.register(
 					return new Promise((resolve, reject) => {
 						Emoji.update({
 							lastBattle: new Date(0),
-							elo: 0
+							elo: 1000
 						}, {
 							where: {}
 						}).then(() => source.message.channel.send('emoji.lastBattle & emoji.elo reset').catch(()=>{}));
@@ -797,9 +794,7 @@ function endFights(channel, battlesId) {
 					where: {
 						id: battlesId
 					}
-				}).catch(console.log).finally(() => {
-					setTimeout(emojiFight, 1, channel);
-				});
+				}).catch(console.log).finally(() => setTimeout(emojiFight, 1, channel));
 			}
 		};
 
@@ -942,26 +937,29 @@ client.on('ready', () => {
 
 		if(guildConfig === undefined)
 			continue;
-		if(typeof guildConfig.permissions !== 'object' || !(Symbol.iterator in guildConfig.permissions))
-			continue;
-
-		for(let perm of guildConfig.permissions) {
-			if(typeof perm.name !== 'string' || typeof perm.roleId !== 'string')
-				continue;
-			if(Permission[perm.name] !== undefined)
-				continue;
-			if(!guild.roles.has(perm.roleId))
-				continue;
-			
-			Permission[perm.name] = new Permission(source => {
-				let role = guild.roles.get(perm.roleId);
-
-				if(role === undefined)
-					return false;
-
-				return role.members.some(m => m.id === source.message.member.id);
-			});
+		if(typeof guildConfig.permissions === 'object' && (Symbol.iterator in guildConfig.permissions)) {
+			for(let perm of guildConfig.permissions) {
+				if(typeof perm.name !== 'string' || typeof perm.roleId !== 'string')
+					continue;
+				if(Permission[perm.name] !== undefined)
+					continue;
+				if(!guild.roles.has(perm.roleId))
+					continue;
+				
+				Permission[perm.name] = new Permission(source => {
+					let role = guild.roles.get(perm.roleId);
+	
+					if(role === undefined)
+						return false;
+	
+					return role.members.some(m => m.id === source.message.member.id);
+				});
+			}
 		}
+
+		// TODO get battle channel
+
+		
 
 		// Se reconnecter après un timeout
 		for(let [,channel] of guild.channels) {
