@@ -89,6 +89,18 @@ dispatcher.register(
 		.description('MAIS TA GUEULE !')
 );
 
+dispatcher.register(
+	literal('sanglier')
+		.executes(source => {
+			return new Promise(async (resolve, reject) => {
+				if(Music.voiceChannel === null)
+					await Music.join();
+				Music.voiceConnection.playFile('SANGLIER.mp3');
+				resolve();
+			});
+		})
+		.description('MAIS TA GUEULE !')
+);
 
 dispatcher.register(
 	literal('force')
@@ -1077,10 +1089,6 @@ client.on('ready', () => {
 			}
 		}
 
-		// TODO get battle channel
-
-		
-
 		// Se reconnecter après un timeout
 		for(let [,channel] of guild.channels) {
 			// if(channel instanceof Discord.VoiceChannel && channel.members.find(member => member.id === client.user.id)) {
@@ -1126,35 +1134,8 @@ client.on('messageReactionAdd', (reaction, user) => {
 		return;
 	
 	let emoji = reaction.emoji;
-	if(reaction.message.member.guild.emojis.has(emoji.id)) {
-		/*Emoji.findOne({
-			where: {
-				id: emojiId
-			}
-		}).then(emoji => {
-			if(emoji === null) {
-				Emoji.create({
-					id: emojiId,
-					count: 1
-				}).catch(err => {
-					console.error(`erreur create emoji: ${err}`); // TODO err
-				});
-			} else {
-				Emoji.update({
-					count: emoji.count + 1
-				}, {
-					where: {
-						id: emojiId
-					}
-				}).catch(err => {
-					console.error(`erreur update emoji: ${err}`); // TODO err
-				});
-			}
-		}).catch(err => {
-			console.error(`erreur find emoji: ${err}`); // TODO err
-		});*/
+	if(reaction.message.member.guild.emojis.has(emoji.id))
 		updateEmoji(emoji, true, 1);
-	}
 });
 
 client.on('messageReactionRemove', (reaction, user) => {
@@ -1162,28 +1143,8 @@ client.on('messageReactionRemove', (reaction, user) => {
 		return;
 	
 	let emoji = reaction.emoji;
-	if(reaction.message.member.guild.emojis.has(emoji.id)) {
-		/*Emoji.findOne({
-			where: {
-				id: emojiId
-			}
-		}).then(emoji => {
-			if(emoji !== null) {
-				Emoji.update({
-					count: emoji.count - 1
-				}, {
-					where: {
-						id: emojiId
-					}
-				}).catch(err => {
-					console.error(`erreur update emoji: ${err}`); // TODO err
-				});
-			}
-		}).catch(err => {
-			console.error(`erreur find emoji: ${err}`); // TODO err
-		});*/
+	if(reaction.message.member.guild.emojis.has(emoji.id))
 		updateEmoji(emoji, false, 0);
-	}
 });
 
 client.on('voiceStateUpdate', (oldmember, newmember) => { // Update packages
@@ -1236,6 +1197,15 @@ client.on('voiceStateUpdate', (oldmember, newmember) => { // Update packages
 	} catch(e) {
 		// Channel supprimé entre temps
 	}
+});
+
+client.on('emojiDelete', emoji => {
+	Emoji.destroy({
+		where: {
+			id: emoji.id,
+			guildId: emoji.guild.id
+		}
+	}).catch(console.log);
 });
 
 sequelize = new Sequelize(process.env.DATABASE_URL, {
