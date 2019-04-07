@@ -99,7 +99,7 @@ dispatcher.register(
 				let message = source.message;
 				if(Music.voiceChannel === null)
 					await Music.join(message.member.voiceChannel);
-				Music.voiceConnection.playFile(`${__dirname}/public/SANGLIER.wav`);
+				Music.voiceConnection.playFile(`${__dirname}/public/S A N G L I E R.mp3`);
 				resolve();
 			});
 		})
