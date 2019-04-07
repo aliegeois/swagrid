@@ -1051,7 +1051,7 @@ async function initEmoji() {
  * @param {Discord.Message} message 
  */
 function coup(message) {
-	if(message.author.id === '207937954880946176' && message.content.match(/^coup| coup$|^cou | cou$/).length) { // Darki dit "coup"
+	if(message.author.id === '207937954880946176' && message.content.match(/^coup| coup$|^cou | cou$/) !== null) { // Darki dit "coup"
 		message.react('551153662827823104');
 	}
 }
