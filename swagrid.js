@@ -25,13 +25,13 @@ const Music = new (require('./music'))(),
 const config = require('./config.json');
 
 /** @type {string} */
-var ytKey = process.env.YT;
+let ytKey = process.env.YT;
 /** @type {Sequelize} */
-var sequelize;
+let sequelize;
 /** @type {Sequelize.Model} */
-var Emoji;
+let Emoji;
 /** @type {Sequelize.Model} */
-var Battle;
+let Battle;
 
 Permission.expert = new Permission(source => source.message.member.id === config.owner);
 const dispatcher = new CommandDispatcher();
@@ -93,8 +93,10 @@ dispatcher.register(
 	literal('sanglier')
 		.executes(source => {
 			return new Promise(async (resolve, reject) => {
+				/** @type {Discord.Message} */
+				let message = source.message;
 				if(Music.voiceChannel === null)
-					await Music.join();
+					await Music.join(message.member.voiceChannel);
 				Music.voiceConnection.playFile('SANGLIER.mp3');
 				resolve();
 			});
@@ -1244,14 +1246,26 @@ sequelize.authenticate().then(() => {
 	ready('database');
 }).catch(console.log);
 
-app.get('/', (request, response) => {
+app.use(express.static(`${__dirname}/public`));
+
+/*app.get('/', (request, response) => {
 	response.sendFile(`${__dirname}/index.html`);
-});
+});*/
+
 app.get('/ping', (request, response) => {
-	//response.sendFile(`${__dirname}/index.html`);
 	response.send({ok: 'ok'});
 });
-var listener = app.listen(process.env.PORT, () => {
+
+app.get('/emojis', async (request, response) => {
+	response.setHeader('Content-Type', 'application/json');
+	try {
+		response.end(JSON.stringify(await Emoji.findAll()));
+	} catch(err) {
+		response.end(JSON.stringify({ error: err }));
+	}
+});
+
+let listener = app.listen(process.env.PORT, () => {
 	console.info('Swagrid présent sur le port ' + listener.address().port);
 });
 

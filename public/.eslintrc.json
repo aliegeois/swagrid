@@ -1,0 +1,36 @@
+{
+	"env": {
+		"es6": true,
+		"browser": true
+	},
+	"extends": "eslint:recommended",
+	"parserOptions": {
+		"ecmaVersion": 2018
+	},
+	"rules": {
+		"indent": [
+			"error",
+			"tab"
+		],
+		"quotes": [
+			"error",
+			"single"
+		],
+		"semi": [
+			"error",
+			"always"
+		],
+		"no-console": [
+			"off"
+		],
+		"no-empty": [
+			"off"
+		],
+		"no-unused-vars": [
+			"off"
+		]
+	},
+	"globals": {
+		"Chart": false
+	}
+}
