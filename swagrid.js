@@ -84,11 +84,26 @@ dispatcher.register(
 				let message = source.message;
 				if(Music.voiceChannel === null)
 					await Music.join(message.member.voiceChannel);
-				Music.voiceConnection.playFile(`${__dirname}/public/fanta.mp3`);
+				Music.voiceConnection.playFile(`${__dirname}/public/music/fanta.mp3`);
 				resolve();
 			});
 		})
 		.description('MAIS TA GUEULE !')
+);
+
+dispatcher.register(
+	literal('ouaismaiscestpastoiquidecide')
+		.executes(source => {
+			return new Promise(async (resolve, reject) => {
+				/** @type {Discord.Message} */
+				let message = source.message;
+				if(Music.voiceChannel === null)
+					await Music.join(message.member.voiceChannel);
+				Music.voiceConnection.playFile(`${__dirname}/public/music/ouaismaiscestpastoiquidecide.mp3`);
+				resolve();
+			});
+		})
+		.description('OUAIS MAIS C\'EST PAS TOI QUI DÉCIDE')
 );
 
 dispatcher.register(
@@ -99,7 +114,7 @@ dispatcher.register(
 				let message = source.message;
 				if(Music.voiceChannel === null)
 					await Music.join(message.member.voiceChannel);
-				Music.voiceConnection.playFile(`${__dirname}/public/S A N G L I E R.mp3`);
+				Music.voiceConnection.playFile(`${__dirname}/public/music/sanglier.mp3`);
 				resolve();
 			});
 		})
@@ -1032,6 +1047,15 @@ async function initEmoji() {
 	}
 }
 
+/**
+ * @param {Discord.Message} message 
+ */
+function coup(message) {
+	if(message.author.id === '207937954880946176' && message.content.indexOf('coup') !== 0) { // Darki dit "coup"
+		message.react('551153662827823104');
+	}
+}
+
 let pready = 0;
 function ready(name) {
 	console.log(name, 'ready');
@@ -1121,6 +1145,7 @@ client.on('message', message => {
 	
 	if(content.indexOf(config.prefix) !== 0 || content.length > 1 && content[1] === ' ') {
 		countEmojis(message);
+		coup(message);
 		return;
 	}
 
