@@ -80,9 +80,11 @@ dispatcher.register(
 	literal('fanta')
 		.executes(source => {
 			return new Promise(async (resolve, reject) => {
+				/** @type {Discord.Message} */
+				let message = source.message;
 				if(Music.voiceChannel === null)
-					await Music.join();
-				Music.voiceConnection.playFile('fanta.m4a');
+					await Music.join(message.member.voiceChannel);
+				Music.voiceConnection.playFile(`${__dirname}/public/fanta.mp3`);
 				resolve();
 			});
 		})
@@ -97,11 +99,11 @@ dispatcher.register(
 				let message = source.message;
 				if(Music.voiceChannel === null)
 					await Music.join(message.member.voiceChannel);
-				Music.voiceConnection.playFile('SANGLIER.mp3');
+				Music.voiceConnection.playFile(`${__dirname}/public/SANGLIER.mp3`);
 				resolve();
 			});
 		})
-		.description('MAIS TA GUEULE !')
+		.description('SANGLIER')
 );
 
 dispatcher.register(
