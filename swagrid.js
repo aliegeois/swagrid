@@ -92,18 +92,18 @@ dispatcher.register(
 );
 
 dispatcher.register(
-	literal('ouaismaiscestpastoiquidecide')
+	literal('ouaismaiscestpastoiquidecides')
 		.executes(source => {
 			return new Promise(async (resolve, reject) => {
 				/** @type {Discord.Message} */
 				let message = source.message;
 				if(Music.voiceChannel === null)
 					await Music.join(message.member.voiceChannel);
-				Music.voiceConnection.playFile(`${__dirname}/public/music/ouaismaiscestpastoiquidecide.mp3`);
+				Music.voiceConnection.playFile(`${__dirname}/public/music/ouaismaiscestpastoiquidecides.mp3`);
 				resolve();
 			});
 		})
-		.description('OUAIS MAIS C\'EST PAS TOI QUI DÉCIDE')
+		.description('OUAIS MAIS C\'EST PAS TOI QUI DÉCIDES')
 );
 
 dispatcher.register(
