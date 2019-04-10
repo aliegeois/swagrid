@@ -67,26 +67,32 @@ module.exports = class Music {
 	 * @param {string} title Le titre de la vidéo
 	 */
 	add(url, title) {
-		this.__musics__.push({url: url, title: title});
-		if(this.__status__ == 'stop')
+		this.__musics__.push({ url: url, title: title });
+		if(this.__status__ === 'stop')
 			this.__play__();
 	}
 
 	/** @private */
-	async __play__() {
+	__play__() {
 		/** @type {music} */
 		let song = this.__musics__.shift();
 		this.__status__ = 'play';
 		this.__playing__ = song;
-		//this.__dispatcher__ = this.voiceConnection.playOpusStream(await ytdl(song.url));
-		this.__dispatcher__ = this.voiceConnection.playStream(ytdl(song.url, {
+		this.__dispatcher__.end('_');
+		this.__dispatcher__ = this.voiceConnection.playOpusStream(ytdl(song.url, {
+			filter: 'audio'
+		}));
+		/*this.__dispatcher__ = this.voiceConnection.playStream(ytdl(song.url, {
 			filter: 'audioonly'
 		}), {
 			seek: 0,
 			volume: 1
-		}).on('end', reason => {
+		});*/
+		this.__dispatcher__.on('end', reason => {
 			switch(reason) {
-			case '_': // Arrêt manuel
+			case 'cancel':
+			case 'skip':
+			case 'stop':
 				break;
 			case 'Stream is not generating quickly enough.':
 				console.log('Stream génère pas assez vite');
@@ -115,7 +121,7 @@ module.exports = class Music {
 			} else {
 				this.__status__ = 'stop';
 				this.__playing__ = null;
-				this.__dispatcher__.end();
+				this.__dispatcher__.end('cancel');
 			}
 		}
 	}
@@ -123,7 +129,7 @@ module.exports = class Music {
 	/** Passe la vidéo en cours de lecture */
 	skip() {
 		if(this.__status__ === 'play')
-			this.__dispatcher__.end('_');
+			this.__dispatcher__.end('skip');
 		if(this.__musics__.length)
 			this.__play__();
 	}
@@ -132,7 +138,7 @@ module.exports = class Music {
 	stop() {
 		this.__status__ = 'stop';
 		this.__playing__ = null;
-		this.__dispatcher__.end('_');
+		this.__dispatcher__.end('stop');
 		this.__musics__ = [];
 	}
 
@@ -149,11 +155,10 @@ module.exports = class Music {
 	 * @returns {string}
 	 */
 	get playlist() {
-		/** @type {music[]} */
 		let musicNames = Array.from(this.__musics__);
 
 		musicNames.push(this.__playing__);
 
-		return musicNames.reduce((total, el) => `${total}${el.title}\n`);
+		return musicNames.reduce((acc, el) => `${acc}${el.title}\n`, '');
 	}
 };

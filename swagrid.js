@@ -971,7 +971,7 @@ function endFights(channel, battlesId) {
 						}
 					}).catch(console.log).finally(after);
 				}).catch(console.log);
-			}).catch(() => channel.send('Qui est l\'abruti qui supprime mes messages !?'));
+			}).catch(() => channel.send('Qui est l\'abruti qui supprime mes messages !?').catch(()=>{}));
 		}
 	}).catch(console.log);
 }
@@ -1227,6 +1227,8 @@ client.on('voiceStateUpdate', (oldmember, newmember) => { // Update packages
 		// Channel supprimé entre temps
 	}
 });
+
+client.on('emojiCreate', initEmoji);
 
 client.on('emojiDelete', emoji => {
 	Emoji.destroy({
