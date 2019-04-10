@@ -982,7 +982,7 @@ function endFights(channel, battlesId) {
  * @param {boolean} add Ajout ou retrait ?
  * @param {number} init Valeur initiale si l'émoji n'existe pas
  */
-function updateEmoji(emoji, add, init) {
+function updateEmoji(emoji, add, init) { // Modifier cette merde pour prendre en compte le nouveau shéma de BDD
 	Emoji.findByPk(emoji.id).then(emoji => {
 		if(emoji === null) {
 			Emoji.create({

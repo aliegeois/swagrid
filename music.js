@@ -84,10 +84,10 @@ module.exports = class Music {
 		}));*/
 		this.__dispatcher__ = this.voiceConnection.playStream(ytdl(song.url, {
 			filter: 'audio'
-		})/*, {
+		}), {
 			seek: 0,
 			volume: 1
-		}*/);
+		});
 		this.__dispatcher__.on('end', reason => {
 			switch(reason) {
 			case 'cancel':
