@@ -78,22 +78,15 @@ module.exports = class Music {
 		let song = this.__musics__.shift();
 		this.__status__ = 'play';
 		this.__playing__ = song;
-		this.__dispatcher__.end('_');
-		/*this.__dispatcher__ = this.voiceConnection.playOpusStream(ytdl(song.url, {
-			filter: 'audio'
-		}));*/
+		// this.__dispatcher__.end('_');
+		// this.__dispatcher__ = this.voiceConnection.playOpusStream(await ytdl(song.url));
 		this.__dispatcher__ = this.voiceConnection.playStream(ytdl(song.url, {
 			filter: 'audio'
 		}), {
 			seek: 0,
 			volume: 1
-		});
-		this.__dispatcher__.on('end', reason => {
+		}).on('end', reason => {
 			switch(reason) {
-			case 'cancel':
-			case 'skip':
-			case 'stop':
-				break;
 			case 'Stream is not generating quickly enough.':
 				console.log('Stream génère pas assez vite');
 				/*this.__musics__.unshift(song);
