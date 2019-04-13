@@ -84,6 +84,8 @@ dispatcher.register(
 				let message = source.message;
 				if(Music.voiceChannel === null)
 					await Music.join(message.member.voiceChannel);
+				/*if(Music.voiceConnection === null)
+					await dispatcher.parse(source, 'join');*/
 				Music.addSound('ta gueule', `${__dirname}/public/music/fanta.mp3`);
 				// Music.voiceConnection.playFile(`${__dirname}/public/music/fanta.mp3`);
 				resolve();
@@ -100,6 +102,8 @@ dispatcher.register(
 				let message = source.message;
 				if(Music.voiceChannel === null)
 					await Music.join(message.member.voiceChannel);
+				/*if(Music.voiceConnection === null) {
+					await dispatcher.parse(source, 'join');*/
 				Music.addSound('ouaismaiscestpastoiquidecides', `${__dirname}/public/music/ouaismaiscestpastoiquidecides.mp3`);
 				// Music.voiceConnection.playFile(`${__dirname}/public/music/ouaismaiscestpastoiquidecides.mp3`);
 				resolve();
@@ -116,6 +120,8 @@ dispatcher.register(
 				let message = source.message;
 				if(Music.voiceChannel === null)
 					await Music.join(message.member.voiceChannel);
+				/*if(Music.voiceConnection === null)
+					await dispatcher.parse(source, 'join');*/
 				Music.addSound('sanglier', `${__dirname}/public/music/sanglier.mp3`);
 				// Music.voiceConnection.playFile(`${__dirname}/public/music/sanglier.mp3`);
 				resolve();
@@ -225,9 +231,9 @@ dispatcher.register(
 					return new Promise(async (resolve, reject) => {
 						/** @type {Discord.Message} */
 						let message = source.message;
-						if(Music.voiceConnection === null) {
+						if(Music.voiceConnection === null)
 							await dispatcher.parse(source, 'join');
-						}
+						
 						if(message.member.voiceChannelID !== Music.voiceChannel.id && !source.force) {
 							message.reply('Petit boloss, arrête de mettre des sons si tu n\'es pas dans le channel') // TODO err
 								.then(resolve)

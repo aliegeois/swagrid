@@ -92,7 +92,6 @@ module.exports = class Music {
 
 	/** @private */
 	__play__() {
-		/** @type {music} */
 		let song = this.__musics__.shift();
 		this.__status__ = 'play';
 		this.__playing__ = song;
@@ -115,20 +114,22 @@ module.exports = class Music {
 			}
 		};
 
-		// this.__dispatcher__.end('_');
 		switch(song.type) {
 		case 'music':
+			console.log('playStream', song);
 			this.__dispatcher__ = this.voiceConnection.playStream(ytdl(song.url, {
 				filter: 'audio'
 			}), {
-				seek: 0,
-				volume: 1
+				bitrate: 'auto'
 			}).on('end', end);
 			break;
 		case 'sound':
+			console.log('playFile', song);
 			this.__dispatcher__ = this.voiceConnection.playFile(song.url).on('end', end);
 			break;
 		default:
+			this.__dispatcher__ = null;
+			end('_');
 			console.log('error type music');
 		}
 
@@ -157,7 +158,7 @@ module.exports = class Music {
 	
 	/** Passe la vidéo en cours de lecture */
 	skip() {
-		if(this.__status__ === 'play')
+		if(this.__status__ === 'play' && this.__dispatcher__ instanceof Discord.StreamDispatcher)
 			this.__dispatcher__.end('skip');
 		if(this.__musics__.length)
 			this.__play__();
@@ -176,6 +177,8 @@ module.exports = class Music {
 	 * @returns {string}
 	 */
 	get playing() {
+		if(this.__playing__ === null)
+			return 'Rien ne joue';
 		return this.__playing__.title;
 	}
 	
@@ -186,7 +189,8 @@ module.exports = class Music {
 	get playlist() {
 		let musicNames = Array.from(this.__musics__);
 
-		musicNames.push(this.__playing__);
+		if(this.__playing__)
+			musicNames.push(this.__playing__);
 
 		return musicNames.reduce((acc, el) => `${acc}${el.title}\n`, '');
 	}
