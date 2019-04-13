@@ -96,20 +96,12 @@ module.exports = class Music {
 		let song = this.__musics__.shift();
 		this.__status__ = 'play';
 		this.__playing__ = song;
-		// this.__dispatcher__.end('_');
-		// this.__dispatcher__ = this.voiceConnection.playOpusStream(await ytdl(song.url));
-		this.__dispatcher__ = (song.type === 'music' ? this.voiceConnection.playStream(ytdl(song.url, {
-			filter: 'audio'
-		}), {
-			seek: 0,
-			volume: 1
-		}) : this.voiceConnection.playFile(song.url)).on('end', reason => {
+
+		/** @param {string} reason */
+		let end = reason => {
 			switch(reason) {
 			case 'Stream is not generating quickly enough.':
 				console.log('Stream génère pas assez vite');
-				/*this.__musics__.unshift(song);
-				this.__lastTime__ = this.__dispatcher__.time;
-				this.__play__();*/
 				break;
 			default:
 				console.log(`music ended with reason "${reason}"`);
@@ -121,7 +113,33 @@ module.exports = class Music {
 				this.__status__ = 'stop';
 				this.__playing__ = null;
 			}
-		});
+		};
+
+		// this.__dispatcher__.end('_');
+		switch(song.type) {
+		case 'music':
+			this.__dispatcher__ = this.voiceConnection.playStream(ytdl(song.url, {
+				filter: 'audio'
+			}), {
+				seek: 0,
+				volume: 1
+			}).on('end', end);
+			break;
+		case 'sound':
+			this.__dispatcher__ = this.voiceConnection.playFile(song.url).on('end', end);
+			break;
+		default:
+			console.log('error type music');
+		}
+
+		/*this.__dispatcher__ = this.voiceConnection.playStream(ytdl(song.url, {
+			filter: 'audio'
+		}), {
+			seek: 0,
+			volume: 1
+		}).on('end', reason => {
+			
+		});*/
 	}
 	
 	/** Annule la dernière action */
