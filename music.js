@@ -116,7 +116,7 @@ module.exports = class Music {
 
 		switch(song.type) {
 		case 'music':
-			console.log('playStream', song);
+			// console.log('playStream', song);
 			this.__dispatcher__ = this.voiceConnection.playStream(ytdl(song.url, {
 				filter: 'audio'
 			}), {
@@ -124,7 +124,7 @@ module.exports = class Music {
 			}).on('end', end);
 			break;
 		case 'sound':
-			console.log('playFile', song);
+			// console.log('playFile', song);
 			this.__dispatcher__ = this.voiceConnection.playFile(song.url).on('end', end);
 			break;
 		default:
