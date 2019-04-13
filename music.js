@@ -2,7 +2,7 @@ const ytdl = require('ytdl-core');
 //const ytdl = require('ytdl-core-discord');
 const Discord = require('discord.js');
 
-/** @typedef {{url: string, title: string}} music */
+/** @typedef {{type: string, title: string, url: string}} music */
 /** @class */
 module.exports = class Music {
 	constructor() {
@@ -54,6 +54,7 @@ module.exports = class Music {
 		});
 	}
 
+	/** Fait quitter le channel vocal */
 	leave() {
 		if(this.voiceChannel instanceof Discord.VoiceChannel)
 			this.voiceChannel.leave();
@@ -66,8 +67,25 @@ module.exports = class Music {
 	 * @param {string} url L'URL de la vidéo
 	 * @param {string} title Le titre de la vidéo
 	 */
-	add(url, title) {
-		this.__musics__.push({ url: url, title: title });
+	addMusic(url, title) {
+		this.__add__({ type: 'music', title: title, url: url });
+	}
+
+	/**
+	 * Ajoute un son custom à la file d'attente. Joue le son si la file est vide
+	 * @param {string} name Nom du son
+	 * @param {string} location Emplacement du son
+	 */
+	addSound(name, location) {
+		this.__add__({ type: 'sound', title: name, url: location });
+	}
+
+	/**
+	 * @param {music} music
+	 * @private
+	 */
+	__add__(music) {
+		this.__musics__.push(music);
 		if(this.__status__ === 'stop')
 			this.__play__();
 	}
@@ -80,12 +98,12 @@ module.exports = class Music {
 		this.__playing__ = song;
 		// this.__dispatcher__.end('_');
 		// this.__dispatcher__ = this.voiceConnection.playOpusStream(await ytdl(song.url));
-		this.__dispatcher__ = this.voiceConnection.playStream(ytdl(song.url, {
+		this.__dispatcher__ = (song.type === 'music' ? this.voiceConnection.playStream(ytdl(song.url, {
 			filter: 'audio'
 		}), {
 			seek: 0,
 			volume: 1
-		}).on('end', reason => {
+		}) : this.voiceConnection.playFile(song.url)).on('end', reason => {
 			switch(reason) {
 			case 'Stream is not generating quickly enough.':
 				console.log('Stream génère pas assez vite');
