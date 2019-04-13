@@ -158,7 +158,7 @@ module.exports = class Music {
 	
 	/** Passe la vidéo en cours de lecture */
 	skip() {
-		if(this.__status__ === 'play' && this.__dispatcher__ instanceof Discord.StreamDispatcher)
+		if(this.__status__ === 'play')
 			this.__dispatcher__.end('skip');
 		if(this.__musics__.length)
 			this.__play__();
