@@ -806,7 +806,7 @@ function selectEmojisPairs(channel, quantity) {
  * @param {Discord.TextChannel} channel 
  */
 function emojiFight(channel) {
-	const nbFights = 3;
+	const nbFights = 5;
 
 	selectEmojisPairs(channel, nbFights).then(pairs => {
 		let dateEnd = new Date();
