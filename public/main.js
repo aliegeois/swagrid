@@ -27,6 +27,7 @@ onload = () => {
 			tdEmoji.appendChild(img);
 			//tdName.innerHTML = emoji.???
 			tdElo.innerHTML = emoji.elo;
+			tr.appendChild(tdId);
 			tr.appendChild(tdEmoji);
 			tr.appendChild(tdElo);
 			tbody.appendChild(tr);
