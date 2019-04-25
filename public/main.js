@@ -3,12 +3,15 @@ onload = () => {
 
 	fetch('/emojis').then(data => data.json()).then(data => {
 		let thead = document.createElement('thead'),
+			thId = document.createElement('th'),
 			thEmoji = document.createElement('th'),
 			//thName = document.createElement('th'),
 			thElo = document.createElement('th');
+		thId.innerHTML = 'id';
 		thEmoji.innerHTML = 'Emoji';
 		//thName.innerHTML = 'Nom';
 		thElo.innerHTML = 'Elo';
+		thead.appendChild(thId);
 		thead.appendChild(thEmoji);
 		//thead.appendChild(thName);
 		thead.appendChild(thElo);
