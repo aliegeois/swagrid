@@ -17,9 +17,11 @@ onload = () => {
 		let tbody = document.createElement('tbody');
 		for(let emoji of data) {
 			let tr = document.createElement('tr'),
+				tdId = document.createElement('td'),
 				tdEmoji = document.createElement('td'),
 				//tdName = document.createElement('td'),
 				tdElo = document.createElement('td');
+			tdId = emoji.id;
 			let img = new Image(64, 64);
 			img.src = `https://cdn.discordapp.com/emojis/${emoji.id}`;
 			tdEmoji.appendChild(img);

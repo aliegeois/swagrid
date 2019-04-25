@@ -211,7 +211,7 @@ dispatcher.register(
 				/** @type {Discord.Message} */
 				let message = source.message;
 				if(message.member.voiceChannelID === null && !source.force) {
-					message.reply('vous devez être dans le même channel vocal que Swagrid pour exécuter cetet action') // TODO err
+					message.reply('vous devez être dans le même channel vocal que Swagrid pour exécuter cette action') // TODO err
 						.then(resolve)
 						.catch(reject);
 				} else {
