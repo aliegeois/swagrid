@@ -498,6 +498,7 @@ dispatcher.register(
 					});
 				})
 		)
+		.permission('expert')
 );
 
 dispatcher.register(
