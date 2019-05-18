@@ -82,13 +82,16 @@ dispatcher.register(
 			return new Promise(async (resolve, reject) => {
 				/** @type {Discord.Message} */
 				let message = source.message;
-				if(Music.voiceChannel === null)
-					await Music.join(message.member.voiceChannel);
+				/*if(Music.voiceChannel === null)
+					await Music.join(message.member.voiceChannel);*/
+				if(Music.voiceConnection === null)
+					await dispatcher.parse(source, 'join');
+				// Music.addSound('ta gueule', `${__dirname}/public/music/fanta.mp3`);
 				Music.voiceConnection.playFile(`${__dirname}/public/music/fanta.mp3`);
 				resolve();
 			});
 		})
-		.description('MAIS TA GUEULE !')
+		.description('TA GUEULE !')
 );
 
 dispatcher.register(
@@ -97,8 +100,11 @@ dispatcher.register(
 			return new Promise(async (resolve, reject) => {
 				/** @type {Discord.Message} */
 				let message = source.message;
-				if(Music.voiceChannel === null)
-					await Music.join(message.member.voiceChannel);
+				/*if(Music.voiceChannel === null)
+					await Music.join(message.member.voiceChannel);*/
+				if(Music.voiceConnection === null)
+					await dispatcher.parse(source, 'join');
+				// Music.addSound('ouaismaiscestpastoiquidecides', `${__dirname}/public/music/ouaismaiscestpastoiquidecides.mp3`);
 				Music.voiceConnection.playFile(`${__dirname}/public/music/ouaismaiscestpastoiquidecides.mp3`);
 				resolve();
 			});
@@ -112,8 +118,11 @@ dispatcher.register(
 			return new Promise(async (resolve, reject) => {
 				/** @type {Discord.Message} */
 				let message = source.message;
-				if(Music.voiceChannel === null)
-					await Music.join(message.member.voiceChannel);
+				/*if(Music.voiceChannel === null)
+					await Music.join(message.member.voiceChannel);*/
+				if(Music.voiceConnection === null)
+					await dispatcher.parse(source, 'join');
+				// Music.addSound('sanglier', `${__dirname}/public/music/sanglier.mp3`);
 				Music.voiceConnection.playFile(`${__dirname}/public/music/sanglier.mp3`);
 				resolve();
 			});
@@ -202,7 +211,7 @@ dispatcher.register(
 				/** @type {Discord.Message} */
 				let message = source.message;
 				if(message.member.voiceChannelID === null && !source.force) {
-					message.reply('vous devez être dans le même channel vocal que Swagrid pour exécuter cetet action') // TODO err
+					message.reply('vous devez être dans le même channel vocal que Swagrid pour exécuter cette action') // TODO err
 						.then(resolve)
 						.catch(reject);
 				} else {
@@ -222,9 +231,9 @@ dispatcher.register(
 					return new Promise(async (resolve, reject) => {
 						/** @type {Discord.Message} */
 						let message = source.message;
-						if(Music.voiceConnection === null) {
+						if(Music.voiceConnection === null)
 							await dispatcher.parse(source, 'join');
-						}
+						
 						if(message.member.voiceChannelID !== Music.voiceChannel.id && !source.force) {
 							message.reply('Petit boloss, arrête de mettre des sons si tu n\'es pas dans le channel') // TODO err
 								.then(resolve)
@@ -237,7 +246,7 @@ dispatcher.register(
 								part: 'snippet',
 								type: 'video'
 							}).then(res => {
-								Music.add(res.items[0].id.videoId, res.items[0].snippet.title);
+								Music.addMusic(res.items[0].id.videoId, res.items[0].snippet.title);
 								message.channel.send(`Recherche de \`${keywords}\``, new Discord.RichEmbed({
 									author: {
 										'name': 'Ajout à la file d\'attente'
@@ -663,14 +672,15 @@ function countEmojis(message) {
 	if(strs !== null) {
 		strs.reduce((previous, current) => {
 			//let [name, id] = current.slice(2, -1).split(':');
-			let [, id] = current.slice(2, -1).split(':');
-			if(message.guild.emojis.has(id)) {
+			let [, emojiId] = current.slice(2, -1).split(':');
+			if(message.guild.emojis.has(emojiId)) {
 				return previous.then(() => {
 					return new Promise((resolve, reject) => {
-						Emoji.findByPk(id).then(emoji => {
+						Emoji.findByPk(emojiId).then(emoji => {
 							if(emoji === null) {
+								addEmoji(emojiId, message.guild.id);
 								Emoji.create({
-									id: id,
+									id: emojiId,
 									count: 1
 								}).then(() => {
 									resolve();
@@ -683,7 +693,7 @@ function countEmojis(message) {
 									count: emoji.count + 1
 								}, {
 									where: {
-										id: id
+										id: emojiId
 									}
 								}).then(() => {
 									resolve();
@@ -797,7 +807,7 @@ function selectEmojisPairs(channel, quantity) {
  * @param {Discord.TextChannel} channel 
  */
 function emojiFight(channel) {
-	const nbFights = 3;
+	const nbFights = 5;
 
 	selectEmojisPairs(channel, nbFights).then(pairs => {
 		let dateEnd = new Date();
@@ -825,11 +835,10 @@ function emojiFight(channel) {
 		};
 
 		for(let i = 0; i < pairs.length; i++) {
-			//console.log('emojiFight.selectEmojisPairs, channel:', channel.id);
-			//console.log(JSON.stringify(pairs[i]));
 			let emos = pairs[i];
 			let e1 = channel.guild.emojis.get(emos[0].id),
 				e2 = channel.guild.emojis.get(emos[1].id);
+			
 			channel.send({
 				embed: {
 					description: 'Nouvelle bataille !',
@@ -865,23 +874,6 @@ function emojiFight(channel) {
 					after(i, battle.id);
 				}).catch(console.log);
 			}).catch(console.log);
-			/*
-			channel.send(`Bataille entre ${e1} et ${e2} !\nVotez pour votre préféré (fin: ${dateEnd})`).then(message => {
-				message.react(e1).then(() => {
-					message.react(e2).catch(()=>{});
-				}).catch(()=>{});
-
-				Battle.create({
-					messageId: message.id,
-					end: dateEnd.getTime(),
-					emoji1: e1.id,
-					emoji2: e2.id,
-					channelId: message.channel.id,
-					ended: false
-				}).then(battle => {
-					after(i, battle.id);
-				}).catch(console.log);
-			}).catch(console.log);*/
 		}
 	});
 }
@@ -972,7 +964,7 @@ function endFights(channel, battlesId) {
 						}
 					}).catch(console.log).finally(after);
 				}).catch(console.log);
-			}).catch(() => channel.send('Qui est l\'abruti qui supprime mes messages !?'));
+			}).catch(() => channel.send('Qui est l\'abruti qui supprime mes messages !?').catch(()=>{}));
 		}
 	}).catch(console.log);
 }
@@ -983,15 +975,16 @@ function endFights(channel, battlesId) {
  * @param {boolean} add Ajout ou retrait ?
  * @param {number} init Valeur initiale si l'émoji n'existe pas
  */
-function updateEmoji(emoji, add, init) {
+function updateEmoji(emoji, add, init) { // Modifier cette merde pour prendre en compte le nouveau shéma de BDD
 	Emoji.findByPk(emoji.id).then(emoji => {
 		if(emoji === null) {
-			Emoji.create({
+			addEmoji(emoji.id, emoji.guild.id);
+			/*Emoji.create({
 				id: emoji.id,
 				count: init
 			}).catch(err => {
 				console.error(`erreur create emoji: ${err}`); // TODO err
-			});
+			});*/
 		} else {
 			Emoji.update({
 				count: emoji.count += add ? 1 : -1
@@ -1008,11 +1001,33 @@ function updateEmoji(emoji, add, init) {
 	});
 }
 
+function addEmoji(emojiId, guildId) {
+	Emoji.findOrCreate({
+		where: {
+			id: emojiId,
+			guildId: guildId
+		},
+		defaults: {
+			count: 0,
+			elo: 1000,
+			lastBattle: new Date(0)
+		}	
+	}).catch(console.log);
+}
+
+function removeEmoji(emojiId) {
+	Emoji.destroy({
+		where: {
+			id: emojiId
+		}
+	}).catch(console.log);
+}
+
 async function initEmoji() {
 	for(let [guildId, guild] of client.guilds) {
 		for(let [emojiId] of guild.emojis) {
-			// Ajoute dans la BBD les émojis ajoutés
-			try {
+			// Ajoute dans la BBD les émojis ajoutés depuis le dernier arrêt
+			/*try {
 				await Emoji.findOrCreate({
 					where: {
 						id: emojiId,
@@ -1026,7 +1041,8 @@ async function initEmoji() {
 				});
 			} catch(err) {
 				console.log(err);
-			}
+			}*/
+			addEmoji(emojiId, guildId);
 		}
 		
 		// Supprime de la BDD les émojis supprimés
@@ -1037,11 +1053,12 @@ async function initEmoji() {
 		}).then(emojis => {
 			for(let emoji of emojis) {
 				if(!guild.emojis.get(emoji.id)) {
-					Emoji.destroy({
+					/*Emoji.destroy({
 						where: {
 							id: emoji.id
 						}
-					}).catch(console.log);
+					}).catch(console.log);*/
+					removeEmoji(emoji.id);
 				}
 			}
 		}).catch(console.log);
@@ -1177,7 +1194,7 @@ client.on('messageReactionRemove', (reaction, user) => {
 		updateEmoji(emoji, false, 0);
 });
 
-client.on('voiceStateUpdate', (oldmember, newmember) => { // Update packages
+client.on('voiceStateUpdate', (oldmember, newmember) => {
 	try {
 		let oldvoice = oldmember.voiceChannel;
 		let newvoice = newmember.voiceChannel;
@@ -1229,18 +1246,16 @@ client.on('voiceStateUpdate', (oldmember, newmember) => { // Update packages
 	}
 });
 
+client.on('emojiCreate', emoji => {
+	addEmoji(emoji.id, emoji.guild.id);
+});
+
 client.on('emojiDelete', emoji => {
-	Emoji.destroy({
-		where: {
-			id: emoji.id,
-			guildId: emoji.guild.id
-		}
-	}).catch(console.log);
+	removeEmoji(emoji.id);
 });
 
 sequelize = new Sequelize(process.env.DATABASE_URL, {
 	dialect: 'postgres',
-	operatorsAliases: false,
 	logging: false
 });
 

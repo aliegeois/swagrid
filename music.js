@@ -2,7 +2,7 @@ const ytdl = require('ytdl-core');
 //const ytdl = require('ytdl-core-discord');
 const Discord = require('discord.js');
 
-/** @typedef {{url: string, title: string}} music */
+/** @typedef {{type: string, title: string, url: string}} music */
 /** @class */
 module.exports = class Music {
 	constructor() {
@@ -54,6 +54,7 @@ module.exports = class Music {
 		});
 	}
 
+	/** Fait quitter le channel vocal */
 	leave() {
 		if(this.voiceChannel instanceof Discord.VoiceChannel)
 			this.voiceChannel.leave();
@@ -66,33 +67,40 @@ module.exports = class Music {
 	 * @param {string} url L'URL de la vidéo
 	 * @param {string} title Le titre de la vidéo
 	 */
-	add(url, title) {
-		this.__musics__.push({url: url, title: title});
-		if(this.__status__ == 'stop')
+	addMusic(url, title) {
+		this.__add__({ type: 'music', title: title, url: url });
+	}
+
+	/**
+	 * Ajoute un son custom à la file d'attente. Joue le son si la file est vide
+	 * @param {string} name Nom du son
+	 * @param {string} location Emplacement du son
+	 */
+	addSound(name, location) {
+		this.__add__({ type: 'sound', title: name, url: location });
+	}
+
+	/**
+	 * @param {music} music
+	 * @private
+	 */
+	__add__(music) {
+		this.__musics__.push(music);
+		if(this.__status__ === 'stop')
 			this.__play__();
 	}
 
 	/** @private */
-	async __play__() {
-		/** @type {music} */
+	__play__() {
 		let song = this.__musics__.shift();
 		this.__status__ = 'play';
 		this.__playing__ = song;
-		//this.__dispatcher__ = this.voiceConnection.playOpusStream(await ytdl(song.url));
-		this.__dispatcher__ = this.voiceConnection.playStream(ytdl(song.url, {
-			filter: 'audioonly'
-		}), {
-			seek: 0,
-			volume: 1
-		}).on('end', reason => {
+
+		/** @param {string} reason */
+		let end = reason => {
 			switch(reason) {
-			case '_': // Arrêt manuel
-				break;
 			case 'Stream is not generating quickly enough.':
 				console.log('Stream génère pas assez vite');
-				/*this.__musics__.unshift(song);
-				this.__lastTime__ = this.__dispatcher__.time;
-				this.__play__();*/
 				break;
 			default:
 				console.log(`music ended with reason "${reason}"`);
@@ -104,7 +112,35 @@ module.exports = class Music {
 				this.__status__ = 'stop';
 				this.__playing__ = null;
 			}
-		});
+		};
+
+		switch(song.type) {
+		case 'music':
+			// console.log('playStream', song);
+			this.__dispatcher__ = this.voiceConnection.playStream(ytdl(song.url, {
+				filter: 'audio'
+			}), {
+				bitrate: 'auto'
+			}).on('end', end);
+			break;
+		case 'sound':
+			// console.log('playFile', song);
+			this.__dispatcher__ = this.voiceConnection.playFile(song.url).on('end', end);
+			break;
+		default:
+			this.__dispatcher__ = null;
+			end('_');
+			console.log('error type music');
+		}
+
+		/*this.__dispatcher__ = this.voiceConnection.playStream(ytdl(song.url, {
+			filter: 'audio'
+		}), {
+			seek: 0,
+			volume: 1
+		}).on('end', reason => {
+			
+		});*/
 	}
 	
 	/** Annule la dernière action */
@@ -115,7 +151,7 @@ module.exports = class Music {
 			} else {
 				this.__status__ = 'stop';
 				this.__playing__ = null;
-				this.__dispatcher__.end();
+				this.__dispatcher__.end('cancel');
 			}
 		}
 	}
@@ -123,7 +159,7 @@ module.exports = class Music {
 	/** Passe la vidéo en cours de lecture */
 	skip() {
 		if(this.__status__ === 'play')
-			this.__dispatcher__.end('_');
+			this.__dispatcher__.end('skip');
 		if(this.__musics__.length)
 			this.__play__();
 	}
@@ -132,7 +168,7 @@ module.exports = class Music {
 	stop() {
 		this.__status__ = 'stop';
 		this.__playing__ = null;
-		this.__dispatcher__.end('_');
+		this.__dispatcher__.end('stop');
 		this.__musics__ = [];
 	}
 
@@ -141,6 +177,8 @@ module.exports = class Music {
 	 * @returns {string}
 	 */
 	get playing() {
+		if(this.__playing__ === null)
+			return 'Rien ne joue';
 		return this.__playing__.title;
 	}
 	
@@ -149,11 +187,11 @@ module.exports = class Music {
 	 * @returns {string}
 	 */
 	get playlist() {
-		/** @type {music[]} */
 		let musicNames = Array.from(this.__musics__);
 
-		musicNames.push(this.__playing__);
+		if(this.__playing__)
+			musicNames.push(this.__playing__);
 
-		return musicNames.reduce((total, el) => `${total}${el.title}\n`);
+		return musicNames.reduce((acc, el) => `${acc}${el.title}\n`, '');
 	}
 };
