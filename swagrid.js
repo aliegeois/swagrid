@@ -506,8 +506,9 @@ dispatcher.register(
 						resolve();
 					});
 				})
+				.permission('expert')
+				.description('Reset le elo des émojis et les précédentes batailles')
 		)
-		.permission('expert')
 );
 
 dispatcher.register(
