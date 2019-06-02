@@ -160,8 +160,8 @@ module.exports = class Music {
 	skip() {
 		if(this.__status__ === 'play')
 			this.__dispatcher__.end('skip');
-		if(this.__musics__.length)
-			this.__play__();
+		// if(this.__musics__.length) // Lecture automatique déjà faite dans l'event 'end'
+		// 	this.__play__();
 	}
 	
 	/** Stoppe la vidéo en cours de lecture */
@@ -178,7 +178,7 @@ module.exports = class Music {
 	 */
 	get playing() {
 		if(this.__playing__ === null)
-			return 'Rien ne joue';
+			return '';
 		return this.__playing__.title;
 	}
 	
@@ -190,7 +190,7 @@ module.exports = class Music {
 		let musicNames = Array.from(this.__musics__);
 
 		if(this.__playing__)
-			musicNames.push(this.__playing__);
+			musicNames.unshift(this.__playing__);
 
 		return musicNames.reduce((acc, el) => `${acc}${el.title}\n`, '');
 	}

@@ -76,59 +76,59 @@ dispatcher.register(
 		)
 );
 
-dispatcher.register(
-	literal('fanta')
-		.executes(source => {
-			return new Promise(async (resolve, reject) => {
-				/** @type {Discord.Message} */
-				let message = source.message;
-				/*if(Music.voiceChannel === null)
-					await Music.join(message.member.voiceChannel);*/
-				if(Music.voiceConnection === null)
-					await dispatcher.parse(source, 'join');
-				// Music.addSound('ta gueule', `${__dirname}/public/music/fanta.mp3`);
-				Music.voiceConnection.playFile(`${__dirname}/public/music/fanta.mp3`);
-				resolve();
-			});
-		})
-		.description('TA GUEULE !')
-);
+// dispatcher.register(
+// 	literal('fanta')
+// 		.executes(source => {
+// 			return new Promise(async (resolve, reject) => {
+// 				/** @type {Discord.Message} */
+// 				let message = source.message;
+// 				/*if(Music.voiceChannel === null)
+// 					await Music.join(message.member.voiceChannel);*/
+// 				if(Music.voiceConnection === null)
+// 					await dispatcher.parse(source, 'join');
+// 				// Music.addSound('ta gueule', `${__dirname}/public/music/fanta.mp3`);
+// 				Music.voiceConnection.playFile(`${__dirname}/public/music/fanta.mp3`);
+// 				resolve();
+// 			});
+// 		})
+// 		.description('TA GUEULE !')
+// );
 
-dispatcher.register(
-	literal('ouaismaiscestpastoiquidecides')
-		.executes(source => {
-			return new Promise(async (resolve, reject) => {
-				/** @type {Discord.Message} */
-				let message = source.message;
-				/*if(Music.voiceChannel === null)
-					await Music.join(message.member.voiceChannel);*/
-				if(Music.voiceConnection === null)
-					await dispatcher.parse(source, 'join');
-				// Music.addSound('ouaismaiscestpastoiquidecides', `${__dirname}/public/music/ouaismaiscestpastoiquidecides.mp3`);
-				Music.voiceConnection.playFile(`${__dirname}/public/music/ouaismaiscestpastoiquidecides.mp3`);
-				resolve();
-			});
-		})
-		.description('OUAIS MAIS C\'EST PAS TOI QUI DÉCIDES')
-);
+// dispatcher.register(
+// 	literal('ouaismaiscestpastoiquidecides')
+// 		.executes(source => {
+// 			return new Promise(async (resolve, reject) => {
+// 				/** @type {Discord.Message} */
+// 				let message = source.message;
+// 				/*if(Music.voiceChannel === null)
+// 					await Music.join(message.member.voiceChannel);*/
+// 				if(Music.voiceConnection === null)
+// 					await dispatcher.parse(source, 'join');
+// 				// Music.addSound('ouaismaiscestpastoiquidecides', `${__dirname}/public/music/ouaismaiscestpastoiquidecides.mp3`);
+// 				Music.voiceConnection.playFile(`${__dirname}/public/music/ouaismaiscestpastoiquidecides.mp3`);
+// 				resolve();
+// 			});
+// 		})
+// 		.description('OUAIS MAIS C\'EST PAS TOI QUI DÉCIDES')
+// );
 
-dispatcher.register(
-	literal('sanglier')
-		.executes(source => {
-			return new Promise(async (resolve, reject) => {
-				/** @type {Discord.Message} */
-				let message = source.message;
-				/*if(Music.voiceChannel === null)
-					await Music.join(message.member.voiceChannel);*/
-				if(Music.voiceConnection === null)
-					await dispatcher.parse(source, 'join');
-				// Music.addSound('sanglier', `${__dirname}/public/music/sanglier.mp3`);
-				Music.voiceConnection.playFile(`${__dirname}/public/music/sanglier.mp3`);
-				resolve();
-			});
-		})
-		.description('SANGLIER')
-);
+// dispatcher.register(
+// 	literal('sanglier')
+// 		.executes(source => {
+// 			return new Promise(async (resolve, reject) => {
+// 				/** @type {Discord.Message} */
+// 				let message = source.message;
+// 				/*if(Music.voiceChannel === null)
+// 					await Music.join(message.member.voiceChannel);*/
+// 				if(Music.voiceConnection === null)
+// 					await dispatcher.parse(source, 'join');
+// 				// Music.addSound('sanglier', `${__dirname}/public/music/sanglier.mp3`);
+// 				Music.voiceConnection.playFile(`${__dirname}/public/music/sanglier.mp3`);
+// 				resolve();
+// 			});
+// 		})
+// 		.description('SANGLIER')
+// );
 
 dispatcher.register(
 	literal('force')
@@ -272,11 +272,11 @@ dispatcher.register(
 				/** @type {Discord.Message} */
 				let message = source.message;
 				if(Music.playing === '') {
-					message.reply('Aucune musique en cours de lecture') // TODO err
+					message.channel.send('Aucune musique en cours de lecture') // TODO err
 						.then(resolve)
 						.catch(reject);
 				} else {
-					message.reply(`"${Music.playing}" est en cours de lecture`) // TODO msg
+					message.channel.send(`"${Music.playing}" est en cours de lecture`) // TODO msg
 						.then(resolve)
 						.catch(reject);
 				}
@@ -291,7 +291,7 @@ dispatcher.register(
 			return new Promise((resolve, reject) => {
 				/** @type {Discord.Message} */
 				let message = source.message;
-				message.reply(Music.playlist)
+				message.channel.send(Music.playlist)
 					.then(resolve)
 					.catch(reject);
 			});
