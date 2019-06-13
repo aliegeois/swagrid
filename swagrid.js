@@ -415,8 +415,9 @@ dispatcher.register(
 						} else {
 							let deletable = Array.from(message.mentions.members.values()).filter(member => {
 								let guildMember = message.member.voiceChannel.members.get(member.id);
-								if(guildMember !== undefined && message.member.voiceChannelID === guildMember.voiceChannelID)
+								if(guildMember !== undefined && message.member.voiceChannelID === guildMember.voiceChannelID && member.id !== client.user.id)
 									return guildMember;
+								
 							});
 	
 							if(deletable.length) {
@@ -1107,7 +1108,7 @@ function ready(name) {
 
 client.on('ready', () => {
 	console.log('Initialisation de Swagrid...');
-	client.user.setActivity('de la magie', {type: 'WATCHING'});
+	client.user.setActivity('de la magie', { type: 'WATCHING' });
 
 	// Récupérer la config de chaque guild
 	for(let [id, guild] of client.guilds) {
