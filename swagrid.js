@@ -910,6 +910,53 @@ function endFights(channel, battlesId) {
 		let realEnded = 0;
 		let realEnd = () => {
 			if((++realEnded) === battles.length) {
+				// Mise à jour de la tier-list
+
+				let guildId = channel.guild.id,
+					messageTiers = config.guilds[guildId].battle.tiers,
+					outputChannel = channel.guild.channels.get(config.guilds[guildId].battle.channel);
+				Emoji.findAll({
+					where: {
+						guildId: guildId
+					}
+				}).then(emojis => {
+					emojis.sort((e1, e2) => e2.elo - e1.elo);
+
+					let min = 1000, max = 1000;
+					for(let e of emojis) {
+						if(e.elo < min)
+							min = e.elo;
+						if(e.elo > max)
+							max = e.elo;
+					}
+
+					let t = Math.floor((max - min) / (messageTiers.length - 1)); // remplacer 6 par tiers.length
+
+					let m = {};
+					for(let e of emojis) {
+						let n = Math.floor(e.elo / t) * t,
+							s = Math.floor((e.elo + t) / t) * t,
+							k = `${n}-${s-1}`;
+						
+						if(m[k] !== undefined)
+							m[k].push(e);
+						else
+							m[k] = [e];
+					}
+
+					let tiers = Object.entries(m); // Taille 7 (normalement)
+					let tierNames = ['nauseated_face', 'put_litter_in_its_place', 'question', 'neutral_face', 'sparkles', 'tada', 'fireworks'];
+
+					for(let i = 0; i < messageTiers.length; i++) {
+						let message = outputChannel.fetchMessage(messageTiers[i]); // Message à modifier
+						let newMessage = `\\:${tierNames[i]}:\n`; // :nomDuTier:
+						for(let emo of tiers[i][1]) // liste des émojis du tier
+							newMessage += `${channel.guild.emojis.get(emo.id)}`;
+						message.edit(newMessage).catch(console.log);
+					}
+				}).catch(console.log);
+
+				// Fin de la bataille, lancement de la prochaine
 				Battle.update({
 					ended: true
 				}, {
