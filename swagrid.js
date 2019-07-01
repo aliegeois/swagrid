@@ -913,13 +913,14 @@ function endFights(channel, battlesId) {
 				// Mise à jour de la tier-list
 
 				let guildId = channel.guild.id,
-					messageTiers = config.guilds[guildId].battle.tiers,
-					outputChannel = channel.guild.channels.get(config.guilds[guildId].battle.channel);
+					messageTiers = config.guilds[guildId].battle.tiers;
+				/** @type {Discord.TextChannel} */
+				let outputChannel = channel.guild.channels.get(config.guilds[guildId].battle.channel);
 				Emoji.findAll({
 					where: {
 						guildId: guildId
 					}
-				}).then(emojis => {
+				}).then(async emojis => {
 					emojis.sort((e1, e2) => e2.elo - e1.elo);
 
 					let min = 1000, max = 1000;
@@ -948,7 +949,7 @@ function endFights(channel, battlesId) {
 					let tierNames = ['nauseated_face', 'put_litter_in_its_place', 'question', 'neutral_face', 'sparkles', 'tada', 'fireworks'];
 
 					for(let i = 0; i < messageTiers.length; i++) {
-						let message = outputChannel.fetchMessage(messageTiers[i]); // Message à modifier
+						let message = await outputChannel.fetchMessage(messageTiers[i]); // Message à modifier
 						let newMessage = `\\:${tierNames[i]}:\n`; // :nomDuTier:
 						for(let emo of tiers[i][1]) // liste des émojis du tier
 							newMessage += `${channel.guild.emojis.get(emo.id)}`;
