@@ -946,14 +946,32 @@ function endFights(channel, battlesId) {
 					}
 
 					let tiers = Object.entries(m); // Taille 7 (normalement)
-					let tierNames = ['nauseated_face', 'put_litter_in_its_place', 'question', 'neutral_face', 'sparkles', 'tada', 'fireworks'];
+					// let tierNames = ['fireworks', 'tada', 'sparkles', 'neutral_face', 'question', 'put_litter_in_its_place', 'nauseated_face'],
+					// let tierNames = ['🎆', '🎉', '✨', '😐', '❓', '🚮', '🤢'],
+					let tierNames = ['197b958b01f6012cd753e543c3efb214', '612f3fc9dedfd368820b55c4cf259c07', 'c90098069e61110397d4552647ade33d', '2c6041bfc91ee1174f11740dc26573fe', '6e054ab8981d3f1ce8debfd1235d3ea3', '59ba1e8d8ce894a7b7d857c87434303d', 'a9257530099447e1e7846cf269d16948'],
+						tierReadableNames = ['Interdimensionnel', 'Fantastique', 'Classe', 'Neutre', 'Questionnable', 'Poubelle', 'Vomi'];
 
 					for(let i = 0; i < messageTiers.length; i++) {
 						let message = await outputChannel.fetchMessage(messageTiers[i]); // Message à modifier
-						let newMessage = `\\:${tierNames[i]}:\n`; // :nomDuTier:
-						for(let emo of tiers[i][1]) // liste des émojis du tier
-							newMessage += `${channel.guild.emojis.get(emo.id)}`;
-						message.edit(newMessage).catch(console.log);
+						// let newMessage = `\\:${tierNames[i]}:\n`; // :nomDuTier:
+						/** @type {Discord.Emoji} */
+						let desc = '';
+						for(let emo of tiers[i][1]) { // liste des émojis du tier
+							// newMessage += `${currentEmo}`;
+							desc += `${channel.guild.emojis.get(emo.id)}`;
+						}
+						
+						message.edit({
+							embed: {
+								description: desc,
+								author: {
+									name: tierReadableNames[i],
+									icon_url: `https://discordapp.com/assets/${tierNames[i]}.svg`
+								}
+							}
+						}).catch(console.log);
+						
+						// message.edit(newMessage).catch(console.log);
 					}
 				}).catch(console.log);
 
