@@ -1030,7 +1030,8 @@ function updateTierList(guild) {
 
 		let tiers = Object.entries(m); // Taille 7 (normalement)
 		let tierNames = ['1f386', '1f389', '2728', '1f610', '2753', '1f6ae', '1f922'],
-			tierReadableNames = ['Interdimensionnel', 'Fantastique', 'Classe', 'Neutre', 'Questionnable', 'Poubelle', 'Vomi'];
+			tierReadableNames = ['Interdimensionnel', 'Fantastique', 'Classe', 'Neutre', 'Questionnable', 'Poubelle', 'Vomi'],
+			tierColor = [16713485, 16683781, 16774148, 4311299, 2802684, 140787, 5648579];
 
 		for(let i = 0; i < messageTiers.length; i++) {
 			let message = await outputChannel.fetchMessage(messageTiers[i]); // Message à modifier
@@ -1052,8 +1053,9 @@ function updateTierList(guild) {
 			message.edit({
 				embed: {
 					description: desc,
+					color: tierColor[i],
 					author: {
-						name: `${tierReadableNames[i]} ${intervale}`,
+						name: `${tierReadableNames[i]} (${intervale})`,
 						icon_url: `https://twemoji.maxcdn.com/2/72x72/${tierNames[i]}.png`
 					}
 				}
