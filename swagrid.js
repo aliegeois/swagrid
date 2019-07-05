@@ -1029,34 +1029,22 @@ function updateTierList(guild) {
 		}
 
 		let tiers = Object.entries(m); // Taille 7 (normalement)
-		let tierNames = ['1f386', '1f389', '2728', '1f610', '2753', '1f6ae', '1f922'],
-			tierReadableNames = ['Interdimensionnel', 'Fantastique', 'Classe', 'Neutre', 'Questionnable', 'Poubelle', 'Vomi'],
-			tierColor = [16713485, 16683781, 16774148, 4311299, 2802684, 140787, 5648579];
+		let tierCodes = ['1f386', '1f389', '2728', '1f610', '2753', '1f6ae', '1f922'], // code utf-8
+			tierNames = ['Interdimensionnel', 'Fantastique', 'Classe', 'Neutre', 'Questionnable', 'Poubelle', 'Vomi'],
+			tierColors = [16713485, 16683781, 16774148, 4311299, 2802684, 140787, 5648579];
 
 		for(let i = 0; i < messageTiers.length; i++) {
-			let message = await outputChannel.fetchMessage(messageTiers[i]); // Message à modifier
+			let message = await outputChannel.fetchMessage(messageTiers[i].messageId); // Message à modifier
 			/** @type {Discord.Emoji} */
-			let desc = '';
-			// for(let emo of tiers[i][1]) // liste des émojis du tier
-			// 	desc += `${guild.emojis.get(emo.id)}: ${emo.elo}  `;
-			desc = tiers[i][1].reduce((acc, emo) => `${acc}  ${guild.emojis.get(emo.id)}: ${emo.elo}`, '');
-			
-			let intervale = tiers[i][0];
-			// if(i === 0) {
-			// 	intervale = '> ' + max;
-			// } else if(i === tiers.length) {
-			// 	intervale = min + '<';
-			// } else {
-			// 	intervale = 4;
-			// }
+			let desc = tiers[i][1].reduce((acc, emo) => `${acc}  ${guild.emojis.get(emo.id)}: ${emo.elo}`, '');
 			
 			message.edit({
 				embed: {
 					description: desc,
-					color: tierColor[i],
+					color: messageTiers[i].color,
 					author: {
-						name: `${tierReadableNames[i]} (${intervale})`,
-						icon_url: `https://twemoji.maxcdn.com/2/72x72/${tierNames[i]}.png`
+						name: `${messageTiers[i].name} (${tiers[i][0]})`,
+						icon_url: `https://twemoji.maxcdn.com/2/72x72/${messageTiers[i].code}.png`
 					}
 				}
 			}).catch(console.log);
