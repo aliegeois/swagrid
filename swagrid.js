@@ -513,6 +513,21 @@ dispatcher.register(
 );
 
 dispatcher.register(
+	literal('update')
+		.then(
+			literal('tier-list')
+				.executes(source => {
+					return new Promise((resolve, reject) => {
+						updateTierList(source.message.guild);
+						resolve();
+					});
+				})
+				.permission('expert')
+				.description('Met à jour la tier-list')
+		)
+);
+
+dispatcher.register(
 	literal('init')
 		.executes(source => {
 			return new Promise((resolve, reject) => {
@@ -911,69 +926,7 @@ function endFights(channel, battlesId) {
 		let realEnd = () => {
 			if((++realEnded) === battles.length) {
 				// Mise à jour de la tier-list
-
-				let guildId = channel.guild.id,
-					messageTiers = config.guilds[guildId].battle.tiers;
-				/** @type {Discord.TextChannel} */
-				let outputChannel = channel.guild.channels.get(config.guilds[guildId].battle.channel);
-				Emoji.findAll({
-					where: {
-						guildId: guildId
-					}
-				}).then(async emojis => {
-					emojis.sort((e1, e2) => e2.elo - e1.elo);
-
-					let min = 1000, max = 1000;
-					for(let e of emojis) {
-						if(e.elo < min)
-							min = e.elo;
-						if(e.elo > max)
-							max = e.elo;
-					}
-
-					let t = Math.floor((max - min) / (messageTiers.length - 1)); // remplacer 6 par tiers.length
-
-					let m = {};
-					for(let e of emojis) {
-						let n = Math.floor(e.elo / t) * t,
-							s = Math.floor((e.elo + t) / t) * t,
-							k = `${n}-${s-1}`;
-						
-						if(m[k] !== undefined)
-							m[k].push(e);
-						else
-							m[k] = [e];
-					}
-
-					let tiers = Object.entries(m); // Taille 7 (normalement)
-					// let tierNames = ['fireworks', 'tada', 'sparkles', 'neutral_face', 'question', 'put_litter_in_its_place', 'nauseated_face'],
-					// let tierNames = ['🎆', '🎉', '✨', '😐', '❓', '🚮', '🤢'],
-					let tierNames = ['197b958b01f6012cd753e543c3efb214', '612f3fc9dedfd368820b55c4cf259c07', 'c90098069e61110397d4552647ade33d', '2c6041bfc91ee1174f11740dc26573fe', '6e054ab8981d3f1ce8debfd1235d3ea3', '59ba1e8d8ce894a7b7d857c87434303d', 'a9257530099447e1e7846cf269d16948'],
-						tierReadableNames = ['Interdimensionnel', 'Fantastique', 'Classe', 'Neutre', 'Questionnable', 'Poubelle', 'Vomi'];
-
-					for(let i = 0; i < messageTiers.length; i++) {
-						let message = await outputChannel.fetchMessage(messageTiers[i]); // Message à modifier
-						// let newMessage = `\\:${tierNames[i]}:\n`; // :nomDuTier:
-						/** @type {Discord.Emoji} */
-						let desc = '';
-						for(let emo of tiers[i][1]) { // liste des émojis du tier
-							// newMessage += `${currentEmo}`;
-							desc += `${channel.guild.emojis.get(emo.id)}`;
-						}
-						
-						message.edit({
-							embed: {
-								description: desc,
-								author: {
-									name: tierReadableNames[i],
-									icon_url: `https://discordapp.com/assets/${tierNames[i]}.svg`
-								}
-							}
-						}).catch(console.log);
-						
-						// message.edit(newMessage).catch(console.log);
-					}
-				}).catch(console.log);
+				updateTierList(channel.guild);
 
 				// Fin de la bataille, lancement de la prochaine
 				Battle.update({
@@ -1033,6 +986,78 @@ function endFights(channel, battlesId) {
 					}).catch(console.log).finally(after);
 				}).catch(console.log);
 			}).catch(() => channel.send('Qui est l\'abruti qui supprime mes messages !?').catch(()=>{}));
+		}
+	}).catch(console.log);
+}
+
+/**
+ * Met à jour la tier list
+ * @param {Discord.Guild} guild
+ */
+function updateTierList(guild) {
+	let guildId = guild.id,
+		messageTiers = config.guilds[guildId].battle.tiers;
+	/** @type {Discord.TextChannel} */
+	let outputChannel = guild.channels.get(config.guilds[guildId].battle.channel);
+	Emoji.findAll({
+		where: {
+			guildId: guildId
+		}
+	}).then(async emojis => {
+		emojis.sort((e1, e2) => e2.elo - e1.elo);
+
+		let min = 1000, max = 1000;
+		for(let e of emojis) {
+			if(e.elo < min)
+				min = e.elo;
+			if(e.elo > max)
+				max = e.elo;
+		}
+
+		let t = Math.floor((max - min) / (messageTiers.length - 1)); // remplacer 6 par tiers.length
+
+		let m = {};
+		for(let e of emojis) {
+			let n = Math.floor(e.elo / t) * t,
+				s = Math.floor((e.elo + t) / t) * t,
+				k = `${n}-${s-1}`;
+			
+			if(m[k] !== undefined)
+				m[k].push(e);
+			else
+				m[k] = [e];
+		}
+
+		let tiers = Object.entries(m); // Taille 7 (normalement)
+		// let tierNames = ['fireworks', 'tada', 'sparkles', 'neutral_face', 'question', 'put_litter_in_its_place', 'nauseated_face'],
+		// let tierNames = ['🎆', '🎉', '✨', '😐', '❓', '🚮', '🤢'],
+		// https://twemoji.maxcdn.com/2/72x72/1f386.png fireworks
+		// https://twemoji.maxcdn.com/2/72x72/1f389.png tada
+		// https://twemoji.maxcdn.com/2/72x72/2728.png sparkle
+		// https://twemoji.maxcdn.com/2/72x72/1f610.png neutral_face
+		// https://twemoji.maxcdn.com/2/72x72/2753.png question
+		// https://twemoji.maxcdn.com/2/72x72/1f6ae.png put_litter_in_its_place
+		// https://twemoji.maxcdn.com/2/72x72/1f922.png nauseated_face
+		let tierNames = ['1f386', '1f389', '2728', '1f610', '2753', '1f6ae', '1f922'],
+			// let tierNames = ['197b958b01f6012cd753e543c3efb214', '612f3fc9dedfd368820b55c4cf259c07', 'c90098069e61110397d4552647ade33d', '2c6041bfc91ee1174f11740dc26573fe', '6e054ab8981d3f1ce8debfd1235d3ea3', '59ba1e8d8ce894a7b7d857c87434303d', 'a9257530099447e1e7846cf269d16948'],
+			tierReadableNames = ['Interdimensionnel', 'Fantastique', 'Classe', 'Neutre', 'Questionnable', 'Poubelle', 'Vomi'];
+
+		for(let i = 0; i < messageTiers.length; i++) {
+			let message = await outputChannel.fetchMessage(messageTiers[i]); // Message à modifier
+			/** @type {Discord.Emoji} */
+			let desc = '';
+			for(let emo of tiers[i][1]) // liste des émojis du tier
+				desc += `${guild.emojis.get(emo.id)}: ${emo.elo}`;
+			
+			message.edit({
+				embed: {
+					description: desc,
+					author: {
+						name: tierReadableNames[i],
+						icon_url: `https://twemoji.maxcdn.com/2/72x72/${tierNames[i]}.png`
+					}
+				}
+			}).catch(console.log);
 		}
 	}).catch(console.log);
 }
