@@ -1029,17 +1029,7 @@ function updateTierList(guild) {
 		}
 
 		let tiers = Object.entries(m); // Taille 7 (normalement)
-		// let tierNames = ['fireworks', 'tada', 'sparkles', 'neutral_face', 'question', 'put_litter_in_its_place', 'nauseated_face'],
-		// let tierNames = ['🎆', '🎉', '✨', '😐', '❓', '🚮', '🤢'],
-		// https://twemoji.maxcdn.com/2/72x72/1f386.png fireworks
-		// https://twemoji.maxcdn.com/2/72x72/1f389.png tada
-		// https://twemoji.maxcdn.com/2/72x72/2728.png sparkle
-		// https://twemoji.maxcdn.com/2/72x72/1f610.png neutral_face
-		// https://twemoji.maxcdn.com/2/72x72/2753.png question
-		// https://twemoji.maxcdn.com/2/72x72/1f6ae.png put_litter_in_its_place
-		// https://twemoji.maxcdn.com/2/72x72/1f922.png nauseated_face
 		let tierNames = ['1f386', '1f389', '2728', '1f610', '2753', '1f6ae', '1f922'],
-			// let tierNames = ['197b958b01f6012cd753e543c3efb214', '612f3fc9dedfd368820b55c4cf259c07', 'c90098069e61110397d4552647ade33d', '2c6041bfc91ee1174f11740dc26573fe', '6e054ab8981d3f1ce8debfd1235d3ea3', '59ba1e8d8ce894a7b7d857c87434303d', 'a9257530099447e1e7846cf269d16948'],
 			tierReadableNames = ['Interdimensionnel', 'Fantastique', 'Classe', 'Neutre', 'Questionnable', 'Poubelle', 'Vomi'];
 
 		for(let i = 0; i < messageTiers.length; i++) {
@@ -1047,7 +1037,7 @@ function updateTierList(guild) {
 			/** @type {Discord.Emoji} */
 			let desc = '';
 			for(let emo of tiers[i][1]) // liste des émojis du tier
-				desc += `${guild.emojis.get(emo.id)}: ${emo.elo}`;
+				desc += `${guild.emojis.get(emo.id)}: ${emo.elo}  `;
 			
 			message.edit({
 				embed: {
