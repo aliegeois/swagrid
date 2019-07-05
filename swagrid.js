@@ -1051,9 +1051,9 @@ function updateTierList(guild) {
 			
 			message.edit({
 				embed: {
-					description: `${desc} (${intervale})`,
+					description: desc,
 					author: {
-						name: tierReadableNames[i],
+						name: `${tierReadableNames[i]} ${intervale}`,
 						icon_url: `https://twemoji.maxcdn.com/2/72x72/${tierNames[i]}.png`
 					}
 				}
@@ -1185,7 +1185,7 @@ function ready(name) {
 			if(battles.length) {
 				let channel = client.channels.get(battles[0].channelId);
 				if(channel) {
-					console.log('retrive battle, end:', battles[0].end);
+					console.log('retrieve battle, end:', battles[0].end);
 					let interval = battles[0].end - now;
 					console.log(`start timeout of ${interval / 1000} seconds`);
 					setTimeout(endFights, interval, channel, battles.map(battle => battle.id));
