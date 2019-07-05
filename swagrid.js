@@ -1020,7 +1020,7 @@ function updateTierList(guild) {
 		for(let e of emojis) {
 			let n = Math.floor(e.elo / t) * t,
 				s = Math.floor((e.elo + t) / t) * t,
-				k = `${n}-${s-1}`;
+				k = `${s-1}-${n}`;
 			
 			if(m[k] !== undefined)
 				m[k].push(e);
