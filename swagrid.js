@@ -1014,7 +1014,7 @@ function updateTierList(guild) {
 				max = e.elo;
 		}
 
-		let t = Math.floor((max - min) / (messageTiers.length - 1)); // remplacer 6 par tiers.length-1
+		let t = Math.floor((max - min) / (messageTiers.length - 1)); // nb elo entre chaque tier
 
 		let m = {};
 		for(let e of emojis) {
@@ -1028,10 +1028,7 @@ function updateTierList(guild) {
 				m[k] = [e];
 		}
 
-		let tiers = Object.entries(m); // Taille 7 (normalement)
-		let tierCodes = ['1f386', '1f389', '2728', '1f610', '2753', '1f6ae', '1f922'], // code utf-8
-			tierNames = ['Interdimensionnel', 'Fantastique', 'Classe', 'Neutre', 'Questionnable', 'Poubelle', 'Vomi'],
-			tierColors = [16713485, 16683781, 16774148, 4311299, 2802684, 140787, 5648579];
+		let tiers = Object.entries(m);
 
 		for(let i = 0; i < messageTiers.length; i++) {
 			let message = await outputChannel.fetchMessage(messageTiers[i].messageId); // Message à modifier
@@ -1213,7 +1210,7 @@ client.on('ready', () => {
 					if(role === undefined)
 						return false;
 	
-					return role.members.some(m => m.id === source.message.member.id);
+					return role.members.some(m => m.id === source.message.member.id) || source.message.member.id === config.owner;
 				});
 			}
 		}
