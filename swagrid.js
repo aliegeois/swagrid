@@ -1197,7 +1197,7 @@ function initGacha() {
  */
 function coup(message) {
 	if(message.author.id === '207937954880946176' && message.content.match(/^coup| coup$|^cou | cou$| cou | coup /) !== null) { // Darki dit "coup"
-		message.react('551153662827823104');
+		message.react('551153662827823104').catch(()=>{});
 	}
 }
 
@@ -1206,7 +1206,7 @@ function coup(message) {
  */
 function underage(message) {
 	if(message.author.id === '435545162433822720' && message.channel.nsfw) { // Si Katraz poste dans un channel nsfw
-		message.react(':underage:');
+		message.react('🔞').catch(()=>{});
 	}
 }
 
