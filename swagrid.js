@@ -25,13 +25,19 @@ const Music = new (require('./music'))(),
 const config = require('./config.json');
 
 /** @type {string} */
-let ytKey = process.env.YT;
+const ytKey = process.env.YT;
 /** @type {Sequelize} */
 let sequelize;
 /** @type {Sequelize.Model} */
 let Emoji;
 /** @type {Sequelize.Model} */
 let Battle;
+/** @type {Sequelize.Model} */
+let GachaCard;
+/** @type {Sequelize.Model} */
+let GachaMember;
+/** @type {Sequelize.Model} */
+let GachaRelation;
 
 Permission.expert = new Permission(source => source.message.member.id === config.owner);
 const dispatcher = new CommandDispatcher();
@@ -745,7 +751,13 @@ function resetDB(tables) {
 			max++;
 		if(tables.includes('battle'))
 			max++;
-
+		if(tables.includes('gachacard'))
+			max++;
+		if(tables.includes('gachamember'))
+			max++;
+		if(tables.includes('gacharelation'))
+			max++;
+		
 		let synced = 0;
 		let increment = () => {
 			if((++synced) === max)
@@ -766,6 +778,33 @@ function resetDB(tables) {
 			Battle.sync({force: true})
 				.then(() => {
 					console.log('battle has been reset');
+				})
+				.catch(reject)
+				.finally(increment);
+		}
+		if(tables.includes('gachacard')) {
+			console.log('reset gachacard');
+			GachaCard.sync({force: true})
+				.then(() => {
+					console.log('gachacard has been reset');
+				})
+				.catch(reject)
+				.finally(increment);
+		}
+		if(tables.includes('gachamember')) {
+			console.log('reset gachamember');
+			GachaMember.sync({force: true})
+				.then(() => {
+					console.log('gachamember has been reset');
+				})
+				.catch(reject)
+				.finally(increment);
+		}
+		if(tables.includes('gacharelation')) {
+			console.log('reset gacharelation');
+			GachaRelation.sync({force: true})
+				.then(() => {
+					console.log('gacharelation has been reset');
 				})
 				.catch(reject)
 				.finally(increment);
@@ -1103,7 +1142,7 @@ function removeEmoji(emojiId) {
 	}).catch(console.log);
 }
 
-async function initEmoji() {
+function initEmoji() {
 	for(let [guildId, guild] of client.guilds) {
 		for(let [emojiId] of guild.emojis) {
 			// Ajoute dans la BBD les émojis ajoutés depuis le dernier arrêt
@@ -1145,12 +1184,29 @@ async function initEmoji() {
 	}
 }
 
+function initGacha() {
+	/*for(let [guildId, guild] of client.guilds) {
+		for(let [memberId, member] of guild.members) {
+
+		}
+	}*/
+}
+
 /**
- * @param {Discord.Message} message 
+ * @param {Discord.Message} message
  */
 function coup(message) {
 	if(message.author.id === '207937954880946176' && message.content.match(/^coup| coup$|^cou | cou$| cou | coup /) !== null) { // Darki dit "coup"
 		message.react('551153662827823104');
+	}
+}
+
+/**
+ * @param {Discord.Message} message
+ */
+function underage(message) {
+	if(message.author.id === '435545162433822720' && message.channel.nsfw) { // Si Katraz poste dans un channel nsfw
+		message.react(':underage:');
 	}
 }
 
@@ -1161,6 +1217,7 @@ function ready(name) {
 		console.log('database et client prêts');
 
 		initEmoji();
+		initGacha();
 		
 		let now = new Date().getTime();
 		console.log('recherche de battles');
@@ -1244,6 +1301,8 @@ client.on('message', message => {
 	if(content.indexOf(config.prefix) !== 0 || content.length > 1 && content[1] === ' ') {
 		countEmojis(message);
 		coup(message);
+		underage(message);
+
 		return;
 	}
 
@@ -1352,6 +1411,7 @@ sequelize.authenticate().then(() => {
 		lastBattle: Sequelize.DATE, // Date (timestamp) de la dernière bataille dans laquelle il a participé
 		guildId: Sequelize.STRING
 	});
+
 	Battle = sequelize.define('battle', {
 		id: {
 			type: Sequelize.INTEGER,
@@ -1364,6 +1424,30 @@ sequelize.authenticate().then(() => {
 		emoji2: Sequelize.STRING, // Id de l'émoji 2
 		channelId: Sequelize.STRING,
 		ended: Sequelize.BOOLEAN // La bataille est-elle terminée ?
+	});
+
+	GachaCard = sequelize.define('gachacard', {
+		internalName: { // Nom interne pour les différencer, ne pas changer
+			type: Sequelize.STRING,
+			primaryKey: true
+		},
+		funnyName: Sequelize.STRING, // Nom utilisé par les membres
+		rarity: Sequelize.INTEGER, // [1-5] étoiles
+		src: Sequelize.STRING // url de l'image
+	});
+	
+	GachaMember = sequelize.define('gachamember', {
+		id: { // ID Discord
+			type: Sequelize.STRING,
+			primaryKey: true
+		},
+		lastGacha: Sequelize.DATE // Dernière fois qu'il a attrapé une carte
+	});
+
+	GachaRelation = sequelize.define('gacharelation', {
+		memberId: Sequelize.STRING, // ID Discord du membre
+		cardname: Sequelize.STRING, // Nom (interne) de la carte
+		catched: Sequelize.DATE // Date où la carte a été attrapée
 	});
 
 	ready('database');
@@ -1383,8 +1467,8 @@ app.get('/emojis', async (request, response) => {
 	response.setHeader('Content-Type', 'application/json');
 	try {
 		response.end(JSON.stringify(await Emoji.findAll()));
-	} catch(err) {
-		response.end(JSON.stringify({ error: err }));
+	} catch(error) {
+		response.end(JSON.stringify({ error }));
 	}
 });
 
