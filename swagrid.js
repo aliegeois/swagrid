@@ -869,7 +869,7 @@ function emojiFight(channel) {
 		let dateEnd = new Date();
 		console.log('date', dateEnd);
 		dateEnd.setDate(dateEnd.getDate() + 1);
-		dateEnd.setHours(22); // ?
+		dateEnd.setHours(23); // ?
 		dateEnd.setMinutes(0);
 		//dateEnd.setMinutes(dateEnd.getMinutes() + 1);
 		dateEnd.setSeconds(0);
