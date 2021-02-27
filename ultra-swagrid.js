@@ -1,3 +1,6 @@
+/* jshint -W008 */
+/* jshint -W061 */
+/* jshint -W083 */
 /* eslint-disable no-async-promise-executor */
 
 // Dependencies
@@ -15,7 +18,6 @@ const Discord = require('discord.js'),
 const Music = new(require('./music'))(),
 	{ Permission, CommandDispatcher, literal, argument } = require('./commandDispatcher');
 
-//** @type {{prefix: string, owner: string, guilds: [{id: string, permissions: [{name: string, roleId: string}]}]}} */
 /** @type {{prefix: string, owner: string, errorMessages: any, guilds: any}} */
 const config = require('./config.json');
 
@@ -56,7 +58,7 @@ dispatcher.register(
 				.description('Fait dire des choses à Swagrid')
 		)
 );
-
+		
 dispatcher.register(
 	literal('tts')
 		.then(
@@ -76,7 +78,7 @@ dispatcher.register(
 				.description('Comme "say" mais avec du tts en plus')
 		)
 );
-
+				
 dispatcher.register(
 	literal('force')
 		.then(
@@ -92,7 +94,7 @@ dispatcher.register(
 				.description('Force une commande')
 		)
 );
-
+						
 dispatcher.register(
 	literal('join')
 		.then(
@@ -103,8 +105,8 @@ dispatcher.register(
 						let guild = source.message.guild;
 						/** @type {Map<string, [Discord.VoiceChannel, number]} */
 						let count = new Map();
-
-						for (let [, chan] of guild.channels) {
+										
+						for (let [, chan] of guild.channels.cache) {
 							if (chan instanceof Discord.VoiceChannel) {
 								for (let word of channel) {
 									if (chan.name.match(new RegExp(word, 'i')) !== null) {
@@ -117,11 +119,11 @@ dispatcher.register(
 								}
 							}
 						}
-
+										
 						let sorted = [...count.entries()].sort(([, [, v1]], [, [, v2]]) => {
 							return v2 - v1;
 						}).map(([, [chan]]) => chan);
-
+										
 						if (sorted.length > 0) {
 							Music.join(sorted[0])
 								.then(resolve)
@@ -150,7 +152,7 @@ dispatcher.register(
 		})
 		.description('Invoque Swagrid dans le channel vocal')
 );
-
+								
 dispatcher.register(
 	literal('leave')
 		.executes((source) => {
@@ -169,7 +171,7 @@ dispatcher.register(
 		})
 		.description('Renvoie Swagrid du channel vocal vers sa hutte')
 );
-
+									
 dispatcher.register(
 	literal('play')
 		.then(
@@ -180,7 +182,7 @@ dispatcher.register(
 						let message = source.message;
 						if (Music.voiceConnection === null)
 							await dispatcher.parse(source, 'join');
-
+													
 						if (message.member.voiceChannelID !== Music.voiceChannel.id && !source.force) {
 							message.reply('Petit boloss, arrête de mettre des sons si tu n\'es pas dans le channel') // TODO err
 								.then(resolve)
@@ -194,12 +196,12 @@ dispatcher.register(
 								type: 'video'
 							}).then(res => {
 								Music.addMusic(res.items[0].id.videoId, res.items[0].snippet.title);
-								message.channel.send(`Recherche de \`${keywords}\``, new Discord.RichEmbed({
+								message.channel.send(`Recherche de \`${keywords}\``, new Discord.MessageEmbed({
 									author: {
-										'name': 'Ajout à la file d\'attente'
+										name: 'Ajout à la file d\'attente'
 									},
 									thumbnail: {
-										'url': `https://img.youtube.com/vi/${res.items[0].id.videoId}/hqdefault.jpg`
+										url: `https://img.youtube.com/vi/${res.items[0].id.videoId}/hqdefault.jpg`
 									},
 									title: `${res.items[0].snippet.title}`,
 									url: `https://youtu.be/${res.items[0].id.videoId}/`
@@ -211,7 +213,7 @@ dispatcher.register(
 				.description('Effectue une recherche sur Youtube et joue la première vidéo trouvée, ou la met en attente si une vidéo est déjà en cours de lecture (vous devez être dans le même channel vocal que Swagrid)')
 		)
 );
-
+											
 dispatcher.register(
 	literal('playing')
 		.executes((source) => {
@@ -231,7 +233,7 @@ dispatcher.register(
 		})
 		.description('Permet d\'obtenir le nom de la vidéo qui passe actuellement')
 );
-
+												
 dispatcher.register(
 	literal('playlist')
 		.executes((source) => {
@@ -245,7 +247,7 @@ dispatcher.register(
 		})
 		.description('Affiche le titre des vidéos dans la file d\'attente')
 );
-
+													
 dispatcher.register(
 	literal('cancel')
 		.executes((source) => {
@@ -264,7 +266,7 @@ dispatcher.register(
 		})
 		.description('Annule la dernière action (en rapport avec les vidéos)')
 );
-
+														
 dispatcher.register(
 	literal('skip')
 		.executes((source) => {
@@ -283,7 +285,7 @@ dispatcher.register(
 		})
 		.description('Fait passer la vidéo en cours de lecture')
 );
-
+															
 dispatcher.register(
 	literal('stop')
 		.executes((source) => {
@@ -302,7 +304,7 @@ dispatcher.register(
 		})
 		.description('Arrête la vidéo en cours et vide la file d\'attente')
 );
-
+																
 dispatcher.register(
 	literal('danbooru')
 		.then(
@@ -313,10 +315,10 @@ dispatcher.register(
 							.then(result => {
 								/** @type {Discord.Message} */
 								let message = source.message;
-
+																					
 								try {
 									let post = JSON.parse(result);
-
+																						
 									if (post.length === 0) {
 										message.reply('aucun résultat') // TODO err
 											.then(resolve)
@@ -347,7 +349,7 @@ dispatcher.register(
 				.description('effectue une recherche sur danbooru et affiche une image au hasard en rapport avec les tags indiqués')
 		)
 );
-
+																		
 dispatcher.register(
 	literal('delete')
 		.then(
@@ -356,7 +358,7 @@ dispatcher.register(
 					return new Promise((resolve, reject) => {
 						/** @type {Discord.Message} */
 						let message = source.message;
-
+																						
 						if (!message.member.voiceChannel && !source.force) {
 							reject('Vous devez être dans un channel vocal pour exécuter cette commande'); // TODO err
 						} else {
@@ -364,9 +366,9 @@ dispatcher.register(
 								let guildMember = message.member.voiceChannel.members.get(member.id);
 								if (guildMember !== undefined && message.member.voiceChannelID === guildMember.voiceChannelID && member.id !== client.user.id)
 									return guildMember;
-
+																								
 							});
-
+																							
 							if (deletable.length) {
 								message.guild.createChannel('SUCC', 'voice')
 									.then(channel => {
@@ -395,26 +397,26 @@ dispatcher.register(
 				.description('Vire une personne du vocal')
 		)
 );
-
+																				
 dispatcher.register(
 	literal('emojipopularity')
 		.executes((source) => {
 			return new Promise((resolve, reject) => {
 				/** @type {Discord.Message} */
 				let message = source.message;
-
+																							
 				Emoji.findAll({
 					where: {
 						guildId: message.guild.id
 					}
 				}).then(emojis => {
 					emojis.sort((e1, e2) => e2.count - e1.count);
-
+																								
 					let msg = 'Popularité des émojis par nombre d\'utilisations:'; // TODO msg
 					for (let emoji of emojis)
 						if (emoji.count > 0)
 							msg += `\n${emoji.count} : ${message.member.guild.emojis.get(emoji.id)}`;
-
+																								
 					message.channel.send(msg)
 						.then(resolve)
 						.catch(reject);
@@ -426,7 +428,7 @@ dispatcher.register(
 		})
 		.description('Affiche la popularité des émojis du serveur')
 );
-
+																					
 dispatcher.register(
 	literal('battle')
 		.then(
@@ -458,7 +460,7 @@ dispatcher.register(
 				.description('Reset le elo des émojis et les précédentes batailles')
 		)
 );
-
+																								
 dispatcher.register(
 	literal('update')
 		.then(
@@ -473,7 +475,7 @@ dispatcher.register(
 				.description('Met à jour la tier-list')
 		)
 );
-
+																										
 dispatcher.register(
 	literal('init')
 		.executes(source => {
@@ -486,69 +488,69 @@ dispatcher.register(
 		.permission('expert')
 		.description('Reset les batailles (+resetdb battle et initEmoji())')
 );
-
+																											
 /*dispatcher.register(
 	literal('fix')
-		.executes(source => {
-			return new Promise(async (resolve, reject) => {
-				try {
-					await Emoji.update({ // haram
-						elo: 985
-					}, {
-						where: {
-							id: '476318657018855425'
-						}
-					});
+	.executes(source => {
+		return new Promise(async (resolve, reject) => {
+			try {
+				await Emoji.update({ // haram
+					elo: 985
+				}, {
+					where: {
+						id: '476318657018855425'
+					}
+				});
 				
-					await Emoji.update({ // boi
-						elo: 1015
-					}, {
-						where: {
-							id: '519147196181118976'
-						}
-					});
+				await Emoji.update({ // boi
+					elo: 1015
+				}, {
+					where: {
+						id: '519147196181118976'
+					}
+				});
 				
-					await Emoji.update({ // mesyeux
-						elo: 985
-					}, {
-						where: {
-							id: '431252859263385612'
-						}
-					});
+				await Emoji.update({ // mesyeux
+					elo: 985
+				}, {
+					where: {
+						id: '431252859263385612'
+					}
+				});
 				
-					await Emoji.update({ // drakeyeah
-						elo: 1015
-					}, {
-						where: {
-							id: '498930418058395649'
-						}
-					});
+				await Emoji.update({ // drakeyeah
+					elo: 1015
+				}, {
+					where: {
+						id: '498930418058395649'
+					}
+				});
 				
-					await Emoji.update({ // betel
-						elo: 1015
-					}, {
-						where: {
-							id: '479390965509914624'
-						}
-					});
+				await Emoji.update({ // betel
+					elo: 1015
+				}, {
+					where: {
+						id: '479390965509914624'
+					}
+				});
 				
-					await Emoji.update({ // robotnik
-						elo: 985
-					}, {
-						where: {
-							id: '531873527251337237'
-						}
-					});
-
-					resolve();
-				} catch(err) {
-					reject(err);
-				}
-			});
-		})
-		.permission('expert')
+				await Emoji.update({ // robotnik
+					elo: 985
+				}, {
+					where: {
+						id: '531873527251337237'
+					}
+				});
+				
+				resolve();
+			} catch(err) {
+				reject(err);
+			}
+		});
+	})
+	.permission('expert')
 );*/
-
+																												
 dispatcher.register(
 	literal('eval')
 		.then(
@@ -567,7 +569,7 @@ dispatcher.register(
 				.description('Exécute une commande en brut')
 		)
 );
-
+																														
 dispatcher.register(
 	literal('resetdb')
 		.then(
@@ -583,35 +585,35 @@ dispatcher.register(
 				.description('Réinitialise les bases de données sélectionnées')
 		)
 );
-
+																																
 dispatcher.register(
 	literal('help')
 	/*.then(
-    	argument('command')
-    		.executes((source, command) => {
-    			return new Promise((resolve, reject) => {
-    				// @type {Discord.Message}
-    				
-    				let message = source.message;
-    				if(dispatcher.commands.has(command)) {
-    					command = dispatcher.commands.get(command);
-    					message.channel.send(`-- Aide pour la commande ${command.getName()} --\n${command.getUsages(config.prefix).map(({ usage, description }) => usage + ': ' + description).join('\n')}`)
-    						.then(resolve)
-    						.catch(reject);
-    				} else {
-    					message.reply(`commande inconnue: "${command}"`) // TODO err
-    						.then(resolve)
-    						.catch(reject);
-    				}
-    			});
-    		})
-    		.description('Affiche l\'aide d\'une commande en particulier')
-    )*/
+		argument('command')
+		.executes((source, command) => {
+			return new Promise((resolve, reject) => {
+				// @type {Discord.Message}
+				
+				let message = source.message;
+				if(dispatcher.commands.has(command)) {
+					command = dispatcher.commands.get(command);
+					message.channel.send(`-- Aide pour la commande ${command.getName()} --\n${command.getUsages(config.prefix).map(({ usage, description }) => usage + ': ' + description).join('\n')}`)
+					.then(resolve)
+					.catch(reject);
+				} else {
+					message.reply(`commande inconnue: "${command}"`) // TODO err
+					.then(resolve)
+					.catch(reject);
+				}
+			});
+		})
+		.description('Affiche l\'aide d\'une commande en particulier')
+		)*/
 		.executes(source => {
 			return new Promise((resolve, reject) => {
 				/** @type {Discord.Message} */
 				let message = source.message;
-
+																																				
 				//** @type {{command: Command, usage: string, description: string}[]} */
 				/** @type {command.getUsages} */
 				let usableCommands = [];
@@ -620,7 +622,7 @@ dispatcher.register(
 					.filter(({ command }) => Permission[command.getPermission()].checkPermission(source))
 					.map(({ usage, description }) => `${usage}: ${description}`)
 					.join('\n');
-
+																																				
 				message.channel.send(`Liste des commandes disponibles pour vous:\`\`\`${descriptions}\`\`\``) // TODO msg
 					.then(resolve)
 					.catch(reject);
@@ -628,7 +630,7 @@ dispatcher.register(
 		})
 		.description('Affiche ce message d\'aide')
 );
-
+																																		
 /** @param {Discord.Message} message */
 function countEmojis(message) {
 	/** @type {RegExpMatchArray} */
@@ -682,12 +684,12 @@ function countEmojis(message) {
 		}, Promise.resolve());
 	}
 }
-
+																																		
 /** @param {string[]} tables */
 function resetDB(tables) {
 	return new Promise((resolve, reject) => {
 		let max = 0;
-
+																																				
 		if (tables.includes('emoji'))
 			max++;
 		if (tables.includes('battle'))
@@ -698,13 +700,13 @@ function resetDB(tables) {
 			max++;
 		if (tables.includes('gacharelation'))
 			max++;
-
+																																				
 		let synced = 0;
 		let increment = () => {
 			if ((++synced) === max)
 				resolve();
 		};
-
+																																				
 		if (tables.includes('emoji')) {
 			console.log('reset emoji');
 			Emoji.sync({ force: true })
@@ -750,24 +752,24 @@ function resetDB(tables) {
 				.catch(reject)
 				.finally(increment);
 		}
-
+																																				
 		if (max === 0)
 			resolve();
 	});
 }
-
+																																		
 /**
- * 
- * @param {Discord.TextChannel} channel
- * @param {number} quantity 
- * @returns {Promise<[{id: string, count: number, elo: number, lastBattle: Date, guildId: string}, {id: string, count: number, elo: number, lastBattle: Date, guildId: string}][]>}
- */
+																																		* 
+																																		* @param {Discord.TextChannel} channel
+																																		* @param {number} quantity 
+																																		* @returns {Promise<[{id: string, count: number, elo: number, lastBattle: Date, guildId: string}, {id: string, count: number, elo: number, lastBattle: Date, guildId: string}][]>}
+																																		*/
 function selectEmojisPairs(channel, quantity) {
 	return new Promise((resolve, reject) => {
 		/** @type {[{id: string, count: number, elo: number, lastBattle: Date, guildId: string}, {id: string, count: number, elo: number, lastBattle: Date, guildId: string}][]} */
 		let battles = new Array(quantity).fill(0);
 		//console.log('selectEmojisPairs, recherche des émojis (args:', channel.id, quantity, ')');
-
+																																				
 		Emoji.findAll({
 			where: {
 				guildId: channel.guild.id
@@ -777,35 +779,35 @@ function selectEmojisPairs(channel, quantity) {
 			]
 		}).then(emojis => {
 			let now = new Date();
-
+																																					
 			//emojis.forEach(emo => console.log('lastBattle:', (now - emo.lastBattle) / emojis[0].lastBattle));
 			//console.log('émojis trouvés:', emojis.length);
 			/** @type {[{id: string, count: number, elo: number, lastBattle: Date, guildId: string}, number][]} */
 			let d_emojis = emojis.map(emoji => [emoji, Math.random() * (now - emoji.lastBattle) / (now - emojis[0].lastBattle)]).sort((e1, e2) => e2[1] - e1[1]);
-
+																																					
 			//console.log('d_emojis', d_emojis);
-
+																																					
 			for (let i = 0; i < quantity; i++) {
 				let e1 = d_emojis.shift()[0],
 					e2 = d_emojis.shift()[0];
-
+																																						
 				//console.log('e1', e1, 'e2', e2);
-
+																																						
 				battles[i] = [e1, e2];
 			}
-
+																																					
 			resolve(battles);
 		}).catch(reject);
 	});
 }
-
+																																		
 /**
- * Lance une bataille entre des émojis pris "au hasard"
- * @param {Discord.TextChannel} channel 
- */
+																																		* Lance une bataille entre des émojis pris "au hasard"
+																																		* @param {Discord.TextChannel} channel 
+																																		*/
 function emojiFight(channel) {
 	const nbFights = 5;
-
+																																			
 	selectEmojisPairs(channel, nbFights).then(pairs => {
 		let dateEnd = new Date();
 		console.log('date', dateEnd);
@@ -815,13 +817,13 @@ function emojiFight(channel) {
 		//dateEnd.setMinutes(dateEnd.getMinutes() + 1);
 		dateEnd.setSeconds(0);
 		dateEnd.setMilliseconds(0);
-
+																																				
 		//let tmpDateEnd = new Date(dateEnd.setHours(dateEnd.getHours() + 1));
 		let tmpDateEnd = new Date(dateEnd);
 		// tmpDateEnd.setHours(tmpDateEnd.getHours() + 1);
 		// Test
-
-
+																																				
+																																				
 		let finished = 0,
 			ids = [];
 		let after = (index, battleId) => {
@@ -830,12 +832,12 @@ function emojiFight(channel) {
 				setTimeout(endFights, dateEnd.getTime() - new Date().getTime(), channel, ids);
 			}
 		};
-
+																																				
 		for (let i = 0; i < pairs.length; i++) {
 			let emos = pairs[i];
 			let e1 = channel.guild.emojis.get(emos[0].id),
 				e2 = channel.guild.emojis.get(emos[1].id);
-
+																																					
 			channel.send({
 				embed: {
 					description: 'Nouvelle bataille !',
@@ -857,7 +859,7 @@ function emojiFight(channel) {
 				message.react(e1).then(() => {
 					message.react(e2).catch(() => {});
 				}).catch(() => {});
-
+																																						
 				Battle.create({
 					messageId: message.id,
 					end: dateEnd.getTime(),
@@ -872,7 +874,7 @@ function emojiFight(channel) {
 		}
 	});
 }
-
+																																		
 /**
  * Calcule des elos
  * @param {number} elo1 Elo de 1
@@ -882,13 +884,13 @@ function emojiFight(channel) {
 function calculateElo(elo1, elo2, win) {
 	let p = d => 1 / (1 + Math.pow(10, d / 400));
 	const k = 30;
-
+																																			
 	let nElo1 = elo1 + k * (win - p(elo2 - elo1)),
 		nElo2 = elo2 + k * ((1 - win) - p(elo1 - elo2));
-
+																																			
 	return [Math.round(nElo1), Math.round(nElo2)];
 }
-
+																																		
 /**
  * Termine une bataille d'émojis puis passe à la suivante
  * @param {Discord.TextChannel} channel 
@@ -905,7 +907,7 @@ function endFights(channel, battlesId) {
 			if ((++realEnded) === battles.length) {
 				// Mise à jour de la tier-list
 				updateTierList(channel.guild);
-
+																																						
 				// Fin de la bataille, lancement de la prochaine
 				Battle.update({
 					ended: true
@@ -916,16 +918,16 @@ function endFights(channel, battlesId) {
 				}).catch(console.log).finally(() => setTimeout(emojiFight, 1, channel));
 			}
 		};
-
+																																				
 		let now = new Date();
-
+																																				
 		for (let battle of battles) {
-			channel.fetchMessage(battle.messageId).then(message => {
+			channel.messages.fetch(battle.messageId).then(message => {
 				let react1 = message.reactions.find(r => r.emoji.id === battle.emoji1),
 					react2 = message.reactions.find(r => r.emoji.id === battle.emoji2);
 				let n1 = react1 ? react1.count - 1 : 0,
 					n2 = react2 ? react2.count - 1 : 0;
-
+																																						
 				Emoji.findAll({
 					where: {
 						id: [battle.emoji1, battle.emoji2]
@@ -934,18 +936,18 @@ function endFights(channel, battlesId) {
 					if (emoji1.id === battle.emoji2)
 						[emoji1, emoji2] = [emoji2, emoji1];
 					let nElo = calculateElo(emoji1.elo, emoji2.elo, n1 === n2 ? .5 : n1 > n2 ? 1 : 0);
-
+																																							
 					let finished = 0;
 					let after = () => {
 						if ((++finished) === 2) {
 							let e1 = channel.guild.emojis.get(emoji1.id),
 								e2 = channel.guild.emojis.get(emoji2.id);
 							channel.send(`Mise à jour du elo:\n${e1}: ${emoji1.elo} -> ${nElo[0]}, ${e2}: ${emoji2.elo} -> ${nElo[1]}`);
-
+																																									
 							realEnd();
 						}
 					};
-
+																																							
 					Emoji.update({
 						elo: nElo[0],
 						lastBattle: now
@@ -967,7 +969,7 @@ function endFights(channel, battlesId) {
 		}
 	}).catch(console.log);
 }
-
+																																		
 /**
  * Met à jour la tier list
  * @param {Discord.Guild} guild
@@ -983,7 +985,7 @@ function updateTierList(guild) {
 		}
 	}).then(async emojis => {
 		emojis.sort((e1, e2) => e2.elo - e1.elo);
-
+																																				
 		let min = 1000,
 			max = 1000;
 		for (let e of emojis) {
@@ -992,28 +994,28 @@ function updateTierList(guild) {
 			if (e.elo > max)
 				max = e.elo;
 		}
-
+																																				
 		let t = Math.floor((max - min) / (messageTiers.length - 1)); // nb elo entre chaque tier
-
+																																				
 		let m = {};
 		for (let e of emojis) {
 			let n = Math.floor(e.elo / t) * t,
 				s = Math.floor((e.elo + t) / t) * t,
 				k = `${s-1}-${n}`;
-
+																																					
 			if (m[k] !== undefined)
 				m[k].push(e);
 			else
 				m[k] = [e];
 		}
-
+																																				
 		let tiers = Object.entries(m);
-
+																																				
 		for (let i = 0; i < messageTiers.length; i++) {
-			let message = await outputChannel.fetchMessage(messageTiers[i].messageId); // Message à modifier
+			let message = await outputChannel.messages.fetch(messageTiers[i].messageId); // Message à modifier
 			/** @type {Discord.Emoji} */
 			let desc = tiers[i][1].reduce((acc, emo) => `${acc}  ${guild.emojis.get(emo.id)}: ${emo.elo}`, '');
-
+																																					
 			message.edit({
 				embed: {
 					description: desc,
@@ -1027,7 +1029,7 @@ function updateTierList(guild) {
 		}
 	}).catch(console.log);
 }
-
+																																		
 /**
  * Met à jour un émoji dans la BDD (+/-1 au count)
  * @param {Discord.Emoji} emoji
@@ -1039,11 +1041,11 @@ function updateEmoji(emoji, add, init) { // Modifier cette merde pour prendre en
 		if (emoji === null) {
 			addEmoji(emoji.id, emoji.guild.id);
 			/*Emoji.create({
-            	id: emoji.id,
-            	count: init
-            }).catch(err => {
-            	console.error(`erreur create emoji: ${err}`); // TODO err
-            });*/
+				id: emoji.id,
+				count: init
+			}).catch(err => {
+				console.error(`erreur create emoji: ${err}`); // TODO err
+			});*/
 		} else {
 			Emoji.update({
 				count: emoji.count += add ? 1 : -1
@@ -1059,7 +1061,7 @@ function updateEmoji(emoji, add, init) { // Modifier cette merde pour prendre en
 		console.error(`erreur find emoji: ${err}`); // TODO err
 	});
 }
-
+																																		
 function addEmoji(emojiId, guildId) {
 	Emoji.findOrCreate({
 		where: {
@@ -1073,7 +1075,7 @@ function addEmoji(emojiId, guildId) {
 		}
 	}).catch(console.log);
 }
-
+																																		
 function removeEmoji(emojiId) {
 	Emoji.destroy({
 		where: {
@@ -1081,29 +1083,29 @@ function removeEmoji(emojiId) {
 		}
 	}).catch(console.log);
 }
-
+																																		
 function initEmoji() {
 	for (let [guildId, guild] of client.guilds) {
 		for (let [emojiId] of guild.emojis) {
 			// Ajoute dans la BBD les émojis ajoutés depuis le dernier arrêt
 			/*try {
-            	await Emoji.findOrCreate({
-            		where: {
-            			id: emojiId,
-            			guildId: guildId
-            		},
-            		defaults: {
-            			count: 0,
-            			elo: 1000,
-            			lastBattle: new Date(0)
-            		}	
-            	});
-            } catch(err) {
-            	console.log(err);
-            }*/
+				await Emoji.findOrCreate({
+					where: {
+						id: emojiId,
+						guildId: guildId
+					},
+					defaults: {
+						count: 0,
+						elo: 1000,
+						lastBattle: new Date(0)
+					}	
+				});
+			} catch(err) {
+				console.log(err);
+			}*/
 			addEmoji(emojiId, guildId);
 		}
-
+																																				
 		// Supprime de la BDD les émojis supprimés
 		Emoji.findAll({
 			where: {
@@ -1113,25 +1115,25 @@ function initEmoji() {
 			for (let emoji of emojis) {
 				if (!guild.emojis.get(emoji.id)) {
 					/*Emoji.destroy({
-                    	where: {
-                    		id: emoji.id
-                    	}
-                    }).catch(console.log);*/
+						where: {
+							id: emoji.id
+						}
+					}).catch(console.log);*/
 					removeEmoji(emoji.id);
 				}
 			}
 		}).catch(console.log);
 	}
 }
-
+																																		
 function initGacha() {
 	/*for(let [guildId, guild] of client.guilds) {
-    	for(let [memberId, member] of guild.members) {
-
-    	}
-    }*/
+		for(let [memberId, member] of guild.members) {
+			
+		}
+	}*/
 }
-
+																																		
 /**
  * @param {Discord.Message} message
  */
@@ -1140,7 +1142,7 @@ function coup(message) {
 		message.react('551153662827823104').catch(() => {});
 	}
 }
-
+																																	
 /**
  * @param {Discord.Message} message
  */
@@ -1149,17 +1151,17 @@ function underage(message) {
 		message.react('🔞').catch(() => {});
 	}
 }
-
+																																	
 let pready = 0;
-
+																																	
 function ready(name) {
 	console.log(name, 'ready');
 	if ((++pready) === 2) { // client et database ready
 		console.log('database et client prêts');
-
+																																			
 		initEmoji();
 		initGacha();
-
+																																			
 		let now = new Date().getTime();
 		console.log('recherche de battles');
 		Battle.findAll({
@@ -1181,16 +1183,16 @@ function ready(name) {
 		}).catch(console.log);
 	}
 }
-
+																																	
 client.on('ready', () => {
 	console.log('Initialisation de Swagrid...');
 	client.user.setActivity('de la magie', { type: 'WATCHING' });
-
+																																		
 	// Récupérer la config de chaque guild
-	for (let [id, guild] of client.guilds) {
+	for (let [id, guild] of client.guilds.cache) {
 		/** @type {{permissions: Array.<{name: string, roleId: string}>, loggingChannel: string}} */
 		let guildConfig = config.guilds[id];
-
+																																			
 		if (guildConfig === undefined)
 			continue;
 		if (typeof guildConfig.permissions === 'object' && (Symbol.iterator in guildConfig.permissions)) {
@@ -1199,22 +1201,22 @@ client.on('ready', () => {
 					continue;
 				if (Permission[perm.name] !== undefined)
 					continue;
-				if (!guild.roles.has(perm.roleId))
+				if (!guild.roles.cache.has(perm.roleId))
 					continue;
-
+																																					
 				Permission[perm.name] = new Permission(source => {
-					let role = guild.roles.get(perm.roleId);
-
+					let role = guild.roles.cache.get(perm.roleId);
+																																						
 					if (role === undefined)
 						return false;
-
+																																						
 					return role.members.some(m => m.id === source.message.member.id) || source.message.member.id === config.owner;
 				});
 			}
 		}
-
+																																			
 		// Se reconnecter après un timeout
-		for (let [, channel] of guild.channels) {
+		for (let [, channel] of guild.channels.cache) {
 			// if(channel instanceof Discord.VoiceChannel && channel.members.find(member => member.id === client.user.id)) {
 			if (channel instanceof Discord.VoiceChannel && channel.members.get(client.user.id)) {
 				Music.voiceChannel = channel;
@@ -1227,58 +1229,59 @@ client.on('ready', () => {
 			}
 		}
 	}
-
+																																		
 	ready('client');
-
+																																		
 	console.info('Prêt à défoncer des mères');
 });
-
+																																	
 client.on('message', message => {
 	if (message.author.bot)
 		return;
-
+																																		
 	let content = message.content.trim();
-
+																																		
 	if (content.indexOf(config.prefix) !== 0 || content.length > 1 && content[1] === ' ') {
 		countEmojis(message);
 		coup(message);
 		underage(message);
-
+																																			
 		return;
 	}
-
+																																		
 	let command = content.slice(config.prefix.length);
-
+																																		
 	dispatcher.parse({ message: message }, command)
 		.catch(err => {
-			message.channel.send('```' + err + '```').catch(() => {});
+			if (!(err instanceof CommandDispatcher.UnknownCommandError))
+				message.channel.send('```' + err + '```').catch(() => {});
 			console.error(err.message);
 		});
 });
-
+																																	
 client.on('messageReactionAdd', (reaction, user) => {
 	if (user.bot)
 		return;
-
+																																		
 	let emoji = reaction.emoji;
 	if (reaction.message.member.guild.emojis.has(emoji.id))
 		updateEmoji(emoji, true, 1);
 });
-
+																																	
 client.on('messageReactionRemove', (reaction, user) => {
 	if (user.bot)
 		return;
-
+																																		
 	let emoji = reaction.emoji;
 	if (reaction.message.member.guild.emojis.has(emoji.id))
 		updateEmoji(emoji, false, 0);
 });
-
+																																	
 client.on('voiceStateUpdate', (oldmember, newmember) => {
 	try {
 		let oldvoice = oldmember.voiceChannel;
 		let newvoice = newmember.voiceChannel;
-
+																																			
 		if (!oldvoice && newvoice) {
 			//join
 		} else if (oldvoice && !newvoice) {
@@ -1297,25 +1300,25 @@ client.on('voiceStateUpdate', (oldmember, newmember) => {
 					}
 					// Vestiges du 10s
 					/*if(newvoice.id === '539072415704154132') {
-                    	newmember.guild.channels.get('470676824532320256').send(`${newmember.user.username}#${newmember.user.tag} va devenir prisonnier`);
-                    	newmember.addRole('520210711767678977')
-                    		.then(() => {
-                    			newmember.guild.channels.get('470676824532320256').send(`${newmember.user.username}#${newmember.user.tag} est devenu prisonnier`);
-                    		})
-                    		.catch(()=>{
-                    			newmember.guild.channels.get('470676824532320256').send(`${newmember.user.username}#${newmember.user.tag} n'est pas devenu prisonnier :'(`);
-                    		});
-                    	setTimeout(() => {
-                    		newmember.removeRole('520210711767678977')
-                    			.then(() => {
-                    				newmember.guild.channels.get('470676824532320256').send(`${newmember.user.username}#${newmember.user.tag} a perdu le rôle prisonnier (normal)`);
-                    			})
-                    			.catch(()=>{
-                    				newmember.guild.channels.get('470676824532320256').send(`impossible d'enlever le rôle prisonnier à ${newmember.user.username}#${newmember.user.tag} (???)`);
-                    			});
-                    		newmember.setVoiceChannel(oldvoice).catch(()=>{});
-                    	}, 10000);
-                    }*/
+						newmember.guild.channels.get('470676824532320256').send(`${newmember.user.username}#${newmember.user.tag} va devenir prisonnier`);
+						newmember.addRole('520210711767678977')
+						.then(() => {
+							newmember.guild.channels.get('470676824532320256').send(`${newmember.user.username}#${newmember.user.tag} est devenu prisonnier`);
+						})
+						.catch(()=>{
+							newmember.guild.channels.get('470676824532320256').send(`${newmember.user.username}#${newmember.user.tag} n'est pas devenu prisonnier :'(`);
+						});
+						setTimeout(() => {
+							newmember.removeRole('520210711767678977')
+							.then(() => {
+								newmember.guild.channels.get('470676824532320256').send(`${newmember.user.username}#${newmember.user.tag} a perdu le rôle prisonnier (normal)`);
+							})
+							.catch(()=>{
+								newmember.guild.channels.get('470676824532320256').send(`impossible d'enlever le rôle prisonnier à ${newmember.user.username}#${newmember.user.tag} (???)`);
+							});
+							newmember.setVoiceChannel(oldvoice).catch(()=>{});
+						}, 10000);
+					}*/
 				}
 			} else {
 				// update genre mute/demute
@@ -1325,23 +1328,23 @@ client.on('voiceStateUpdate', (oldmember, newmember) => {
 		// Channel supprimé entre temps
 	}
 });
-
+																																	
 client.on('emojiCreate', emoji => {
 	addEmoji(emoji.id, emoji.guild.id);
 });
-
+																																	
 client.on('emojiDelete', emoji => {
 	removeEmoji(emoji.id);
 });
-
+																																	
 sequelize = new Sequelize(process.env.DATABASE_URL, {
 	dialect: 'postgres',
 	logging: false
 });
-
+																																	
 sequelize.authenticate().then(() => {
 	console.info('Authentication to database successful');
-
+																																		
 	Emoji = sequelize.define('emoji', {
 		id: { // Son identifiant, donné par Discord
 			type: Sequelize.STRING,
@@ -1352,7 +1355,7 @@ sequelize.authenticate().then(() => {
 		lastBattle: Sequelize.DATE, // Date (timestamp) de la dernière bataille dans laquelle il a participé
 		guildId: Sequelize.STRING
 	});
-
+																																		
 	Battle = sequelize.define('battle', {
 		id: {
 			type: Sequelize.INTEGER,
@@ -1366,7 +1369,7 @@ sequelize.authenticate().then(() => {
 		channelId: Sequelize.STRING,
 		ended: Sequelize.BOOLEAN // La bataille est-elle terminée ?
 	});
-
+																																		
 	GachaCard = sequelize.define('gachacard', {
 		internalName: { // Nom interne pour les différencer, ne pas changer
 			type: Sequelize.STRING,
@@ -1376,7 +1379,7 @@ sequelize.authenticate().then(() => {
 		rarity: Sequelize.INTEGER, // [1-5] étoiles
 		src: Sequelize.STRING // url de l'image
 	});
-
+																																		
 	GachaMember = sequelize.define('gachamember', {
 		id: { // ID Discord
 			type: Sequelize.STRING,
@@ -1384,26 +1387,26 @@ sequelize.authenticate().then(() => {
 		},
 		lastGacha: Sequelize.DATE // Dernière fois qu'il a attrapé une carte
 	});
-
+																																		
 	GachaRelation = sequelize.define('gacharelation', {
 		memberId: Sequelize.STRING, // ID Discord du membre
 		cardname: Sequelize.STRING, // Nom (interne) de la carte
 		catched: Sequelize.DATE // Date où la carte a été attrapée
 	});
-
+																																		
 	ready('database');
 }).catch(console.log);
-
+																																	
 app.use(express.static(`${__dirname}/public`));
-
+																																	
 /*app.get('/', (request, response) => {
 	response.sendFile(`${__dirname}/index.html`);
 });*/
-
+																																	
 app.get('/ping', (request, response) => {
 	response.send({ ok: 'ok' });
 });
-
+																																	
 app.get('/emojis', async(request, response) => {
 	response.setHeader('Content-Type', 'application/json');
 	try {
@@ -1412,15 +1415,15 @@ app.get('/emojis', async(request, response) => {
 		response.end(JSON.stringify({ error }));
 	}
 });
-
+																																	
 let listener = app.listen(process.env.PORT, () => {
 	console.info('Swagrid présent sur le port ' + listener.address().port);
 });
-
+																																	
 process.on('SIGINT', () => {
 	client.destroy().finally(() => {
 		process.exit();
 	});
 });
-
+																																	
 client.login(process.env.TOKEN);
