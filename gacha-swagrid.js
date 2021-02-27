@@ -14,14 +14,17 @@ let GachaMeme;
 let GachaUser;
 /** @type {Model} */
 let GachaOwn;
-/** @type {Model} */
-let GachaHistory;
 
 const tableName = {
 	gachameme: 'gachameme',
 	gachauser: 'gachauser',
 	gachaown: 'gachaown',
 	gachahistory: 'gachahistory'
+};
+
+const servicesName = {
+	client: 'client',
+	database: 'database'
 };
 
 Permission.expert = new Permission(source => source.message.member.id === config.owner);
@@ -97,15 +100,16 @@ dispatcher.register(
 
 // Helper functions
 
-let pready = 0;
 function ready(name) {
 	console.log(name, 'ready');
-	if ((++pready) === 2) { // client et database ready
-		console.log('database et client prêts');
+	if ((++ready.servicesReady) === ready.nbServices) { // client et database ready
+		console.info('Prêt à défoncer des mères');
 
 		initGacha();
 	}
 }
+ready.servicesReady = 0;
+ready.nbServices = Object.keys(servicesName).length;
 
 function initGacha() {
 
@@ -155,9 +159,7 @@ client.on('ready', async () => {
 		}
 	}
 
-	ready('client');
-
-	console.info('Prêt à défoncer des mères');
+	ready(servicesName.client);
 });
 
 client.on('message', message => {
@@ -189,15 +191,9 @@ client.on('message', message => {
 function resetDB(tables) {
 	return new Promise((resolve, reject) => {
 		let max = 0;
-
-		if (tables.includes(tableName.gachameme))
-			max++;
-		if (tables.includes(tableName.gachauser))
-			max++;
-		if (tables.includes(tableName.gachaown))
-			max++;
-		if (tables.includes(tableName.gachahistory))
-			max++;
+		for(let t of Object.values(tableName))
+			if (tables.includes(t))
+				max++;
 
 		let synced = 0;
 		let increment = () => {
@@ -231,10 +227,6 @@ function resetDB(tables) {
 				})
 				.catch(reject)
 				.finally(increment);
-		}
-		if (tables.includes(tableName.gachahistory)) {
-			console.log('reset', tableName.gachahistory);
-			GachaHistory.sync();
 		}
 
 		if (max === 0)
@@ -282,9 +274,7 @@ sequelize.authenticate().then(() => {
 		}
 	});
 
-	GachaHistory = sequelize.define(tableName.gachahistory, {
-
-	});
+	ready(servicesName.database);
 }).catch(console.log);
 
 process.on('SIGINT', () => {
