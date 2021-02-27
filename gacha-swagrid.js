@@ -30,6 +30,26 @@ const dispatcher = new CommandDispatcher();
 // Commands
 
 dispatcher.register(
+	literal('say')
+		.then(
+			argument('message', true)
+				.executes((source, ...args) => {
+					return new Promise((resolve, reject) => {
+						source.message.delete()
+							.then(() => {
+								source.message.channel.send(args.join(' '))
+									.then(resolve)
+									.catch(reject);
+							})
+							.catch(reject);
+					});
+				})
+				.permission('advanced')
+				.description('Fait dire des choses à Swagrid')
+		)
+);
+
+dispatcher.register(
 	literal('catch')
 		.executes(source => {
 			console.log(source);
