@@ -268,9 +268,8 @@ sequelize.authenticate().then(() => {
 }).catch(console.log);
 
 process.on('SIGINT', () => {
-	client.destroy().finally(() => {
-		process.exit();
-	});
+	client.destroy();
+	process.exit();
 });
 
 client.login(process.env.TOKEN);

@@ -1,5 +1,3 @@
-const { DiscordAPIError } = require("discord.js");
-
 class Command {
 	/** @param {string} name Nom de la commande */
 	constructor(name) {
