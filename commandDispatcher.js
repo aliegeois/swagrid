@@ -1,10 +1,5 @@
-/* jshint -W083 */
+const { DiscordAPIError } = require("discord.js");
 
-//const Permission = require('./permission');
-
-/**
- * @class
- */
 class Command {
 	/** @param {string} name Nom de la commande */
 	constructor(name) {
@@ -12,43 +7,43 @@ class Command {
 		 * @type {string}
 		 * @private
 		 */
-		this.__name__ = name;
+		this._name = name;
 		/**
 		 * @type {Map.<string, Literal>}
 		 * @private
 		 */
-		this.__literals__ = new Map();
+		this._literals = new Map();
 		/**
 		 * @type {?Argument}
 		 * @private
 		 */
-		this.__argument__ = null;
+		this._argument = null;
 		/**
 		 * @type {boolean}
 		 * @private
 		 */
-		this.__executable__ = false;
+		this._executable = false;
 		/**
 		 * @type {string}
 		 * @private
 		 */
-		this.__description__ = '(aucune description disponible)';
+		this._description = '(aucune description disponible)';
 		/**
 		 * @type {string}
 		 * @private
 		 */
-		this.__permission__ = 'basic';
+		this._permission = 'basic';
 	}
 
 	/**
-	 * @param {Command} command
+	 * @param {Command} command Le code à exécuter quand la commande est utilisée
 	 * @returns {this}
 	 */
 	then(command) {
 		if(command instanceof Literal) {
-			this.__literals__.set(command.__name__, command);
+			this._literals.set(command._name, command);
 		} else if(command instanceof Argument) {
-			this.__argument__ = command;
+			this._argument = command;
 		}
 
 		return this;
@@ -66,7 +61,7 @@ class Command {
 		this.execute = (source, ...args) => {
 			//console.log('execution of ' + command + ' with arguments [' + args + '] and permission ' + Permission[this.__permission__]);
 			return new Promise((resolve, reject) => {
-				if(Permission[this.__permission__].checkPermission(source)) {
+				if(Permission[this._permission].checkPermission(source)) {
 					command(source, ...args)
 						.then(resolve)
 						.catch(reject);
@@ -75,7 +70,7 @@ class Command {
 				}
 			});
 		};
-		this.__executable__ = true;
+		this._executable = true;
 
 		return this;
 	}
@@ -87,7 +82,7 @@ class Command {
 	 */
 	permission(perm) {
 		//console.log('command ' + this.name + ' changing permission to "' + perm + '"');
-		this.__permission__ = perm;
+		this._permission = perm;
 
 		return this;
 	}
@@ -98,7 +93,7 @@ class Command {
 	 * @returns {this}
 	 */
 	description(text) {
-		this.__description__ = text;
+		this._description = text;
 
 		return this;
 	}
@@ -108,14 +103,14 @@ class Command {
 	 * @returns {string}
 	 */
 	getName() {
-		return this.__name__;
+		return this._name;
 	}
 
 	/**
 	 * @returns {Map.<string, Command>}
 	 */
 	getLiterals() {
-		return this.__literals__;
+		return this._literals;
 	}
 
 	/**
@@ -124,7 +119,7 @@ class Command {
 	 *
 	 */
 	hasLiteral(name) {
-		return this.__literals__.has(name);
+		return this._literals.has(name);
 	}
 
 	/**
@@ -133,42 +128,42 @@ class Command {
 	 * @returns {Literal}
 	 */
 	getLiteral(name) {
-		return this.__literals__.get(name);
+		return this._literals.get(name);
 	}
 
 	/**
 	 * @returns {boolean}
 	 */
 	hasArgument() {
-		return this.__argument__ !== null;
+		return this._argument !== null;
 	}
 
 	/**
 	 * @returns {?Argument}
 	 */
 	getArgument() {
-		return this.__argument__;
+		return this._argument;
 	}
 
 	/**
 	 * @returns {boolean}
 	 */
 	isExecutable() {
-		return this.__executable__;
+		return this._executable;
 	}
 
 	/**
 	 * @returns {string}
 	 */
 	getDescription() {
-		return this.__description__;
+		return this._description;
 	}
 
 	/**
 	 * @returns {string}
 	 */
 	getPermission() {
-		return this.__permission__;
+		return this._permission;
 	}
 
 	/**
@@ -178,31 +173,31 @@ class Command {
 	getUsages(prefix) {
 		let exploration = [{
 			command: this,
-			usage: this.__name__
+			usage: this._name
 		}];
 		let result = [];
 
 		while(exploration.length > 0) {
 			let { command, usage } = exploration.shift();
 
-			if(command.__executable__) {
+			if(command._executable) {
 				result.push({
 					command,
 					usage: `${prefix}${usage}`,
-					description: command.__description__
+					description: command._description
 				});
 			}
 
-			for(let [lname, lit] of command.__literals__) {
+			for(let [lname, lit] of command._literals) {
 				exploration.push({
 					command: lit,
 					usage: `${usage} ${lname}`
 				});
 			}
-			if(command.__argument__) {
+			if(command._argument) {
 				exploration.push({
-					command: command.__argument__,
-					usage: `${usage} <${command.__argument__.__name__}>`
+					command: command._argument,
+					usage: `${usage} <${command._argument._name}>`
 				});
 			}
 		}
@@ -211,13 +206,6 @@ class Command {
 	}
 }
 
-Command.InsufficientPermissionError = class InsufficientPermissionError extends Error {
-	constructor(name) {
-		super(`Insufficient permission for command ${name}`);
-	}
-};
-
-/** @class */
 class Literal extends Command {
 	/** @param {string} name Nom de la commande */
 	constructor(name) {
@@ -225,7 +213,6 @@ class Literal extends Command {
 	}
 }
 
-/** @class */
 class Argument extends Command {
 	/**
 	 * @param {string} name Nom de l'argument
@@ -375,6 +362,12 @@ class CommandDispatcher {
 	}
 }
 
+CommandDispatcher.InsufficientPermissionError = class InsufficientPermissionError extends Error {
+	constructor(name) {
+		super(`Insufficient permission for command ${name}`);
+	}
+};
+
 CommandDispatcher.EmptyCommandError = class EmptyCommandError extends Error {
 	constructor() {
 		super('Empty command');
@@ -422,8 +415,8 @@ function argument(name, restString = false) {
 
 /** @class */
 class Permission {
+	/** @param {function({message: {})} check */
 	constructor(check) {
-		/** @type {function(any): boolean} */
 		this.checkPermission = check;
 	}
 }

@@ -1,9 +1,6 @@
 {
 	"prefix": "+",
 	"owner": "239844879688007681",
-	"errorMessages": {
-		
-	},
 	"guilds": {
 		"307821648835248130": {
 			"permissions": [
@@ -12,48 +9,7 @@
 					"roleId": "469496344558698506"
 				}
 			],
-			"loggingChannel": "470676824532320256",
-			"battle": {
-				"channel": "596652260524687360",
-				"tiers": [{
-						"messageId": "596652349305651202",
-						"name": "Interdimensionnel",
-						"color": 16713485,
-						"code": "1f386"
-					}, {
-						"messageId": "596652356729438209",
-						"name": "Fantastique",
-						"color": 16683781,
-						"code": "1f389"
-					}, {
-						"messageId": "596652360730804244",
-						"name": "Classe",
-						"color": 16774148,
-						"code": "2728"
-					}, {
-						"messageId": "596652372155957248",
-						"name": "Neutre",
-						"color": 4311299,
-						"code": "1f610"
-					}, {
-						"messageId": "596652377407225868",
-						"name": "Questionnable",
-						"color": 2802684,
-						"code": "2753"
-					}, {
-						"messageId": "596652382264229888",
-						"name": "Poubelle",
-						"color": 140787,
-						"code": "1f6ae"
-					}, {
-						"messageId": "596652390699106314",
-						"name": "Vomi",
-						"color": 5648579,
-						"code": "1f922"
-					}
-				]
-			},
-			"musicChannel": "502905931768659968"
+			"loggingChannel": "470676824532320256"
 		}
 	}
 }
