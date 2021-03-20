@@ -99,11 +99,11 @@ module.exports = class Music {
 		/** @param {string} reason */
 		let end = reason => {
 			switch (reason) {
-				case 'Stream is not generating quickly enough.':
-					console.log('Stream génère pas assez vite');
-					break;
-				default:
-					console.log(`music ended with reason "${reason}"`);
+			case 'Stream is not generating quickly enough.':
+				console.log('Stream génère pas assez vite');
+				break;
+			default:
+				console.log(`music ended with reason "${reason}"`);
 			}
 
 			if (this._musics.length) {
@@ -115,22 +115,22 @@ module.exports = class Music {
 		};
 
 		switch (song.type) {
-			case 'music':
-				// console.log('playStream', song);
-				this._dispatcher = this.voiceConnection.play(ytdl(song.url, {
-					filter: 'audio'
-				}), {
-					bitrate: 'auto'
-				}).on('end', end);
-				break;
-			case 'sound':
-				// console.log('playFile', song);
-				this._dispatcher = this.voiceConnection.play(song.url).on('end', end);
-				break;
-			default:
-				this._dispatcher = null;
-				end('_');
-				console.log('error type music');
+		case 'music':
+			// console.log('playStream', song);
+			this._dispatcher = this.voiceConnection.play(ytdl(song.url, {
+				filter: 'audio'
+			}), {
+				bitrate: 'auto'
+			}).on('end', end);
+			break;
+		case 'sound':
+			// console.log('playFile', song);
+			this._dispatcher = this.voiceConnection.play(song.url).on('end', end);
+			break;
+		default:
+			this._dispatcher = null;
+			end('_');
+			console.log('error type music');
 		}
 
 		/*this.__dispatcher__ = this.voiceConnection.playStream(ytdl(song.url, {

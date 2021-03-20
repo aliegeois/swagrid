@@ -3,19 +3,17 @@
 	"version": "0.1.0",
 	"description": "Swag + Hagrid = Swagrid",
 	"scripts": {
-		"start": "node gacha-swagrid.js",
-		"local": "node -r dotenv/config gacha-swagrid.js"
+		"start": "node gacha-swagrid.js"
 	},
 	"dependencies": {
+		"@mapbox/node-pre-gyp": "^1.0.0",
 		"bufferutil": "^4.0.3",
+		"canvas": "^2.6.1",
 		"discord.js": "^12.5.1",
-		"dotenv": "^8.2.0",
 		"express": "^4.17.1",
 		"libsodium-wrappers": "^0.7.9",
 		"pg": "^8.5.1",
-		"request-promise-native": "^1.0.9",
-		"sequelize": "^6.5.0",
-		"xml2js": "^0.4.23"
+		"sequelize": "^6.5.0"
 	},
 	"repository": {
 		"type": "git",

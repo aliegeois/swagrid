@@ -1,9 +1,15 @@
 const Discord = require('discord.js'),
+	// eslint-disable-next-line no-unused-vars
 	{ Sequelize, Model, DataTypes } = require('sequelize'),
+	{ createCanvas, loadImage } = require('canvas'),
+	ctx = createCanvas(174, 174),
+	express = require('express'),
+	app = express(),
 	client = new Discord.Client();
 
 const { Permission, CommandDispatcher, literal, argument } = require('./commandDispatcher');
 
+/** @type {{prefix: string, owner: string, errorMessages: any, guilds: any}} */
 const config = require('./config.json');
 
 /** @type {Sequelize} */
@@ -54,10 +60,29 @@ dispatcher.register(
 
 dispatcher.register(
 	literal('catch')
-		.executes(source => {
-			console.log(source);
+		.executes(() => {
+			return Promise.resolve();
 		})
 		.description('Attrape le dernier meme qui est apparu')
+);
+
+dispatcher.register(
+	literal('spawn')
+		.executes(source => {
+			return new Promise((resolve, reject) => {
+				source.message.channel
+					.send({
+						files: [{
+							attachment: '.data/doot.png',
+							name: 'doot.png'
+						}]
+					})
+					.then(resolve)
+					.catch(reject);
+			});
+		})
+		.description('Fait spawn un meme')
+		.permission('expert')
 );
 
 dispatcher.register(
@@ -80,9 +105,6 @@ dispatcher.register(
 	literal('help')
 		.executes(source => {
 			return new Promise((resolve, reject) => {
-				/** @type {Discord.Message} */
-				let message = source.message;
-
 				let usableCommands = [];
 				dispatcher.commands.forEach(command => usableCommands.push(...command.getUsages(config.prefix)));
 				let descriptions = usableCommands
@@ -90,7 +112,7 @@ dispatcher.register(
 					.map(({ usage, description }) => `${usage}: ${description}`)
 					.join('\n');
 
-				message.channel.send(`Liste des commandes disponibles pour vous:\`\`\`${descriptions}\`\`\``) // TODO msg
+				source.message.channel.send(`Liste des commandes disponibles pour vous:\`\`\`${descriptions}\`\`\``)
 					.then(resolve)
 					.catch(reject);
 			});
@@ -180,7 +202,9 @@ client.on('message', message => {
 
 	dispatcher.parse({ message: message }, command)
 		.catch(err => {
-			message.channel.send('```' + err + '```').catch(() => {});
+			if (!(err instanceof CommandDispatcher.UnknownCommandError)) {
+				message.channel.send('```' + err + '```').catch(() => {});
+			}
 			console.error(err.message);
 		});
 });
@@ -275,11 +299,24 @@ sequelize.authenticate().then(() => {
 	});
 
 	ready(servicesName.database);
-}).catch(console.log);
+}).catch(console.error);
 
-process.on('SIGINT', () => {
+// Web server
+
+app.use(express.static(`${__dirname}/public`));
+
+let listener = app.listen(process.env.PORT, () => {
+	console.info('Swagrid présent sur le port ' + listener.address().port);
+});
+
+// Technical
+
+function exit() {
 	client.destroy();
 	process.exit();
-});
+}
+
+process.on('SIGINT', exit);
+process.on('SIGTERM', exit);
 
 client.login(process.env.TOKEN);

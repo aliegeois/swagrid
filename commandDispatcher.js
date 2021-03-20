@@ -1,3 +1,6 @@
+// eslint-disable-next-line no-unused-vars
+const { Message } = require('discord.js');
+
 class Command {
 	/** @param {string} name Nom de la commande */
 	constructor(name) {
@@ -49,11 +52,12 @@ class Command {
 
 	/**
 	 * What appens when you execute the command
-	 * @param {function(any, ...string): Promise<void>} command La commande à exécuter
+	 * @param {function({message: Message}, ...string): Promise<void>} command La commande à exécuter
 	 * @returns {this}
 	 */
 	executes(command) {
 		/**
+		 * @param {{message: Message}} source
 		 * @param {...string} args
 		 */
 		this.execute = (source, ...args) => {
@@ -64,7 +68,7 @@ class Command {
 						.then(resolve)
 						.catch(reject);
 				} else {
-					reject(new Command.InsufficientPermissionError(command.name));
+					reject(new CommandDispatcher.InsufficientPermissionError(command.name));
 				}
 			});
 		};
@@ -361,36 +365,42 @@ class CommandDispatcher {
 }
 
 CommandDispatcher.InsufficientPermissionError = class InsufficientPermissionError extends Error {
+	/** @param {*} name Nom de la commande */
 	constructor(name) {
 		super(`Insufficient permission for command ${name}`);
 	}
 };
 
 CommandDispatcher.EmptyCommandError = class EmptyCommandError extends Error {
+	/** @param {*} name Nom de la commande */
 	constructor() {
 		super('Empty command');
 	}
 };
 
 CommandDispatcher.UnknownCommandError = class UnknownCommandError extends Error {
+	/** @param {*} name Nom de la commande */
 	constructor(name) {
 		super(`Unknown command ${name}`);
 	}
 };
 
 CommandDispatcher.MissingArgumentError = class MissingArgumentError extends Error {
+	/** @param {*} name Nom de la commande */
 	constructor(name) {
 		super(`Missing argument(s) for command ${name}`);
 	}
 };
 
 CommandDispatcher.TooManyArgumentsError = class TooManyArgumentsError extends Error {
+	/** @param {*} name Nom de la commande */
 	constructor(name) {
 		super(`Too many argument(s) for command ${name}`);
 	}
 };
 
 CommandDispatcher.CommandAlreadyRegisteredError = class CommandAlreadyRegisteredError extends Error {
+	/** @param {*} name Nom de la commande */
 	constructor(name) {
 		super(`Command ${name} already registered`);
 	}
@@ -411,9 +421,8 @@ function argument(name, restString = false) {
 	return new Argument(name, restString);
 }
 
-/** @class */
 class Permission {
-	/** @param {function({message: {})} check */
+	/** @param {function({message: Message)} check */
 	constructor(check) {
 		this.checkPermission = check;
 	}
