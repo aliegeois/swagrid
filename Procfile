@@ -1,1 +1,1 @@
-swagrid: node gacha-swagrid.js
+web: node gacha-swagrid.js
