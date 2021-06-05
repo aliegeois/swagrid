@@ -8,7 +8,9 @@
 	},
 	"dependencies": {
 		"discord.js": "^12.5.3",
-		"reddit": "^1.2.1"
+		"express": "^4.17.1",
+		"reddit": "^1.2.1",
+		"sequelize": "^6.6.2"
 	},
 	"devDependencies": {
 		"dotenv": "*"

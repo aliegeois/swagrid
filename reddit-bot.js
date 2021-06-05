@@ -1,11 +1,14 @@
 const Discord = require('discord.js'),
 	Reddit = require('reddit'),
+	express = require('express'),
+	path = require('path'),
 	config = require('./config.json');
 
 const { Permission, CommandDispatcher, literal, argument } = require('./commandDispatcher');
 const client = new Discord.Client({
 	disabledEvents: ['TYPING_START']
 });
+const app = express();
 const reddit = new Reddit({
 	username: process.env.REDDIT_USERNAME,
 	password: process.env.REDDIT_PASSWORD,
@@ -180,6 +183,12 @@ client.on('message', message => {
 				message.channel.send('```' + err + '```').catch(() => {});
 			console.error(err);
 		});
+});
+
+app.use(express.static(`${path.resolve()}/public`));
+
+const listener = app.listen(process.env.PORT, () => {
+	console.info('Swagrid présent sur le port ' + listener.address().port);
 });
 
 process.on('SIGINT', () => {
