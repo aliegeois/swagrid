@@ -59,6 +59,7 @@ class Command {
 		/**
 		 * @param {{message: Message}} source
 		 * @param {...string} args
+		 * @private
 		 */
 		this.execute = (source, ...args) => {
 			//console.log('execution of ' + command + ' with arguments [' + args + '] and permission ' + Permission[this.__permission__]);

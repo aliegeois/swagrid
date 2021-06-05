@@ -3,17 +3,15 @@
 	"version": "0.1.0",
 	"description": "Swag + Hagrid = Swagrid",
 	"scripts": {
-		"start": "node gacha-swagrid.js"
+		"start": "node reddit-bot.js",
+		"local": "node -r dotenv/config reddit-bot.js"
 	},
 	"dependencies": {
-		"@mapbox/node-pre-gyp": "^1.0.0",
-		"bufferutil": "^4.0.3",
-		"canvas": "^2.6.1",
-		"discord.js": "^12.5.1",
-		"express": "^4.17.1",
-		"libsodium-wrappers": "^0.7.9",
-		"pg": "^8.5.1",
-		"sequelize": "^6.5.0"
+		"discord.js": "^12.5.3",
+		"reddit": "^1.2.1"
+	},
+	"devDependencies": {
+		"dotenv": "*"
 	},
 	"repository": {
 		"type": "git",

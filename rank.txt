@@ -1,1 +1,0 @@
-DATABASE_URL=postgres://nero:claudius@127.0.0.1:5432/swagrid

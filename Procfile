@@ -1,1 +1,1 @@
-web: node gacha-swagrid.js
+web: reddit-bot.js

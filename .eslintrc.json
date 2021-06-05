@@ -25,9 +25,9 @@
 		],
 		"no-empty": [
 			"off"
-		]/*,
+		],
 		"no-unused-vars": [
 			"off"
-		]*/
+		]
 	}
 }
