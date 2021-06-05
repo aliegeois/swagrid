@@ -1,1 +1,1 @@
-web: reddit-bot.js
+web: node reddit-bot.js
