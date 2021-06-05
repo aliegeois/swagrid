@@ -187,6 +187,10 @@ client.on('message', message => {
 
 app.use(express.static(`${path.resolve()}/public`));
 
+app.get('/ping', (_, response) => {
+	response.send({});
+});
+
 const listener = app.listen(process.env.PORT, () => {
 	console.info('Swagrid présent sur le port ' + listener.address().port);
 });
