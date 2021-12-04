@@ -27,4 +27,13 @@ module.exports = class ValidatedSuggestionDTO extends AbstractCardDTO {
 	get messageId() {
 		return this.#messageId;
 	}
+
+	toString() {
+		return JSON.stringify({
+			name: this.name,
+			imageURL: this.imageURL,
+			rarity: this.rarity,
+			messageId: this.messageId
+		});
+	}
 };

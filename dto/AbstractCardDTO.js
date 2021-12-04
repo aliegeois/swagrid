@@ -4,8 +4,8 @@ module.exports = class AbstractCardDTO {
 	#rarity;
 
 	/**
-	 * @param {string} imageURL
 	 * @param {string} name
+	 * @param {string} imageURL
 	 * @param {number} rarity
 	 */
 	constructor(name = null, imageURL = null, rarity = null) {

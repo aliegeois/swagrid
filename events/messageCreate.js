@@ -1,4 +1,4 @@
-const { MAX_POINTS, MAX_TIME_BETWEEN_MESSAGE, MIN_TIME_BETWEEN_MESSAGE, MIN_POINTS_TO_ADD, SPAWN_THRESHOLD } = require('../constants.js');
+const { MAX_POINTS_TO_ADD, MAX_TIME_BETWEEN_MESSAGE, MIN_TIME_BETWEEN_MESSAGE, MIN_POINTS_TO_ADD, SPAWN_THRESHOLD } = require('../constants.js');
 const OngoingSpawnDTO = require('../dto/OngoingSpawnDTO.js');
 const { findGuildConfigById, findRandomCardTemplate, deletePreviousCardAndReturnMessageId, saveOngoingSpawn } = require('../utils/database-utils.js');
 const { generateSpawnMessageContent } = require('../utils/message-utils.js');
@@ -11,23 +11,22 @@ const { generateSpawnMessageContent } = require('../utils/message-utils.js');
 async function deletePreviousCard(channel) {
 	const messageId = await deletePreviousCardAndReturnMessageId(channel.id);
 	if (messageId !== null) {
-		try {
-			const spawnMessage = await channel.messages.fetch(messageId);
+		const spawnMessage = await channel.messages.fetch(messageId);
 
+		if (spawnMessage !== null) {
 			await spawnMessage.edit({
 				components: [{
 					type: 'ACTION_ROW',
 					components: [{
 						type: 'BUTTON',
+						customId: 'claim',
 						label: 'Expiré',
-						disabled: true,
-						emoji: '❌'
+						style: 'SECONDARY',
+						emoji: '❌',
+						disabled: true
 					}]
 				}]
 			});
-		} catch (error) {
-			// Le message a été supprimé donc fetch lève une erreur
-			console.error(error);
 		}
 	}
 }
@@ -74,25 +73,27 @@ module.exports = {
 				guildId: message.guildId,
 				createdTimestamp: message.createdTimestamp
 			};
-			pointsToAdd = MAX_POINTS;
 			message.client.lastMessageSent.push(data);
+			pointsToAdd = MAX_POINTS_TO_ADD;
 		} else {
 			const timeDifference = message.createdTimestamp - data.createdTimestamp;
 			data.createdTimestamp = message.createdTimestamp;
 
 			if (timeDifference >= MAX_TIME_BETWEEN_MESSAGE) {
 				// Si le message date de plus de 5 minutes
-				pointsToAdd = MAX_POINTS;
-			} else if (timeDifference < MIN_TIME_BETWEEN_MESSAGE) {
+				pointsToAdd = MAX_POINTS_TO_ADD;
+			} else if (timeDifference <= MIN_TIME_BETWEEN_MESSAGE) {
 				// Si le message date de moins de 10 secondes
 				pointsToAdd = MIN_POINTS_TO_ADD;
 			} else {
-				pointsToAdd = Math.round((timeDifference - MIN_TIME_BETWEEN_MESSAGE) * MAX_POINTS / (MAX_TIME_BETWEEN_MESSAGE - MIN_TIME_BETWEEN_MESSAGE));
+				pointsToAdd = Math.round((timeDifference - MIN_TIME_BETWEEN_MESSAGE) * (MAX_POINTS_TO_ADD - MIN_POINTS_TO_ADD) / (MAX_TIME_BETWEEN_MESSAGE - MIN_TIME_BETWEEN_MESSAGE)) + MIN_POINTS_TO_ADD;
 			}
 		}
 
 		let guildCounter = message.client.messageCounter.has(message.guildId) ? message.client.messageCounter.get(message.guildId) : 0;
 		guildCounter += pointsToAdd;
+		console.log(`points to add: ${pointsToAdd}`);
+		console.log(`guild total: ${guildCounter} / ${SPAWN_THRESHOLD}`);
 
 		if (guildCounter >= SPAWN_THRESHOLD) {
 			// On récupère la config de guilde pour savoir où faire apparaître la carte

@@ -19,10 +19,10 @@ module.exports = {
 
 	/** @param {string} alias */
 	aliasToLocalId(alias) {
-		const uppderAlias = alias.toUpperCase();
-		return VALID_CHARACTERS.indexOf(uppderAlias[0]) * (2 ** 15)
-			+ VALID_CHARACTERS.indexOf(uppderAlias[1]) * (2 ** 10)
-			+ VALID_CHARACTERS.indexOf(uppderAlias[2]) * (2 ** 5)
-			+ VALID_CHARACTERS.indexOf(uppderAlias[3]);
+		const upperAlias = alias.toUpperCase();
+		return (VALID_CHARACTERS.indexOf(upperAlias[0]) << 15)
+			+ (VALID_CHARACTERS.indexOf(upperAlias[1]) << 10)
+			+ (VALID_CHARACTERS.indexOf(upperAlias[2]) << 5)
+			+ (VALID_CHARACTERS.indexOf(upperAlias[3]));
 	}
 };

@@ -40,4 +40,12 @@ module.exports = class SuggestionVoteDTO {
 	set positiveVote(positiveVote) {
 		this.#positiveVote = positiveVote;
 	}
+
+	toString() {
+		return JSON.stringify({
+			userId: this.userId,
+			validatedSuggestionId: this.validatedSuggestionId,
+			positiveVote: this.positiveVote
+		});
+	}
 };

@@ -1,5 +1,6 @@
 const { localIdToAlias } = require('../utils/card-utils');
 const { findOngoingSpawnById, claimCardAndAddItToInventory, findCardTemplateById } = require('../utils/database-utils');
+const { generateSpawnMessageContent } = require('../utils/message-utils');
 
 /**
  * Revendique la carte et l'ajoute à l'inventaire de l'utilisateur
@@ -25,7 +26,7 @@ async function retrieveAndClaimCard(channel, user) {
  * @param {import('discord.js').User} poorUser
  */
 async function notifyUserCardAlreadyClaimed(interaction, poorUser) {
-	await interaction.reply(`Désolé <@${poorUser.id}>, cette carte a déjà été revendiqué !`);
+	await interaction.reply(`Désolé <@${poorUser.id}>, cette carte a déjà été revendiquée !`);
 }
 
 /**
@@ -37,20 +38,14 @@ async function notifyUserCardAlreadyClaimed(interaction, poorUser) {
  * @param {import('../dto/CardTemplateDTO')} createdCardTemplate
  */
 async function editSpawnMessageAfterClaim(message, claimingUser, createdCard, createdCardTemplate) {
+	const originalMessage = generateSpawnMessageContent(createdCardTemplate);
+	originalMessage.embeds[0].author = {
+		name: `Attrapé par : ${claimingUser.username}`,
+		icon_url: claimingUser.displayAvatarURL({ dynamic: true, size: 32 })
+	};
+	originalMessage.embeds[0].fields[0].value = `\`${localIdToAlias(createdCard.localId)}\` | ${createdCardTemplate.name}`;
 	await message.edit({
-		embeds: [{
-			image: {
-				url: createdCardTemplate.imageURL
-			},
-			author: {
-				name: `Attrapé par : ${claimingUser.username}`,
-				icon_url: claimingUser.displayAvatarURL({ dynamic: true, size: 32 })
-			},
-			fields: [{
-				name: 'Nom:',
-				value: `\`${localIdToAlias(createdCard.localId)}\` | ${createdCardTemplate.name}`
-			}]
-		}],
+		...originalMessage,
 		components: []
 	});
 }

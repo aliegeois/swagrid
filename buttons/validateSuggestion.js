@@ -1,5 +1,5 @@
 const ValidatedSuggestionDTO = require('../dto/ValidatedSuggestionDTO');
-const { findGuildConfigById, findTemporaryCardSuggestionById, saveValidatedSuggestion } = require('../utils/database-utils');
+const { findGuildConfigById, findTemporaryCardSuggestionById, createValidatedSuggestionAndDeleteTemporary } = require('../utils/database-utils');
 const { generateSuggestionReviewMessageContent } = require('../utils/message-utils');
 
 module.exports = {
@@ -7,24 +7,30 @@ module.exports = {
 
 	/** @param {import('discord.js').ButtonInteraction} interaction */
 	async execute(interaction) {
-		// L'utilisateur a cliqué sur le bouton "valider" après avoir utilisé /suggest <name> <rarity> <imageURL>
+		// L'utilisateur a cliqué sur le bouton "valider" après avoir utilisé /suggest <name> <imageURL> <rarity>
 		// On crée un message dans #suggestions et on demande aux utilisateurs de voter
-		// Un bouton "Voter pour" et un "Voter contre"
+		// Un bouton "Approuver" et un "Rejeter"
 		// Un compteur de score dans le message
 		// Quand le message atteint un score de 4, supprimer les boutons puis poster un message dans #suggestions-validées pour prévenir
 
 		const guildConfig = await findGuildConfigById(interaction.guildId);
 		if (guildConfig !== null && guildConfig.reviewSuggestionChannelId !== null) {
-			try {
-				/** @type {import('discord.js').GuildTextBasedChannel} */
-				const suggestionChannel = await interaction.client.channels.fetch(guildConfig.reviewSuggestionChannelId);
+			/** @type {import('discord.js').GuildTextBasedChannel} */
+			const suggestionChannel = await interaction.client.channels.fetch(guildConfig.reviewSuggestionChannelId);
+			if (suggestionChannel !== null) {
 				const temporaryCardSuggestion = await findTemporaryCardSuggestionById(interaction.message.id);
-				const previewMessage = await suggestionChannel.send(generateSuggestionReviewMessageContent(temporaryCardSuggestion));
-				// Transformer le vote temporaire en vote permanent
-				await saveValidatedSuggestion(new ValidatedSuggestionDTO(previewMessage.id, temporaryCardSuggestion.name, temporaryCardSuggestion.imageURL, temporaryCardSuggestion.rarity));
-			} catch (error) {
-				// TODO: Le channel a été supprimé, faire des trucs plus tard
-				console.error('Le channel de review de suggestion a été supprimé !');
+				if (temporaryCardSuggestion !== null) {
+					const previewMessage = await suggestionChannel.send(generateSuggestionReviewMessageContent(temporaryCardSuggestion));
+					// Transformer la suggestion temporaire en suggestion permanente
+					const inserted = await createValidatedSuggestionAndDeleteTemporary(new ValidatedSuggestionDTO(previewMessage.id, temporaryCardSuggestion.name, temporaryCardSuggestion.imageURL, temporaryCardSuggestion.rarity), temporaryCardSuggestion);
+					console.log(`card inserted ? ${inserted}`);
+					if (inserted) {
+						// Une fois la suggestion prête à être review, on supprime la suggestion temporaire
+						/** @type {import('discord.js').Message} */
+						const message = await interaction.channel.messages.fetch(temporaryCardSuggestion.messageId);
+						await message.delete();
+					}
+				}
 			}
 		} else {
 			await interaction.reply('Aucun channel de review de suggestion n\'a été configuré, faites /channel suggest set <#channel>');

@@ -208,16 +208,6 @@ module.exports = {
 		});
 	},
 
-	/** @param {ValidatedSuggestionDTO} validatedSuggestion */
-	async saveValidatedSuggestion(validatedSuggestion) {
-		await sequelize.models[VALIDATED_SUGGESTION].upsert({
-			message_id: validatedSuggestion.messageId,
-			name: validatedSuggestion.name,
-			image_url: validatedSuggestion.imageURL,
-			rarity: validatedSuggestion.rarity
-		});
-	},
-
 	/** @param {SuggestionVoteDTO} suggestionVote */
 	async saveSuggestionVoteAndCalculateScore(suggestionVote) {
 		let score = null;
@@ -226,58 +216,76 @@ module.exports = {
 		const transaction = await sequelize.transaction();
 		try {
 			// Sauvegarder le vote
-			const insertedVote = await sequelize.models[SUGGESTION_VOTE].upsert({
+			await sequelize.models[SUGGESTION_VOTE].upsert({
 				user_id: suggestionVote.userId,
 				validated_suggestion_id: suggestionVote.validatedSuggestionId,
 				positive_vote: suggestionVote.positiveVote
 			}, { transaction });
 
-			// Récupérer le nombre de votes
+			// Récupérer le nombre de votes (sauf celui qui vient de l'utilisateur qui vient de voter)
 			const suggestionVoteModels = await sequelize.models[SUGGESTION_VOTE].findAll({
 				where: {
-					validated_suggestion_id: suggestionVote.validatedSuggestionId
+					[Op.and]: {
+						validated_suggestion_id: suggestionVote.validatedSuggestionId,
+						user_id: {
+							[Op.ne]: suggestionVote.userId
+						}
+					}
 				}
 			}, { transaction });
 
-			suggestionVoteModels.push(insertedVote);
+			// suggestionVoteModels.push(insertedVote);
 			const suggestionVotes = SuggestionVoteDTO.modelToClassArray(suggestionVoteModels);
+			suggestionVotes.push(suggestionVote);
+			console.log('votes:');
+			console.log(suggestionVotes);
 
 			score = 0;
-			for (suggestionVote of suggestionVotes) {
-				score += (suggestionVote.positiveVote ? 1 : -1);
+			for (const vote of suggestionVotes) {
+				score += (vote.positiveVote ? 1 : -1);
 			}
 
-			validatedSuggestion = await sequelize.models[VALIDATED_SUGGESTION].findOne({
+			const validatedSuggestionModel = await sequelize.models[VALIDATED_SUGGESTION].findOne({
 				where: {
 					message_id: suggestionVote.validatedSuggestionId
 				}
 			}, { transaction });
+			validatedSuggestion = ValidatedSuggestionDTO.modelToClass(validatedSuggestionModel);
 
 			if (score >= SCORE_REQUIRED || score <= -SCORE_REQUIRED) {
+				// Supprimer la suggestion
 				await sequelize.models[VALIDATED_SUGGESTION].destroy({
 					where: {
 						message_id: validatedSuggestion.messageId
 					}
 				}, { transaction });
+
+				// Supprimer tous les votes
+				await sequelize.models[SUGGESTION_VOTE].destroy({
+					where: {
+						validated_suggestion_id: suggestionVote.validatedSuggestionId
+					}
+				}, { transaction });
 			}
 
 			if (score >= SCORE_REQUIRED) {
+				// Si le score est suffisant, ajouter la carte aux templates
 				sequelize.models[CARD_TEMPLATE].create({
-					name: validatedSuggestion.get('name'),
-					image_url: validatedSuggestion.get('image_url'),
-					rarity: validatedSuggestion.get('rarity')
+					name: validatedSuggestion.name,
+					image_url: validatedSuggestion.imageURL,
+					rarity: validatedSuggestion.rarity
 				}, { transaction });
 			}
 
 			transaction.commit();
 		} catch (error) {
-			console.log('rollback');
+			console.log('rollback', error);
 			await transaction.rollback();
 			score = null;
 			validatedSuggestion = null;
 		}
 
-		return { validatedSuggestion: ValidatedSuggestionDTO.modelToClass(validatedSuggestion), score };
+		return { validatedSuggestion, score };
 	},
 
 	/**
@@ -357,7 +365,7 @@ module.exports = {
 				}, { transaction });
 			}
 
-			transaction.commit();
+			await transaction.commit();
 		} catch (error) {
 			console.log('rollback');
 			await transaction.rollback();
@@ -366,6 +374,41 @@ module.exports = {
 		}
 
 		return messageId;
+	},
+
+	/**
+	 * @param {ValidatedSuggestionDTO} validatedSuggestion
+	 * @param {TemporaryCardSuggestionDTO} temporarySuggestion
+	 */
+	async createValidatedSuggestionAndDeleteTemporary(validatedSuggestion, temporarySuggestion) {
+		let inserted = true;
+
+		const transaction = await sequelize.transaction();
+		try {
+			console.log(`destroying temporary suggestion: ${temporarySuggestion.messageId}`);
+			await sequelize.models[TEMPORARY_CARD_SUGGESTION].destroy({
+				where: {
+					message_id: temporarySuggestion.messageId
+				}
+			}, { transaction });
+
+			console.log(`Creating new suggestion: ${validatedSuggestion}`);
+			await sequelize.models[VALIDATED_SUGGESTION].create({
+				message_id: validatedSuggestion.messageId,
+				name: validatedSuggestion.name,
+				image_url: validatedSuggestion.imageURL,
+				rarity: validatedSuggestion.rarity
+			}, { transaction });
+
+			await transaction.commit();
+		} catch (error) {
+			console.log('rollback');
+			inserted = false;
+			await transaction.rollback();
+			console.error(error);
+		}
+
+		return inserted;
 	},
 
 	/**
@@ -381,6 +424,46 @@ module.exports = {
 			image_url: suggestedURL,
 			rarity: suggestedRarity
 		});
+	},
+
+	/**
+	 * @param {ValidatedSuggestionDTO} validatedSuggestion
+	 * @param {boolean} approved
+	 */
+	async finishSuggestionAndDeleteVotes(validatedSuggestion, approved) {
+		let inserted = true;
+
+		const transaction = await sequelize.transaction();
+		try {
+			await sequelize.models[VALIDATED_SUGGESTION].destroy({
+				where: {
+					message_id: validatedSuggestion.messageId
+				}
+			}, { transaction });
+
+			await sequelize.models[SUGGESTION_VOTE].destroy({
+				where: {
+					validated_suggestion_id: validatedSuggestion.messageId
+				}
+			}, { transaction });
+
+			if (approved) {
+				await sequelize.models[CARD_TEMPLATE].create({
+					name: validatedSuggestion.name,
+					image_url: validatedSuggestion.imageURL,
+					rarity: validatedSuggestion.rarity
+				}, { transaction });
+			}
+
+			await transaction.commit();
+		} catch (error) {
+			console.log('rollback');
+			await transaction.rollback();
+			console.log(error);
+			inserted = false;
+		}
+
+		return inserted;
 	},
 
 	/**
@@ -413,6 +496,15 @@ module.exports = {
 			name: 'Macron veut t\'attraper',
 			image_url: 'https://i.imgur.com/eeSA4f6.png',
 			rarity: 3
+		});
+	},
+
+	/** @param {string} messageId */
+	async deleteTemporarySuggestion(messageId) {
+		await sequelize.models[TEMPORARY_CARD_SUGGESTION].destroy({
+			where: {
+				message_id: messageId
+			}
 		});
 	},
 

@@ -1,21 +1,40 @@
 const { CARD_PER_PAGE, SCORE_REQUIRED } = require('../constants');
 const { localIdToAlias } = require('./card-utils');
 
+const TEXT = {
+	SUGGESTION: {
+		VALIDATE: 'Valider',
+		VALIDATED: 'Validé',
+		CANCEL: 'Annuler',
+		CANCELLED: 'Annulé'
+	},
+	CARD: {
+		APPROVE: 'Approuver',
+		APPROVED: 'Approuvé',
+		REJECT: 'Rejeter',
+		REJECTED: 'Rejeté',
+		CLAIM: 'Attraper',
+		CLAIMED: 'Attrapé'
+	}
+};
+
 /** @param {number} rarity */
 function generateRarityStar(rarity) {
 	let textRarity = '';
 
 	for (let i = 0; i < rarity; i++) {
-		textRarity += '⭐';
+		textRarity += '\u2b50'; // Émoji étoile
 	}
 
 	return textRarity;
 }
 
 module.exports = {
+	TEXT,
+
 	/** @param {import('../dto/AbstractCardDTO')} abstractCard */
 	generateSpawnMessageContent(abstractCard) {
-		/** @type {import('discord.js').InteractionReplyOptions} */
+		/** @type {import('discord.js').MessageOptions} */
 		const reply = {
 			embeds: [{
 				image: {
@@ -38,7 +57,7 @@ module.exports = {
 				components: [{
 					type: 'BUTTON',
 					customId: 'claim',
-					label: 'Attraper',
+					label: TEXT.CARD.CLAIM,
 					style: 'PRIMARY'
 				}]
 			}]
@@ -59,7 +78,7 @@ module.exports = {
 			`\`${localIdToAlias(inventoryCard.localId)}\` | ${mapCardTemplates.get(inventoryCard.cardTemplateId).name}`
 		).join('\n');
 
-		/** @type {import('discord.js').InteractionReplyOptions} */
+		/** @type {import('discord.js').MessageOptions} */
 		const reply = {
 			embeds: [{
 				author: {
@@ -83,15 +102,16 @@ module.exports = {
 	 */
 	generateViewMessageContent(user, inventoryCard, cardTemplate) {
 		const generalInformations = [
-			`\`ID:\` **${cardTemplate.id}**`
+			`\`ID    :\` **${cardTemplate.id}**`,
+			`\`Rareté:\` ${generateRarityStar(cardTemplate.rarity)}`
 		];
 
 		const personalInformations = [
-			`\`Alias:    \` **${module.exports.localIdToAlias(inventoryCard.localId)}**`,
+			`\`Alias:    \` \`${localIdToAlias(inventoryCard.localId)}\``,
 			`\`Détenteur:\` <@${user.id}>`
 		];
 
-		/** @type {import('discord.js').InteractionReplyOptions} */
+		/** @type {import('discord.js').MessageOptions} */
 		const reply = {
 			embeds: [{
 				image: {
@@ -116,21 +136,21 @@ module.exports = {
 	/** @param {import('../dto/TemporaryCardSuggestionDTO')} suggestedCard */
 	generateSuggestionPrevisualisationMessageContent(suggestedCard) {
 		const realSpawn = module.exports.generateSpawnMessageContent(suggestedCard);
-		/** @type {import('discord.js').InteractionReplyOptions} */
+		/** @type {import('discord.js').MessageOptions} */
 		const reply = {
-			content: 'Aperçu de la carte, cliquez sur "Valider" pour lancer le processus de validation ou "Annuler" si cette carte ne vous convient pas',
+			content: `Aperçu de la carte, cliquez sur "${TEXT.SUGGESTION.VALIDATE}" pour lancer le processus de validation ou "${TEXT.SUGGESTION.CANCEL}" si cette carte ne vous convient pas`,
 			embeds: realSpawn.embeds,
 			components: [{
 				type: 'ACTION_ROW',
 				components: [{
 					type: 'BUTTON',
 					customId: 'validateSuggestion',
-					label: 'Valider',
+					label: TEXT.SUGGESTION.VALIDATE,
 					style: 'SUCCESS'
 				}, {
 					type: 'BUTTON',
 					customId: 'cancelSuggestion',
-					label: 'Annuler',
+					label: TEXT.SUGGESTION.CANCEL,
 					style: 'DANGER'
 				}]
 			}]
@@ -139,34 +159,48 @@ module.exports = {
 		return reply;
 	},
 
-	/** @param {import('../dto/TemporaryCardSuggestionDTO')} temporaryCardSuggestion */
-	generateSuggestionReviewMessageContent(temporaryCardSuggestion, score = 0) {
-		const realSpawn = module.exports.generateSpawnMessageContent(temporaryCardSuggestion);
+	/** @param {import('../dto/AbstractCardDTO')} abstractCard */
+	generateSuggestionReviewMessageContent(abstractCard, score = 0) {
+		const realSpawn = module.exports.generateSpawnMessageContent(abstractCard);
 		realSpawn.embeds[0].fields.push({
 			name: 'Score :',
 			value: `${score} / ${SCORE_REQUIRED}`
 		});
 
-		/** @type {import('discord.js').InteractionReplyOptions} */
+		/** @type {import('discord.js').MessageOptions} */
 		const reply = {
-			content: 'Nouvelle proposition de carte !',
+			content: `Proposition de carte, cliquez sur "${TEXT.CARD.APPROVE}" si vous voulez l'ajouter au bot, ou "${TEXT.CARD.REJECT}" sinon`,
 			embeds: realSpawn.embeds,
 			components: [{
 				type: 'ACTION_ROW',
 				components: [{
 					type: 'BUTTON',
 					customId: 'approveCard',
-					label: 'Approuver',
+					label: TEXT.CARD.APPROVE,
 					style: 'SUCCESS'
 				}, {
 					type: 'BUTTON',
 					customId: 'rejectCard',
-					label: 'Rejeter',
+					label: TEXT.CARD.REJECT,
 					style: 'DANGER'
 				}]
 			}]
 		};
 
 		return reply;
+	},
+
+	/**
+	 * @param {import('../dto/ValidatedSuggestionDTO') validatedSuggestion}
+	 * @param {number} score
+	 */
+	generateEditedApprovedMessageAfterVote(validatedSuggestion, score) {
+		const realSpawn = module.exports.generateSuggestionReviewMessageContent(validatedSuggestion);
+		realSpawn.embeds[0].fields.push({
+			name: 'Score :',
+			value: `${score} / ${SCORE_REQUIRED}`
+		});
+
+		return realSpawn;
 	}
 };
