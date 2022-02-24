@@ -599,8 +599,13 @@ module.exports = {
 
 		sequelize = new Sequelize(process.env.DATABASE_URL, {
 			dialect: 'postgres',
-			ssl: true,
-			logging: false
+			logging: false,
+			dialectOptions: {
+				ssl: {
+					require: true,
+					rejectUnauthorized: false
+				}
+			}
 		});
 		await sequelize.authenticate();
 
