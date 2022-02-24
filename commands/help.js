@@ -6,7 +6,7 @@ module.exports = {
 		.setDescription('Liste les commandes et leurs usages'),
 
 	/** @param {import('discord.js').CommandInteraction} interaction */
-	async executeCommand(interaction) {
+	async execute(interaction) {
 		/** @type {import('discord.js').Collection<string, { data: SlashCommandBuilder }>} */
 		const commands = interaction.client.commands;
 

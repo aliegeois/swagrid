@@ -1,7 +1,7 @@
 const { deleteTemporarySuggestion } = require('../utils/database-utils');
 
 module.exports = {
-	name: 'cancelSuggestion',
+	name: 'cancelsuggestion',
 
 	/** @param {import('discord.js').ButtonInteraction} interaction */
 	async execute(interaction) {

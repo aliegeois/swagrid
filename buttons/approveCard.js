@@ -1,46 +1,56 @@
-const { SCORE_REQUIRED } = require('../constants');
 const SuggestionVoteDTO = require('../dto/SuggestionVoteDTO');
-const { saveSuggestionVoteAndCalculateScore } = require('../utils/database-utils');
-const { generateSuggestionReviewMessageContent, TEXT } = require('../utils/message-utils');
+const { bold } = require('@discordjs/builders');
+const { saveSuggestionVote, countVotesAndValidateSuggestion, findGuildConfigById } = require('../utils/database-utils');
+const { generateSuggestionReviewMessageContent, TEXT, generateApprovedMessage } = require('../utils/message-utils');
+const cache = require('../cache');
 
 module.exports = {
-	name: 'approveCard',
+	name: 'approvecard',
 
 	/** @param {import('discord.js').ButtonInteraction} interaction */
 	async execute(interaction) {
-		const { score, validatedSuggestion } = await saveSuggestionVoteAndCalculateScore(new SuggestionVoteDTO(interaction.user.id, interaction.message.id, true));
+		const suggestionVote = new SuggestionVoteDTO(interaction.user.id, interaction.message.id, true);
+		await saveSuggestionVote(suggestionVote);
 
-		if (score === null) {
-			// Le calcul a échoué
-			await interaction.reply('Échec du calcul du score :\'(');
-		} else {
-			await interaction.reply({
-				content: 'Votre vote a été pris en compte (vous avez **approuvé** cette carte)',
-				ephemeral: true
+		const votesRequired = await cache.get('VOTES_REQUIRED');
+		const { positiveVotes, negativeVotes, validatedSuggestion } = await countVotesAndValidateSuggestion(suggestionVote, votesRequired);
+		const originalMessage = await interaction.channel.messages.fetch(interaction.message.id);
+
+		await interaction.reply({
+			content: `Votre vote a été pris en compte (vous avez ${bold('approuvé')} cette carte)`,
+			ephemeral: true
+		});
+
+		const editedMessage = generateSuggestionReviewMessageContent(validatedSuggestion, votesRequired, positiveVotes, negativeVotes);
+
+		if (positiveVotes >= votesRequired) {
+			await originalMessage.edit({
+				content: 'Carte approuvée !',
+				embeds: editedMessage.embeds,
+				components: [{
+					type: 'ACTION_ROW',
+					components: [{
+						type: 'BUTTON',
+						customId: 'approvecard',
+						label: TEXT.CARD.APPROVED,
+						style: 'SUCCESS',
+						disabled: true
+					}]
+				}]
 			});
 
-			const editedMessage = generateSuggestionReviewMessageContent(validatedSuggestion, score);
-			const originalMessage = await interaction.channel.messages.fetch(interaction.message.id);
+			const guildConfig = await findGuildConfigById(interaction.guildId);
+			if (guildConfig !== null && guildConfig.approvedCardsChannelId !== null) {
+				const approvedCardsChannel = await interaction.guild.channels.fetch(guildConfig.approvedCardsChannelId);
 
-			if (score >= SCORE_REQUIRED) {
-				// Approuver la carte
-				await originalMessage.edit({
-					content: 'Carte approuvée !',
-					embeds: editedMessage.embeds,
-					components: [{
-						type: 'ACTION_ROW',
-						components: [{
-							type: 'BUTTON',
-							customId: 'approveCard',
-							label: TEXT.CARD.APPROVED,
-							style: 'SUCCESS',
-							disabled: true
-						}]
-					}]
-				});
+				if (approvedCardsChannel !== undefined) {
+					await approvedCardsChannel.send(generateApprovedMessage(validatedSuggestion));
+				}
 			} else {
-				await originalMessage.edit(editedMessage);
+				await interaction.channel.send('La carte a été validée, mais il n\'existe pas de channel dans lequel la montrer');
 			}
+		} else {
+			await originalMessage.edit(editedMessage);
 		}
 	}
 };

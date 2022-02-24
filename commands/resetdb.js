@@ -7,7 +7,7 @@ module.exports = {
 		.setDescription('Réinitialise les BDDs sélectionnées')
 		.addStringOption(option =>
 			option
-				.setName('dbs')
+				.setName('tables')
 				.setDescription('La liste des BDDs à réinitialiser')
 				.setRequired(true)
 		)
@@ -15,8 +15,13 @@ module.exports = {
 
 	/** @param {import('discord.js').CommandInteraction} interaction */
 	async execute(interaction) {
-		resetDB(interaction.options.getString('dbs').split(' '));
+		const tables = interaction.options.getString('tables').split(' ');
+		resetDB(tables);
 
-		interaction.reply('Bases de données réinitialisées');
+		if (tables.length == 1 && tables[0] !== 'all') {
+			interaction.reply('Table réinitialisée');
+		} else {
+			interaction.reply('Tables réinitialisées');
+		}
 	}
 };

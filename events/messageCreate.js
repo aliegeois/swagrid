@@ -1,7 +1,7 @@
-const { MAX_POINTS_TO_ADD, MAX_TIME_BETWEEN_MESSAGE, MIN_TIME_BETWEEN_MESSAGE, MIN_POINTS_TO_ADD, SPAWN_THRESHOLD } = require('../constants.js');
-const OngoingSpawnDTO = require('../dto/OngoingSpawnDTO.js');
-const { findGuildConfigById, findRandomCardTemplate, deletePreviousCardAndReturnMessageId, saveOngoingSpawn } = require('../utils/database-utils.js');
-const { generateSpawnMessageContent } = require('../utils/message-utils.js');
+const OngoingSpawnDTO = require('../dto/OngoingSpawnDTO');
+const { findGuildConfigById, findRandomCardTemplate, deletePreviousCardAndReturnMessageId, saveOngoingSpawn } = require('../utils/database-utils');
+const { generateSpawnMessageContent } = require('../utils/message-utils');
+const cache = require('../cache');
 
 /**
  * Supprime une éventuelle précédente carte toujours active du channel
@@ -74,28 +74,28 @@ module.exports = {
 				createdTimestamp: message.createdTimestamp
 			};
 			message.client.lastMessageSent.push(data);
-			pointsToAdd = MAX_POINTS_TO_ADD;
+			pointsToAdd = await cache.get('MAX_POINTS_TO_ADD');
 		} else {
 			const timeDifference = message.createdTimestamp - data.createdTimestamp;
 			data.createdTimestamp = message.createdTimestamp;
 
-			if (timeDifference >= MAX_TIME_BETWEEN_MESSAGE) {
+			if (timeDifference >= (await cache.get('MAX_TIME_BETWEEN_MESSAGE'))) {
 				// Si le message date de plus de 5 minutes
-				pointsToAdd = MAX_POINTS_TO_ADD;
-			} else if (timeDifference <= MIN_TIME_BETWEEN_MESSAGE) {
+				pointsToAdd = await cache.get('MAX_POINTS_TO_ADD');
+			} else if (timeDifference <= (await cache.get('MIN_TIME_BETWEEN_MESSAGE'))) {
 				// Si le message date de moins de 10 secondes
-				pointsToAdd = MIN_POINTS_TO_ADD;
+				pointsToAdd = await cache.get('MIN_POINTS_TO_ADD');
 			} else {
-				pointsToAdd = Math.round((timeDifference - MIN_TIME_BETWEEN_MESSAGE) * (MAX_POINTS_TO_ADD - MIN_POINTS_TO_ADD) / (MAX_TIME_BETWEEN_MESSAGE - MIN_TIME_BETWEEN_MESSAGE)) + MIN_POINTS_TO_ADD;
+				pointsToAdd = Math.round((timeDifference - (await cache.get('MIN_TIME_BETWEEN_MESSAGE'))) * (await cache.get('MAX_POINTS_TO_ADD') - (await cache.get('MIN_POINTS_TO_ADD'))) / ((await cache.get('MAX_TIME_BETWEEN_MESSAGE')) - (await cache.get('MIN_TIME_BETWEEN_MESSAGE')))) + (await cache.get('MIN_POINTS_TO_ADD'));
 			}
 		}
 
 		let guildCounter = message.client.messageCounter.has(message.guildId) ? message.client.messageCounter.get(message.guildId) : 0;
 		guildCounter += pointsToAdd;
 		console.log(`points to add: ${pointsToAdd}`);
-		console.log(`guild total: ${guildCounter} / ${SPAWN_THRESHOLD}`);
+		console.log(`guild total: ${guildCounter} / ${await cache.get('SPAWN_THRESHOLD')}`);
 
-		if (guildCounter >= SPAWN_THRESHOLD) {
+		if (guildCounter >= (await cache.get('SPAWN_THRESHOLD'))) {
 			// On récupère la config de guilde pour savoir où faire apparaître la carte
 			const guildConfig = await findGuildConfigById(message.guildId);
 

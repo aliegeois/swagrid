@@ -1,1 +1,1 @@
-web: node gacha.js
+web: node index.js

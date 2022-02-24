@@ -1,4 +1,4 @@
-const { CARD_PER_PAGE, SCORE_REQUIRED } = require('../constants');
+const { bold, userMention, underscore, inlineCode } = require('@discordjs/builders');
 const { localIdToAlias } = require('./card-utils');
 
 const TEXT = {
@@ -18,24 +18,24 @@ const TEXT = {
 	}
 };
 
-/** @param {number} rarity */
-function generateRarityStar(rarity) {
-	let textRarity = '';
+function generateRarityText(rarity) {
+	return '\u2b50'.repeat(rarity); // ⭐
+}
 
-	for (let i = 0; i < rarity; i++) {
-		textRarity += '\u2b50'; // Émoji étoile
-	}
-
-	return textRarity;
+function generateVotesText(votesRequired, positiveVotes, negativeVotes) {
+	// ⬛, ❌ & ✅
+	return '|' + '\u2b1b'.repeat(votesRequired - negativeVotes) + '\u274c'.repeat(negativeVotes) + '|' + '\u2705'.repeat(positiveVotes) + '\u2b1b'.repeat(votesRequired - positiveVotes) + '|';
 }
 
 module.exports = {
 	TEXT,
 
-	/** @param {import('../dto/AbstractCardDTO')} abstractCard */
+	/**
+	 * @param {import('../dto/AbstractCardDTO')} abstractCard
+	 * @returns {import('discord.js').MessageOptions}
+	 */
 	generateSpawnMessageContent(abstractCard) {
-		/** @type {import('discord.js').MessageOptions} */
-		const reply = {
+		return {
 			embeds: [{
 				image: {
 					url: abstractCard.imageURL
@@ -49,7 +49,7 @@ module.exports = {
 					value: abstractCard.name
 				}, {
 					name: 'Rareté:',
-					value: generateRarityStar(abstractCard.rarity)
+					value: generateRarityText(abstractCard.rarity)
 				}]
 			}],
 			components: [{
@@ -62,8 +62,6 @@ module.exports = {
 				}]
 			}]
 		};
-
-		return reply;
 	},
 
 	/**
@@ -72,14 +70,15 @@ module.exports = {
 	 * @param {Map<number, import('../dto/CardTemplateDTO')>} mapCardTemplates
 	 * @param {number} page
 	 * @param {number} maxPage
+	 * @param {number} cardPerPage
+	 * @returns {import('discord.js').MessageOptions}
 	 */
-	generateInventoryMessageContent(user, inventoryCards, mapCardTemplates, page, maxPage) {
+	generateInventoryMessageContent(user, inventoryCards, mapCardTemplates, page, maxPage, cardPerPage) {
 		const description = inventoryCards.map(inventoryCard =>
-			`\`${localIdToAlias(inventoryCard.localId)}\` | ${mapCardTemplates.get(inventoryCard.cardTemplateId).name}`
+			`${inlineCode(localIdToAlias(inventoryCard.localId))} | ${mapCardTemplates.get(inventoryCard.cardTemplateId).name}`
 		).join('\n');
 
-		/** @type {import('discord.js').MessageOptions} */
-		const reply = {
+		return {
 			embeds: [{
 				author: {
 					name: `Liste de ${user.username}`,
@@ -87,32 +86,30 @@ module.exports = {
 				},
 				description,
 				footer: {
-					text: `Page ${page + 1}/${maxPage + 1} ; Jusqu'à ${CARD_PER_PAGE} résultats par page`
+					text: `Page ${page + 1}/${maxPage + 1} ; Jusqu'à ${cardPerPage} résultats par page`
 				}
 			}]
 		};
-
-		return reply;
 	},
 
 	/**
 	 * @param {import('discord.js').User} user
 	 * @param {import('../dto/InventoryCardDTO')} inventoryCard
 	 * @param {import('../dto/CardTemplateDTO')} cardTemplate
+	 * @returns {import('discord.js').MessageOptions}
 	 */
 	generateViewMessageContent(user, inventoryCard, cardTemplate) {
 		const generalInformations = [
-			`\`ID    :\` **${cardTemplate.id}**`,
-			`\`Rareté:\` ${generateRarityStar(cardTemplate.rarity)}`
+			`${inlineCode('Id :     ')} ${bold(cardTemplate.id)}`,
+			`${inlineCode('Rareté : ')} ${generateRarityText(cardTemplate.rarity)}`
 		];
 
 		const personalInformations = [
-			`\`Alias:    \` \`${localIdToAlias(inventoryCard.localId)}\``,
-			`\`Détenteur:\` <@${user.id}>`
+			`${inlineCode('Alias :     ')} ${inlineCode(localIdToAlias(inventoryCard.localId))}`,
+			`${inlineCode('Détenteur : ')} ${userMention(user.id)}`
 		];
 
-		/** @type {import('discord.js').MessageOptions} */
-		const reply = {
+		return {
 			embeds: [{
 				image: {
 					url: cardTemplate.imageURL
@@ -121,86 +118,191 @@ module.exports = {
 					name: cardTemplate.name
 				},
 				fields: [{
-					name: '__Informations générales__',
+					name: underscore('Informations générales'),
 					value: generalInformations.join('\n')
 				}, {
-					name: '__Informations personnelles__',
+					name: underscore('Informations personnelles'),
 					value: personalInformations.join('\n')
 				}]
 			}]
 		};
-
-		return reply;
 	},
 
-	/** @param {import('../dto/TemporaryCardSuggestionDTO')} suggestedCard */
+	/**
+	 * @param {import('../dto/TemporaryCardSuggestionDTO')} suggestedCard
+	 * @returns {import('discord.js').MessageOptions}
+	 */
 	generateSuggestionPrevisualisationMessageContent(suggestedCard) {
-		const realSpawn = module.exports.generateSpawnMessageContent(suggestedCard);
-		/** @type {import('discord.js').MessageOptions} */
-		const reply = {
+		return {
 			content: `Aperçu de la carte, cliquez sur "${TEXT.SUGGESTION.VALIDATE}" pour lancer le processus de validation ou "${TEXT.SUGGESTION.CANCEL}" si cette carte ne vous convient pas`,
-			embeds: realSpawn.embeds,
+			embeds: [{
+				image: {
+					url: suggestedCard.imageURL
+				},
+				author: {
+					name: 'Suggestion',
+					icon_url: 'https://upload.wikimedia.org/wikipedia/en/9/96/Meme_Man_on_transparent_background.webp'
+				},
+				fields: [{
+					name: 'Nom:',
+					value: suggestedCard.name
+				}, {
+					name: 'Rareté:',
+					value: generateRarityText(suggestedCard.rarity)
+				}]
+			}],
 			components: [{
 				type: 'ACTION_ROW',
 				components: [{
 					type: 'BUTTON',
-					customId: 'validateSuggestion',
+					customId: 'validatesuggestion',
 					label: TEXT.SUGGESTION.VALIDATE,
 					style: 'SUCCESS'
 				}, {
 					type: 'BUTTON',
-					customId: 'cancelSuggestion',
+					customId: 'cancelsuggestion',
 					label: TEXT.SUGGESTION.CANCEL,
 					style: 'DANGER'
 				}]
 			}]
 		};
-
-		return reply;
 	},
 
-	/** @param {import('../dto/AbstractCardDTO')} abstractCard */
-	generateSuggestionReviewMessageContent(abstractCard, score = 0) {
-		const realSpawn = module.exports.generateSpawnMessageContent(abstractCard);
-		realSpawn.embeds[0].fields.push({
-			name: 'Score :',
-			value: `${score} / ${SCORE_REQUIRED}`
-		});
-
-		/** @type {import('discord.js').MessageOptions} */
-		const reply = {
+	/**
+	 * @param {import('../dto/AbstractCardDTO')} abstractCard
+	 * @param {number} votesRequired
+	 * @returns {import('discord.js').MessageOptions}
+	 */
+	generateSuggestionReviewMessageContent(abstractCard, votesRequired, positiveVotes = 0, negativeVotes = 0) {
+		return {
 			content: `Proposition de carte, cliquez sur "${TEXT.CARD.APPROVE}" si vous voulez l'ajouter au bot, ou "${TEXT.CARD.REJECT}" sinon`,
-			embeds: realSpawn.embeds,
+			embeds: [{
+				image: {
+					url: abstractCard.imageURL
+				},
+				author: {
+					name: 'Suggestion',
+					icon_url: 'https://upload.wikimedia.org/wikipedia/en/9/96/Meme_Man_on_transparent_background.webp'
+				},
+				fields: [{
+					name: 'Nom:',
+					value: abstractCard.name
+				}, {
+					name: 'Rareté:',
+					value: generateRarityText(abstractCard.rarity)
+				}, {
+					name: 'Votes :',
+					value: generateVotesText(votesRequired, positiveVotes, negativeVotes)
+				}]
+			}],
 			components: [{
 				type: 'ACTION_ROW',
 				components: [{
 					type: 'BUTTON',
-					customId: 'approveCard',
+					customId: 'approvecard',
 					label: TEXT.CARD.APPROVE,
 					style: 'SUCCESS'
 				}, {
 					type: 'BUTTON',
-					customId: 'rejectCard',
+					customId: 'rejectcard',
 					label: TEXT.CARD.REJECT,
 					style: 'DANGER'
 				}]
 			}]
 		};
-
-		return reply;
 	},
 
 	/**
-	 * @param {import('../dto/ValidatedSuggestionDTO') validatedSuggestion}
-	 * @param {number} score
+	 * @param {import('../dto/ValidatedSuggestionDTO')} validatedSuggestion
+	 * @param {number} votesRequired
+	 * @param {number} positiveVotes
+	 * @param {number} negativeVotes
 	 */
-	generateEditedApprovedMessageAfterVote(validatedSuggestion, score) {
-		const realSpawn = module.exports.generateSuggestionReviewMessageContent(validatedSuggestion);
-		realSpawn.embeds[0].fields.push({
-			name: 'Score :',
-			value: `${score} / ${SCORE_REQUIRED}`
-		});
+	generateEditedApprovedMessageAfterVote(validatedSuggestion, votesRequired, positiveVotes, negativeVotes) {
+		return {
+			content: `Proposition de carte, cliquez sur "${TEXT.CARD.APPROVE}" si vous voulez l'ajouter au bot, ou "${TEXT.CARD.REJECT}" sinon`,
+			embeds: [{
+				image: {
+					url: validatedSuggestion.imageURL
+				},
+				author: {
+					name: 'Suggestion',
+					icon_url: 'https://upload.wikimedia.org/wikipedia/en/9/96/Meme_Man_on_transparent_background.webp'
+				},
+				fields: [{
+					name: 'Nom:',
+					value: validatedSuggestion.name
+				}, {
+					name: 'Rareté:',
+					value: generateRarityText(validatedSuggestion.rarity)
+				}, {
+					name: 'Votes :',
+					value: generateVotesText(votesRequired, positiveVotes, negativeVotes)
+				}, {
+					name: 'Votes :',
+					value: generateVotesText(votesRequired, positiveVotes, negativeVotes)
+				}]
+			}],
+			components: [{
+				type: 'ACTION_ROW',
+				components: [{
+					type: 'BUTTON',
+					customId: 'approvecard',
+					label: TEXT.CARD.APPROVE,
+					style: 'SUCCESS'
+				}, {
+					type: 'BUTTON',
+					customId: 'rejectcard',
+					label: TEXT.CARD.REJECT,
+					style: 'DANGER'
+				}]
+			}]
+		};
+	},
 
-		return realSpawn;
+	/** @param {import('../dto/AbstractCardDTO')} abstractCard */
+	generateApprovedMessage(abstractCard) {
+		return {
+			embeds: [{
+				image: {
+					url: abstractCard.imageURL
+				},
+				author: {
+					name: 'Nouvelle carte approuvée !',
+					icon_url: 'https://upload.wikimedia.org/wikipedia/en/9/96/Meme_Man_on_transparent_background.webp'
+				},
+				fields: [{
+					name: 'Nom:',
+					value: abstractCard.name
+				}, {
+					name: 'Rareté:',
+					value: generateRarityText(abstractCard.rarity)
+				}]
+			}]
+		};
+	},
+
+	/**
+	 * @param {import('../dto/CardTemplateDTO')} cardTemplate
+	 * @returns {import('discord.js').MessageOptions}
+	 */
+	generateInfoMessage(cardTemplate) {
+		const generalInformations = [
+			`${inlineCode('Nom :    ')} ${bold(cardTemplate.name)}`,
+			`${inlineCode('Id :     ')} ${bold(cardTemplate.id)}`,
+			`${inlineCode('Rareté : ')} ${generateRarityText(cardTemplate.rarity)}`
+		];
+
+		return {
+			embeds: [{
+				image: {
+					url: cardTemplate.imageURL
+				},
+				fields: [{
+					name: underscore('Informations générales'),
+					value: generalInformations.join('\n')
+				}]
+			}]
+		};
 	}
 };

@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('@discordjs/builders');
+const { SlashCommandBuilder, inlineCode, channelMention } = require('@discordjs/builders');
 const GuildConfigDTO = require('../dto/GuildConfigDTO');
 const { findGuildConfigById, saveGuildConfig } = require('../utils/database-utils');
 
@@ -8,9 +8,9 @@ const { findGuildConfigById, saveGuildConfig } = require('../utils/database-util
  */
 async function generateMessageSpawnGet(guildConfig) {
 	if (guildConfig.spawnChannelId === null) {
-		return 'Aucun channel de spawn configuré, utilisez `/channel spawn set <channel>` pour le définir';
+		return `Aucun channel de spawn configuré, utilisez ${inlineCode('/channel spawn set <channel>')} pour le définir`;
 	} else {
-		return `Le channel de spawn est <#${guildConfig.spawnChannelId}>`;
+		return `Le channel de spawn est ${channelMention(guildConfig.spawnChannelId)}`;
 	}
 }
 
@@ -24,7 +24,7 @@ async function generateMessageSpawnSet(guildConfig, channelId) {
 	} else {
 		guildConfig.spawnChannelId = channelId;
 		await saveGuildConfig(guildConfig);
-		return `Le channel de spawn est désormais <#${channelId}>`;
+		return `Le channel de spawn est désormais ${channelMention(channelId)}`;
 	}
 }
 
@@ -34,9 +34,9 @@ async function generateMessageSpawnSet(guildConfig, channelId) {
  */
 async function generateMessageSuggestionGet(guildConfig) {
 	if (guildConfig.reviewSuggestionChannelId === null) {
-		return 'Aucun channel revue de suggestion configuré, utilisez `/channel suggestion set <channel>` pour le définir';
+		return `Aucun channel revue de suggestion configuré, utilisez ${inlineCode('/channel suggestion set <channel>')} pour le définir`;
 	} else {
-		return `Le channel de revue de suggestion est <#${guildConfig.reviewSuggestionChannelId}>`;
+		return `Le channel de revue de suggestion est ${channelMention(guildConfig.reviewSuggestionChannelId)}`;
 	}
 }
 
@@ -50,7 +50,7 @@ async function generateMessageSuggestionSet(guildConfig, channelId) {
 	} else {
 		guildConfig.reviewSuggestionChannelId = channelId;
 		await saveGuildConfig(guildConfig);
-		return `Le channel de revue de suggestion est désormais <#${channelId}>`;
+		return `Le channel de revue de suggestion est désormais ${channelMention(channelId)}`;
 	}
 }
 
@@ -60,9 +60,9 @@ async function generateMessageSuggestionSet(guildConfig, channelId) {
  */
 async function generateMessageApprovedGet(guildConfig) {
 	if (guildConfig.approvedCardsChannelId === null) {
-		return 'Aucun channel d\'approbation de cartes configuré, utilisez `/channel approved set <channel>` pour le définir';
+		return `Aucun channel d'approbation de cartes configuré, utilisez ${inlineCode('/channel approved set <channel>')} pour le définir`;
 	} else {
-		return `Le channel d'approbation de cartes est <#${guildConfig.approvedCardsChannelId}>`;
+		return `Le channel d'approbation de cartes est ${channelMention(guildConfig.approvedCardsChannelId)}`;
 	}
 }
 
@@ -76,7 +76,7 @@ async function generateMessageApprovedSet(guildConfig, channelId) {
 	} else {
 		guildConfig.approvedCardsChannelId = channelId;
 		await saveGuildConfig(guildConfig);
-		return `Le channel d'approbation de cartes est désormais <#${channelId}>`;
+		return `Le channel d'approbation de cartes est désormais ${channelMention(channelId)}`;
 	}
 }
 
@@ -102,7 +102,6 @@ module.exports = {
 							option
 								.setName('channel')
 								.setDescription('Le nouveau channel de spawn')
-								.setRequired(true)
 						)
 				)
 		)
@@ -123,7 +122,6 @@ module.exports = {
 							option
 								.setName('channel')
 								.setDescription('Le nouveau channel de suggestion')
-								.setRequired(true)
 						)
 				)
 		)
@@ -144,7 +142,6 @@ module.exports = {
 							option
 								.setName('channel')
 								.setDescription('Le nouveau channel de cartes approuvées')
-								.setRequired(true)
 						)
 				)
 		),
@@ -154,6 +151,13 @@ module.exports = {
 		let guildConfig = await findGuildConfigById(interaction.guildId);
 		if (guildConfig === null) {
 			guildConfig = new GuildConfigDTO(interaction.guildId);
+		}
+		const channel = interaction.options.getChannel('channel');
+		let channelId;
+		if (channel === null) {
+			channelId = interaction.channelId;
+		} else {
+			channelId = channel.id;
 		}
 
 		let content;
@@ -165,7 +169,7 @@ module.exports = {
 				break;
 
 			case 'set':
-				content = await generateMessageSpawnSet(guildConfig, interaction.options.getChannel('channel').id);
+				content = await generateMessageSpawnSet(guildConfig, channelId);
 				break;
 			}
 			break;
@@ -178,7 +182,7 @@ module.exports = {
 				break;
 
 			case 'set':
-				content = await generateMessageSuggestionSet(guildConfig, interaction.options.getChannel('channel').id);
+				content = await generateMessageSuggestionSet(guildConfig, channelId);
 				break;
 			}
 			break;
@@ -191,7 +195,7 @@ module.exports = {
 				break;
 
 			case 'set':
-				content = await generateMessageApprovedSet(guildConfig, interaction.options.getChannel('channel').id);
+				content = await generateMessageApprovedSet(guildConfig, channelId);
 				break;
 			}
 			break;

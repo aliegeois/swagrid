@@ -1,17 +1,18 @@
+const cache = require('../cache');
 const ValidatedSuggestionDTO = require('../dto/ValidatedSuggestionDTO');
 const { findGuildConfigById, findTemporaryCardSuggestionById, createValidatedSuggestionAndDeleteTemporary } = require('../utils/database-utils');
 const { generateSuggestionReviewMessageContent } = require('../utils/message-utils');
 
 module.exports = {
-	name: 'validateSuggestion',
+	name: 'validatesuggestion',
 
 	/** @param {import('discord.js').ButtonInteraction} interaction */
 	async execute(interaction) {
 		// L'utilisateur a cliqué sur le bouton "valider" après avoir utilisé /suggest <name> <imageURL> <rarity>
 		// On crée un message dans #suggestions et on demande aux utilisateurs de voter
 		// Un bouton "Approuver" et un "Rejeter"
-		// Un compteur de score dans le message
-		// Quand le message atteint un score de 4, supprimer les boutons puis poster un message dans #suggestions-validées pour prévenir
+		// Un compteur de votes dans le message
+		// Quand le message atteint un nombre de votes positif de 4, supprimer les boutons puis poster un message dans #suggestions-approuvées
 
 		const guildConfig = await findGuildConfigById(interaction.guildId);
 		if (guildConfig !== null && guildConfig.reviewSuggestionChannelId !== null) {
@@ -20,7 +21,8 @@ module.exports = {
 			if (suggestionChannel !== null) {
 				const temporaryCardSuggestion = await findTemporaryCardSuggestionById(interaction.message.id);
 				if (temporaryCardSuggestion !== null) {
-					const previewMessage = await suggestionChannel.send(generateSuggestionReviewMessageContent(temporaryCardSuggestion));
+					const votesRequired = await cache.get('VOTES_REQUIRED');
+					const previewMessage = await suggestionChannel.send(generateSuggestionReviewMessageContent(temporaryCardSuggestion, votesRequired));
 					// Transformer la suggestion temporaire en suggestion permanente
 					const inserted = await createValidatedSuggestionAndDeleteTemporary(new ValidatedSuggestionDTO(previewMessage.id, temporaryCardSuggestion.name, temporaryCardSuggestion.imageURL, temporaryCardSuggestion.rarity), temporaryCardSuggestion);
 					console.log(`card inserted ? ${inserted}`);

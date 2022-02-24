@@ -7,7 +7,8 @@ const GuildConfigDTO = require('../dto/GuildConfigDTO');
 const ValidatedSuggestionDTO = require('../dto/ValidatedSuggestionDTO');
 const TemporaryCardSuggestionDTO = require('../dto/TemporaryCardSuggestionDTO');
 const SuggestionVoteDTO = require('../dto/SuggestionVoteDTO');
-const { CARD_PER_PAGE, SCORE_REQUIRED } = require('../constants');
+const GlobalConfigDTO = require('../dto/GlobalConfigDTO');
+const { CARD_MACRON, DEFAULT_GLOBAL_CONFIG } = require('../constants');
 
 /** @type {Sequelize} */
 let sequelize = null;
@@ -20,14 +21,42 @@ const GUILD_CONFIG = 'guild_config';
 const TEMPORARY_CARD_SUGGESTION = 'temporary_card_suggestion';
 const VALIDATED_SUGGESTION = 'validated_suggestion';
 const SUGGESTION_VOTE = 'suggestion_vote';
+const GLOBAL_CONFIG = 'global_config';
 
 module.exports = {
-	/**
-	 * @param {string} id
-	 */
+	/** @param {number} id */
 	async findCardTemplateById(id) {
 		const cardTemplate = await sequelize.models[CARD_TEMPLATE].findOne({
 			where: { id }
+		});
+
+		if (cardTemplate === null) {
+			return null;
+		}
+		return CardTemplateDTO.modelToClass(cardTemplate);
+	},
+
+	/** @param {string} name */
+	async findCardTemplatesByName(name) {
+		const cardTemplates = await sequelize.models[CARD_TEMPLATE].findAll({
+			where: {
+				name: {
+					[Op.substring]: name
+				}
+			}
+		});
+
+		return CardTemplateDTO.modelToClassArray(cardTemplates);
+	},
+
+	/** @param {string} name */
+	async findCardTemplateByName(name) {
+		const cardTemplate = await sequelize.models[CARD_TEMPLATE].findOne({
+			where: {
+				name: {
+					[Op.substring]: name
+				}
+			}
 		});
 
 		if (cardTemplate === null) {
@@ -92,7 +121,7 @@ module.exports = {
 		return GuildConfigDTO.modelToClass(guildConfig);
 	},
 
-	/** @param {strring} messageId */
+	/** @param {string} messageId */
 	async findTemporaryCardSuggestionById(messageId) {
 		const cardSuggestion = await sequelize.models[TEMPORARY_CARD_SUGGESTION].findOne({
 			where: {
@@ -153,6 +182,16 @@ module.exports = {
 		return CardTemplateDTO.modelToClassArray(cardTemplates);
 	},
 
+	async getGlobalConfigOrDefault() {
+		const globalConfig = await sequelize.models[GLOBAL_CONFIG].findOne();
+
+		if (globalConfig === null) {
+			return DEFAULT_GLOBAL_CONFIG;
+		} else {
+			return GlobalConfigDTO.modelToClass(globalConfig);
+		}
+	},
+
 	async findRandomCardTemplate() {
 		const cardTemplate = await sequelize.models[CARD_TEMPLATE].findOne({
 			order: sequelize.random()
@@ -208,41 +247,60 @@ module.exports = {
 		});
 	},
 
+	/** @param {GlobalConfigDTO} guildConfig */
+	async saveGlobalConfig(guildConfig = DEFAULT_GLOBAL_CONFIG) {
+		await sequelize.models[GLOBAL_CONFIG].upsert({
+			id: 0,
+			min_time_between_message: guildConfig.MIN_TIME_BETWEEN_MESSAGE,
+			max_time_between_message: guildConfig.MAX_TIME_BETWEEN_MESSAGE,
+			min_points_to_add: guildConfig.MIN_POINTS_TO_ADD,
+			max_points_to_add: guildConfig.MAX_POINTS_TO_ADD,
+			spawn_threshold: guildConfig.SPAWN_THRESHOLD,
+			cards_per_page: guildConfig.CARDS_PER_PAGE,
+			min_time_between_spawn: guildConfig.MIN_TIME_BETWEEN_SPAWN,
+			max_time_between_spawn: guildConfig.MAX_TIME_BETWEEN_SPAWN,
+			votes_required: guildConfig.VOTES_REQUIRED
+		});
+	},
+
 	/** @param {SuggestionVoteDTO} suggestionVote */
-	async saveSuggestionVoteAndCalculateScore(suggestionVote) {
-		let score = null;
+	async saveSuggestionVote(suggestionVote) {
+		await sequelize.models[SUGGESTION_VOTE].upsert({
+			user_id: suggestionVote.userId,
+			validated_suggestion_id: suggestionVote.validatedSuggestionId,
+			positive_vote: suggestionVote.positiveVote
+		});
+	},
+
+	/**
+	 * @param {SuggestionVoteDTO} suggestionVote
+	 * @param {number} votesRequired
+	 */
+	async countVotesAndValidateSuggestion(suggestionVote, votesRequired) {
+		/** @type {number?} */
+		let positiveVotes = null;
+		/** @type {number?} */
+		let negativeVotes = null;
+		/** @type {import('../dto/ValidatedSuggestionDTO')}*/
 		let validatedSuggestion = null;
 
 		const transaction = await sequelize.transaction();
 		try {
-			// Sauvegarder le vote
-			await sequelize.models[SUGGESTION_VOTE].upsert({
-				user_id: suggestionVote.userId,
-				validated_suggestion_id: suggestionVote.validatedSuggestionId,
-				positive_vote: suggestionVote.positiveVote
-			}, { transaction });
-
-			// Récupérer le nombre de votes (sauf celui qui vient de l'utilisateur qui vient de voter)
+			// Récupérer les votes
 			const suggestionVoteModels = await sequelize.models[SUGGESTION_VOTE].findAll({
 				where: {
-					[Op.and]: {
-						validated_suggestion_id: suggestionVote.validatedSuggestionId,
-						user_id: {
-							[Op.ne]: suggestionVote.userId
-						}
-					}
+					validated_suggestion_id: suggestionVote.validatedSuggestionId
 				}
 			}, { transaction });
 
-			// suggestionVoteModels.push(insertedVote);
 			const suggestionVotes = SuggestionVoteDTO.modelToClassArray(suggestionVoteModels);
-			suggestionVotes.push(suggestionVote);
-			console.log('votes:');
-			console.log(suggestionVotes);
 
-			score = 0;
+			// Compter le nombre de votes pour la suggestion
+			positiveVotes = 0;
+			negativeVotes = 0;
 			for (const vote of suggestionVotes) {
-				score += (vote.positiveVote ? 1 : -1);
+				positiveVotes += (vote.positiveVote ? 1 : 0);
+				negativeVotes += (vote.positiveVote ? 0 : 1);
 			}
 
 			const validatedSuggestionModel = await sequelize.models[VALIDATED_SUGGESTION].findOne({
@@ -252,40 +310,40 @@ module.exports = {
 			}, { transaction });
 			validatedSuggestion = ValidatedSuggestionDTO.modelToClass(validatedSuggestionModel);
 
-			if (score >= SCORE_REQUIRED || score <= -SCORE_REQUIRED) {
-				// Supprimer la suggestion
-				await sequelize.models[VALIDATED_SUGGESTION].destroy({
-					where: {
-						message_id: validatedSuggestion.messageId
-					}
-				}, { transaction });
-
+			if (positiveVotes >= votesRequired || negativeVotes >= votesRequired) {
 				// Supprimer tous les votes
 				await sequelize.models[SUGGESTION_VOTE].destroy({
 					where: {
 						validated_suggestion_id: suggestionVote.validatedSuggestionId
 					}
 				}, { transaction });
+
+				// Supprimer la suggestion
+				await sequelize.models[VALIDATED_SUGGESTION].destroy({
+					where: {
+						message_id: validatedSuggestion.messageId
+					}
+				}, { transaction });
 			}
 
-			if (score >= SCORE_REQUIRED) {
-				// Si le score est suffisant, ajouter la carte aux templates
-				sequelize.models[CARD_TEMPLATE].create({
+			if (positiveVotes >= votesRequired) {
+				// Si le nombre de votes positif est suffisant, ajouter la carte aux templates
+				await sequelize.models[CARD_TEMPLATE].create({
 					name: validatedSuggestion.name,
 					image_url: validatedSuggestion.imageURL,
 					rarity: validatedSuggestion.rarity
 				}, { transaction });
 			}
 
-			transaction.commit();
+			await transaction.commit();
 		} catch (error) {
 			console.log('rollback', error);
 			await transaction.rollback();
-			score = null;
-			validatedSuggestion = null;
+			positiveVotes = null;
+			negativeVotes = null;
 		}
 
-		return { validatedSuggestion, score };
+		return { positiveVotes, negativeVotes, validatedSuggestion };
 	},
 
 	/**
@@ -476,11 +534,11 @@ module.exports = {
 		});
 	},
 
-	async getInventoryPage(userId, page) {
+	async getInventoryPage(userId, page, cardsPerPage) {
 		const inventoryCards = await sequelize.models[INVENTORY_CARD].findAll({
 			where: { user_profile_id: userId },
-			limit: CARD_PER_PAGE,
-			offset: page * CARD_PER_PAGE
+			limit: cardsPerPage,
+			offset: page * cardsPerPage
 		});
 
 		if (inventoryCards === null) {
@@ -492,11 +550,7 @@ module.exports = {
 
 	async populateWithMacron() {
 		await sequelize.models[CARD_TEMPLATE].sync({ force: true });
-		await sequelize.models[CARD_TEMPLATE].create({
-			name: 'Macron veut t\'attraper',
-			image_url: 'https://i.imgur.com/eeSA4f6.png',
-			rarity: 3
-		});
+		await sequelize.models[CARD_TEMPLATE].create(CARD_MACRON);
 	},
 
 	/** @param {string} messageId */
@@ -513,14 +567,26 @@ module.exports = {
 		if (tables.includes(INVENTORY_CARD) || tables.includes('all')) {
 			await sequelize.models[INVENTORY_CARD].sync({ force: true });
 		}
-		if (tables.includes(CARD_TEMPLATE) || tables.includes('all')) {
-			await sequelize.models[CARD_TEMPLATE].sync({ force: true });
-		}
 		if (tables.includes(USER_PROFILE) || tables.includes('all')) {
 			await sequelize.models[USER_PROFILE].sync({ force: true });
 		}
 		if (tables.includes(GUILD_CONFIG) || tables.includes('all')) {
 			await sequelize.models[GUILD_CONFIG].sync({ force: true });
+		}
+		if (tables.includes(ONGOING_SPAWN) || tables.includes('all')) {
+			await sequelize.models[ONGOING_SPAWN].sync({ force: true });
+		}
+		if (tables.includes(CARD_TEMPLATE) || tables.includes('all')) {
+			await sequelize.models[CARD_TEMPLATE].sync({ force: true });
+		}
+		if (tables.includes(SUGGESTION_VOTE) || tables.includes('all')) {
+			await sequelize.models[SUGGESTION_VOTE].sync({ force: true });
+		}
+		if (tables.includes(VALIDATED_SUGGESTION) || tables.includes('all')) {
+			await sequelize.models[VALIDATED_SUGGESTION].sync({ force: true });
+		}
+		if (tables.includes(TEMPORARY_CARD_SUGGESTION) || tables.includes('all')) {
+			await sequelize.models[TEMPORARY_CARD_SUGGESTION].sync({ force: true });
 		}
 	},
 
@@ -528,7 +594,7 @@ module.exports = {
 		console.info('Autentification à la base de donnée...');
 
 		if (sequelize !== null) {
-			throw new Error('Impossible de d\'autentifier plusieurs fois !');
+			throw new Error('Impossible de s\'autentifier plusieurs fois !');
 		}
 
 		sequelize = new Sequelize(process.env.DATABASE_URL, {
@@ -642,6 +708,18 @@ module.exports = {
 			},
 			positive_vote: DataTypes.BOOLEAN
 		}, { tableName: SUGGESTION_VOTE });
+
+		sequelize.define(GLOBAL_CONFIG, {
+			min_time_between_message: DataTypes.INTEGER,
+			max_time_between_message: DataTypes.INTEGER,
+			min_points_to_add: DataTypes.INTEGER,
+			max_points_to_add: DataTypes.INTEGER,
+			spawn_threshold: DataTypes.INTEGER,
+			cards_per_page: DataTypes.INTEGER,
+			min_time_between_spawn: DataTypes.INTEGER,
+			max_time_between_spawn: DataTypes.INTEGER,
+			votes_required: DataTypes.INTEGER
+		}, { tableName: GLOBAL_CONFIG });
 
 		await sequelize.sync({
 			alter: true

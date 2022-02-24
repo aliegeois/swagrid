@@ -2,6 +2,7 @@
 const { readdir } = require('fs/promises');
 const { Client, Collection, Intents } = require('discord.js');
 const { init: initDatabase } = require('./utils/database-utils');
+const { MASTER_PERMISSION } = require('./constants');
 
 // Local objects
 const client = new Client({
@@ -11,12 +12,6 @@ const client = new Client({
 client.lastMessageSent = [];
 /** @type {Collection<string, number>} */
 client.messageCounter = new Collection();
-
-const masterPermission = {
-	id: process.env.OWNER_ID,
-	type: 'USER',
-	permission: true
-};
 
 async function loadCommands() {
 	console.log('Récupération des commandes...');
@@ -65,13 +60,36 @@ async function loadButtons() {
 	console.log('Boutons récupérés !');
 }
 
+async function loadContextMenus() {
+	console.log('Récupération des menus contextuel...');
+	client.contextMenus = new Collection();
+
+	const files = await readdir('./contextmenus');
+	files.filter(file =>
+		file.endsWith('.js')
+	).map(file =>
+		require(`./contextmenus/${file}`)
+	).forEach(contextMenu =>
+		client.contextMenus.set(contextMenu.data.name, contextMenu)
+	);
+
+	console.log('Menus contextuel récupérés !');
+}
+
+async function loginBot() {
+	console.log('Connexion à Discord...');
+	await client.login(process.env.DISCORD_TOKEN);
+	console.log('Connecté à Discord !');
+}
+
 async function definePermissions() {
 	console.log('Définition des permissions...');
 
-	const poudlardCommands = await client.guilds.cache.get(process.env.POUDLARD_ID).commands.fetch();
+	const poudlard = await client.guilds.fetch(process.env.POUDLARD_ID);
+	const poudlardCommands = await poudlard.commands.fetch();
 	for (const command of poudlardCommands.values()) {
-		if (['resetdb', 'populate', 'spawnchannel', 'channel'].includes(command.name)) {
-			command.permissions.set({ permissions: [masterPermission] });
+		if (['resetdb', 'invalidatecache', 'populate', 'channel', 'updateconfig'].includes(command.name)) {
+			command.permissions.set({ permissions: [MASTER_PERMISSION] });
 		}
 	}
 
@@ -85,12 +103,6 @@ client.once('ready', async () => {
 	});
 });
 
-async function loginBot() {
-	console.log('Connexion à Discord...');
-	await client.login(process.env.DISCORD_TOKEN);
-	console.log('Connecté à Discord !');
-}
-
 process.on('SIGINT', () => {
 	client.destroy();
 	process.exit();
@@ -98,7 +110,7 @@ process.on('SIGINT', () => {
 
 (async () => {
 	await initDatabase();
-	await Promise.all([loadCommands(), loadEvents(), loadButtons()]);
+	await Promise.all([loadCommands(), loadEvents(), loadButtons(), loadContextMenus()]);
 	await loginBot();
 	await definePermissions();
 })();

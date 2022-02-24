@@ -1,46 +1,45 @@
-const { SCORE_REQUIRED } = require('../constants');
 const SuggestionVoteDTO = require('../dto/SuggestionVoteDTO');
-const { saveSuggestionVoteAndCalculateScore } = require('../utils/database-utils');
+const { bold } = require('@discordjs/builders');
+const { saveSuggestionVote, countVotesAndValidateSuggestion } = require('../utils/database-utils');
 const { generateSuggestionReviewMessageContent, TEXT } = require('../utils/message-utils');
+const cache = require('../cache');
 
 module.exports = {
-	name: 'rejectCard',
+	name: 'rejectcard',
 
 	/** @param {import('discord.js').ButtonInteraction} interaction */
 	async execute(interaction) {
-		const { score, validatedSuggestion } = await saveSuggestionVoteAndCalculateScore(new SuggestionVoteDTO(interaction.user.id, interaction.message.id, false));
+		const suggestionVote = new SuggestionVoteDTO(interaction.user.id, interaction.message.id, false);
+		await saveSuggestionVote(suggestionVote);
 
-		if (score === null) {
-			// Le calcul a échoué
-			await interaction.reply('Échec du calcul du score :\'(');
-		} else {
-			await interaction.reply({
-				content: 'Votre vote a été pris en compte (vous avez **rejeté** cette carte)',
-				ephemeral: true
-			});
+		const votesRequired = await cache.get('VOTES_REQUIRED');
+		const { positiveVotes, negativeVotes, validatedSuggestion } = await countVotesAndValidateSuggestion(suggestionVote, votesRequired);
+		const originalMessage = await interaction.channel.messages.fetch(interaction.message.id);
 
-			const editedMessage = generateSuggestionReviewMessageContent(validatedSuggestion, score);
-			const originalMessage = await interaction.channel.messages.fetch(interaction.message.id);
+		await interaction.reply({
+			content: `Votre vote a été pris en compte (vous avez ${bold('rejeté')} cette carte)`,
+			ephemeral: true
+		});
 
-			if (score <= -SCORE_REQUIRED) {
-				// Rejeter la carte
-				await originalMessage.edit({
-					content: 'Carte approuvée !',
-					embeds: editedMessage.embeds,
+		const editedMessage = generateSuggestionReviewMessageContent(validatedSuggestion, votesRequired, positiveVotes, negativeVotes);
+
+		if (negativeVotes >= votesRequired) {
+			await originalMessage.edit({
+				content: 'Carte rejetée !',
+				embeds: editedMessage.embeds,
+				components: [{
+					type: 'ACTION_ROW',
 					components: [{
-						type: 'ACTION_ROW',
-						components: [{
-							type: 'BUTTON',
-							customId: 'rejectCard',
-							label: TEXT.CARD.REJECTED,
-							style: 'DANGER',
-							disabled: true
-						}]
+						type: 'BUTTON',
+						customId: 'rejectcard',
+						label: TEXT.CARD.REJECTED,
+						style: 'DANGER',
+						disabled: true
 					}]
-				});
-			} else {
-				await originalMessage.edit(editedMessage);
-			}
+				}]
+			});
+		} else {
+			await originalMessage.edit(editedMessage);
 		}
 	}
 };

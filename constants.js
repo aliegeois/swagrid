@@ -1,17 +1,18 @@
+const GlobalConfigDTO = require('./dto/GlobalConfigDTO');
+
 // Mettre ces infos en base (et en cache ? + une command reloadCache)
 module.exports = {
-	// Calcul du prochain spawn
-	MIN_TIME_BETWEEN_MESSAGE: 10 * 1000, // 10 secondes
-	MAX_TIME_BETWEEN_MESSAGE: 5 * 60 * 1000, // 5 minutes
-	MIN_POINTS_TO_ADD: 1,
-	MAX_POINTS_TO_ADD: 20,
-	SPAWN_THRESHOLD: 5,
+	MASTER_PERMISSION: {
+		id: process.env.OWNER_ID,
+		type: 'USER',
+		permission: true
+	},
 
-	// Inventaire
-	CARD_PER_PAGE: 2,
+	CARD_MACRON: {
+		name: 'Macron veut t\'attraper',
+		image_url: 'https://i.imgur.com/eeSA4f6.png',
+		rarity: 3
+	},
 
-	MIN_TIME_BETWEEN_SPAWN: 10 * 60 * 1000, // 10 minutes
-	MAX_TIME_BETWEEN_SPAWN: 15 * 60 * 1000, // 15 minutes
-
-	SCORE_REQUIRED: 1 // Le score max (ou -min) requis pour approuver / rejeter une suggestion
+	DEFAULT_GLOBAL_CONFIG: new GlobalConfigDTO(10 * 1000, 5 * 60 * 1000, 1, 20, 5, 2, 10 * 60 * 1000, 15 * 60 * 1000, 1)
 };
