@@ -1,6 +1,7 @@
 // Dependencies
 const { readdir } = require('fs/promises');
 const { Client, Collection, Intents } = require('discord.js');
+const express = require('express');
 const { init: initDatabase } = require('./utils/database-utils');
 const { MASTER_PERMISSION } = require('./constants');
 
@@ -12,6 +13,8 @@ const client = new Client({
 client.lastMessageSent = [];
 /** @type {Collection<string, number>} */
 client.messageCounter = new Collection();
+
+const app = express();
 
 async function loadCommands() {
 	console.log('Récupération des commandes...');
@@ -96,6 +99,16 @@ async function definePermissions() {
 	console.log('Permissions définies !');
 }
 
+function initWebsite() {
+	console.log('Binding au port web...');
+
+	app.use(express.static(`${__dirname}/public`));
+
+	const listener = app.listen(process.env.PORT, () => {
+		console.log(`Swagrid web présent sur le port ${listener.address().port} !`);
+	});
+}
+
 client.once('ready', async () => {
 	client.user.setActivity({
 		type: 'WATCHING',
@@ -113,4 +126,5 @@ process.on('SIGINT', () => {
 	await Promise.all([loadCommands(), loadEvents(), loadButtons(), loadContextMenus()]);
 	await loginBot();
 	await definePermissions();
+	initWebsite();
 })();
