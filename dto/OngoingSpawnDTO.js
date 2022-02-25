@@ -14,6 +14,10 @@ module.exports = class OngoingSpawnDTO {
 		this.#messageId = messageId;
 	}
 
+	static get TABLE_NAME() {
+		return 'ongoing_spawn';
+	}
+
 	/** @param {import('sequelize').Model} model */
 	static modelToClass(model) {
 		return new OngoingSpawnDTO(model.get('channel_id'), model.get('card_template_id'), model.get('message_id'));
@@ -42,5 +46,13 @@ module.exports = class OngoingSpawnDTO {
 
 	set messageId(messageId) {
 		this.#messageId = messageId;
+	}
+
+	toJSON() {
+		return {
+			channel_id: this.#channelId,
+			card_template_id: this.#cardTemplateId,
+			message_id: this.#messageId
+		};
 	}
 };

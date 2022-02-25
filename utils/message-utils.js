@@ -129,15 +129,15 @@ module.exports = {
 	},
 
 	/**
-	 * @param {import('../dto/TemporaryCardSuggestionDTO')} suggestedCard
+	 * @param {import('../dto/AbstractCardDTO')} abstractCard
 	 * @returns {import('discord.js').MessageOptions}
 	 */
-	generateSuggestionPrevisualisationMessageContent(suggestedCard) {
+	generateSuggestionPrevisualisationMessageContent(abstractCard) {
 		return {
 			content: `Aperçu de la carte, cliquez sur "${TEXT.SUGGESTION.VALIDATE}" pour lancer le processus de validation ou "${TEXT.SUGGESTION.CANCEL}" si cette carte ne vous convient pas`,
 			embeds: [{
 				image: {
-					url: suggestedCard.imageURL
+					url: abstractCard.imageURL
 				},
 				author: {
 					name: 'Suggestion',
@@ -145,10 +145,10 @@ module.exports = {
 				},
 				fields: [{
 					name: 'Nom:',
-					value: suggestedCard.name
+					value: abstractCard.name
 				}, {
 					name: 'Rareté:',
-					value: generateRarityText(suggestedCard.rarity)
+					value: generateRarityText(abstractCard.rarity)
 				}]
 			}],
 			components: [{
@@ -213,7 +213,7 @@ module.exports = {
 	},
 
 	/**
-	 * @param {import('../dto/ValidatedSuggestionDTO')} validatedSuggestion
+	 * @param {import('../dto/CardSuggestionDTO')} validatedSuggestion
 	 * @param {number} votesRequired
 	 * @param {number} positiveVotes
 	 * @param {number} negativeVotes

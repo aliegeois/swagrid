@@ -13,15 +13,15 @@ module.exports = {
 		await saveSuggestionVote(suggestionVote);
 
 		const votesRequired = await cache.get('VOTES_REQUIRED');
-		const { positiveVotes, negativeVotes, validatedSuggestion } = await countVotesAndValidateSuggestion(suggestionVote, votesRequired);
+		const { positiveVotes, negativeVotes, cardSuggestion } = await countVotesAndValidateSuggestion(suggestionVote, votesRequired);
 		const originalMessage = await interaction.channel.messages.fetch(interaction.message.id);
 
 		await interaction.reply({
-			content: `Votre vote a été pris en compte (vous avez ${bold('approuvé')} cette carte)`,
+			content: `Votre vote a été pris en compte, vous avez \u2705 ${bold('approuvé')} cette carte`,
 			ephemeral: true
 		});
 
-		const editedMessage = generateSuggestionReviewMessageContent(validatedSuggestion, votesRequired, positiveVotes, negativeVotes);
+		const editedMessage = generateSuggestionReviewMessageContent(cardSuggestion, votesRequired, positiveVotes, negativeVotes);
 
 		if (positiveVotes >= votesRequired) {
 			await originalMessage.edit({
@@ -44,7 +44,7 @@ module.exports = {
 				const approvedCardsChannel = await interaction.guild.channels.fetch(guildConfig.approvedCardsChannelId);
 
 				if (approvedCardsChannel !== undefined) {
-					await approvedCardsChannel.send(generateApprovedMessage(validatedSuggestion));
+					await approvedCardsChannel.send(generateApprovedMessage(cardSuggestion));
 				}
 			} else {
 				await interaction.channel.send('La carte a été validée, mais il n\'existe pas de channel dans lequel la montrer');

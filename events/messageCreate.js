@@ -49,8 +49,7 @@ async function spawnCard(channel) {
 	const cardTemplate = await findRandomCardTemplate();
 	if (cardTemplate !== null) {
 		const spawnMessage = await sendSpawnMessage(cardTemplate, channel);
-		const ongoingSpawn = new OngoingSpawnDTO(channel.id, cardTemplate.id, spawnMessage.id);
-		await saveOngoingSpawn(ongoingSpawn);
+		await saveOngoingSpawn(new OngoingSpawnDTO(channel.id, cardTemplate.id, spawnMessage.id));
 	} else {
 		console.warn('Aucun template dans la BDD !');
 	}

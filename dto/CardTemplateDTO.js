@@ -14,6 +14,10 @@ module.exports = class CardTemplateDTO extends AbstractCardDTO {
 		this.#id = id;
 	}
 
+	static get TABLE_NAME() {
+		return 'card_template';
+	}
+
 	/** @param {import('sequelize').Model} model */
 	static modelToClass(model) {
 		return new CardTemplateDTO(model.get('id'), model.get('name'), model.get('image_url'), model.get('rarity'));
@@ -26,5 +30,12 @@ module.exports = class CardTemplateDTO extends AbstractCardDTO {
 
 	get id() {
 		return this.#id;
+	}
+
+	toJSON() {
+		return {
+			...super.toJSON(),
+			id: this.#id
+		};
 	}
 };

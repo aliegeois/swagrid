@@ -4,6 +4,7 @@ const { Client, Collection, Intents } = require('discord.js');
 const express = require('express');
 const { init: initDatabase } = require('./utils/database-utils');
 const { MASTER_PERMISSION } = require('./constants');
+const path = require('path');
 
 // Local objects
 const client = new Client({
@@ -13,6 +14,8 @@ const client = new Client({
 client.lastMessageSent = [];
 /** @type {Collection<string, number>} */
 client.messageCounter = new Collection();
+/** @type {Collection<string, import('./dto/CardSuggestionDTO')} */
+client.temporaryCardSuggestions = new Collection();
 
 const app = express();
 
@@ -100,12 +103,12 @@ async function definePermissions() {
 }
 
 function initWebsite() {
-	console.log('Binding au port web...');
+	console.log('lancement du serveur HTTP...');
 
-	app.use(express.static(`${__dirname}/public`));
+	app.use(express.static(path.join(__dirname, '/public')));
 
 	const listener = app.listen(process.env.PORT, () => {
-		console.log(`Swagrid web présent sur le port ${listener.address().port} !`);
+		console.log(`Serveur HTTP lancé sur le port ${listener.address().port} !`);
 	});
 }
 

@@ -3,8 +3,8 @@
 	"version": "1.0.0",
 	"description": "Swag + Hagrid = Swagrid",
 	"scripts": {
-		"swagrid": "node index.js",
-		"swagrid-local": "node -r dotenv/config index.js",
+		"swagrid": "node app.js",
+		"swagrid-local": "node -r dotenv/config app.js",
 		"deploy-commands": "node deploy-commands.js",
 		"deploy-commands-local": "node -r dotenv/config deploy-commands.js"
 	},

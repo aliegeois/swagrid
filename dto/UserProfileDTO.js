@@ -8,6 +8,10 @@ module.exports = class UserProfileDTO {
 		this.#id = id;
 	}
 
+	static get TABLE_NAME() {
+		return 'user_profile';
+	}
+
 	/** @param {import('sequelize').Model} model */
 	static modelToClass(model) {
 		return new UserProfileDTO(model.get('id'));
@@ -20,5 +24,11 @@ module.exports = class UserProfileDTO {
 
 	get id() {
 		return this.#id;
+	}
+
+	toJSON() {
+		return {
+			id: this.#id
+		};
 	}
 };

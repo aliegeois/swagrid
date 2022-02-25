@@ -31,13 +31,17 @@ module.exports = {
 
 		// On récupère la page qui nous intéresse
 		const inventoryCards = await getInventoryPage(interaction.user.id, page, cardsPerPage);
-		/** @type {number[]} */
-		const cardTemplateIds = [...new Set(inventoryCards.map(inventoryCard => inventoryCard.cardTemplateId))];
+		if (inventoryCards !== null) {
+			/** @type {number[]} */
+			const cardTemplateIds = [...new Set(inventoryCards.map(inventoryCard => inventoryCard.cardTemplateId))];
 
-		// Pour chaque carte unique, on récupère son template
-		const cardTemplates = await findCardTemplatesByIds(cardTemplateIds);
-		const mapCardTemplates = new Map(cardTemplates.map(cardTemplate => [cardTemplate.id, cardTemplate]));
+			// Pour chaque carte unique, on récupère son template
+			const cardTemplates = await findCardTemplatesByIds(cardTemplateIds);
+			const mapCardTemplates = new Map(cardTemplates.map(cardTemplate => [cardTemplate.id, cardTemplate]));
 
-		await interaction.reply(generateInventoryMessageContent(interaction.user, inventoryCards, mapCardTemplates, page, maxPage, cardsPerPage));
+			await interaction.reply(generateInventoryMessageContent(interaction.user, inventoryCards, mapCardTemplates, page, maxPage, cardsPerPage));
+		} else {
+			await interaction.reply('Impossible de trouver la liste de cet utilisateur');
+		}
 	}
 };

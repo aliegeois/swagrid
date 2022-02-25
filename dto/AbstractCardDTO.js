@@ -8,7 +8,7 @@ module.exports = class AbstractCardDTO {
 	 * @param {string} imageURL
 	 * @param {number} rarity
 	 */
-	constructor(name = null, imageURL = null, rarity = null) {
+	constructor(name, imageURL, rarity) {
 		this.#name = name;
 		this.#imageURL = imageURL;
 		this.#rarity = rarity;
@@ -46,5 +46,13 @@ module.exports = class AbstractCardDTO {
 			throw new Error(`La rareté ne peut pas être inférieure à 1 ou supérieure à 5 (valeur: ${rarity})`);
 		}
 		this.#rarity = rarity;
+	}
+
+	toJSON() {
+		return {
+			name: this.#name,
+			image_url: this.#imageURL,
+			rarity: this.#rarity
+		};
 	}
 };

@@ -1,18 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const TemporaryCardSuggestionDTO = require('../dto/TemporaryCardSuggestionDTO');
-const { createTemporaryCardSuggestion } = require('../utils/database-utils');
+const AbstractCardDTO = require('../dto/AbstractCardDTO');
+const CardSuggestionDTO = require('../dto/CardSuggestionDTO');
 const { generateSuggestionPrevisualisationMessageContent } = require('../utils/message-utils');
-
-class FakeTemporaryCard extends TemporaryCardSuggestionDTO {
-	/**
-	 * @param {string} name
-	 * @param {string} imageURL
-	 * @param {number} rarity
-	 */
-	constructor(name, imageURL, rarity) {
-		super(null, name, imageURL, rarity);
-	}
-}
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -49,14 +38,16 @@ module.exports = {
 		let suggestedRarity = interaction.options.getInteger('rarity');
 		if (suggestedRarity === null) {
 			suggestedRarity = Math.floor(Math.random() * 3) + 2; // [2 - 4]
+		} else if (suggestedRarity < 1 || suggestedRarity > 5) {
+			return await interaction.reply('La rareté doit être comprise entre 1 et 5');
 		}
 
-		const temporaryCardSuggestion = new FakeTemporaryCard(suggestedName, suggestedImageURL, suggestedRarity);
+		const temporaryCardSuggestion = new AbstractCardDTO(suggestedName, suggestedImageURL, suggestedRarity);
 		const previewMessage = await interaction.reply({
 			...generateSuggestionPrevisualisationMessageContent(temporaryCardSuggestion),
 			fetchReply: true
 		});
 
-		await createTemporaryCardSuggestion(previewMessage.id, suggestedName, suggestedImageURL, suggestedRarity);
+		interaction.client.temporaryCardSuggestions.set(previewMessage.id, new CardSuggestionDTO(previewMessage.id, interaction.user.id, suggestedName, suggestedImageURL, suggestedRarity));
 	}
 };

@@ -4,29 +4,18 @@ const InventoryCardDTO = require('../dto/InventoryCardDTO');
 const UserProfileDTO = require('../dto/UserProfileDTO');
 const OngoingSpawnDTO = require('../dto/OngoingSpawnDTO');
 const GuildConfigDTO = require('../dto/GuildConfigDTO');
-const ValidatedSuggestionDTO = require('../dto/ValidatedSuggestionDTO');
-const TemporaryCardSuggestionDTO = require('../dto/TemporaryCardSuggestionDTO');
+const CardSuggestionDTO = require('../dto/CardSuggestionDTO');
 const SuggestionVoteDTO = require('../dto/SuggestionVoteDTO');
 const GlobalConfigDTO = require('../dto/GlobalConfigDTO');
-const { CARD_MACRON, DEFAULT_GLOBAL_CONFIG } = require('../constants');
+const { CARD_MACRON } = require('../constants');
 
 /** @type {Sequelize} */
 let sequelize = null;
 
-const CARD_TEMPLATE = 'card_template';
-const USER_PROFILE = 'user_profile';
-const INVENTORY_CARD = 'inventory_card';
-const ONGOING_SPAWN = 'ongoing_spawn';
-const GUILD_CONFIG = 'guild_config';
-const TEMPORARY_CARD_SUGGESTION = 'temporary_card_suggestion';
-const VALIDATED_SUGGESTION = 'validated_suggestion';
-const SUGGESTION_VOTE = 'suggestion_vote';
-const GLOBAL_CONFIG = 'global_config';
-
 module.exports = {
 	/** @param {number} id */
 	async findCardTemplateById(id) {
-		const cardTemplate = await sequelize.models[CARD_TEMPLATE].findOne({
+		const cardTemplate = await sequelize.models[CardTemplateDTO.TABLE_NAME].findOne({
 			where: { id }
 		});
 
@@ -38,7 +27,7 @@ module.exports = {
 
 	/** @param {string} name */
 	async findCardTemplatesByName(name) {
-		const cardTemplates = await sequelize.models[CARD_TEMPLATE].findAll({
+		const cardTemplates = await sequelize.models[CardTemplateDTO.TABLE_NAME].findAll({
 			where: {
 				name: {
 					[Op.substring]: name
@@ -51,7 +40,7 @@ module.exports = {
 
 	/** @param {string} name */
 	async findCardTemplateByName(name) {
-		const cardTemplate = await sequelize.models[CARD_TEMPLATE].findOne({
+		const cardTemplate = await sequelize.models[CardTemplateDTO.TABLE_NAME].findOne({
 			where: {
 				name: {
 					[Op.substring]: name
@@ -67,7 +56,7 @@ module.exports = {
 
 	/** @param {string} id */
 	async findUserProfileById(id) {
-		const userProfile = await sequelize.models[USER_PROFILE].findOne({
+		const userProfile = await sequelize.models[UserProfileDTO.TABLE_NAME].findOne({
 			where: { id }
 		});
 
@@ -82,7 +71,7 @@ module.exports = {
 	 * @param {number} localId
 	 */
 	async findInventoryCardById(userProfileId, localId) {
-		const inventoryCard = await sequelize.models[INVENTORY_CARD].findOne({
+		const inventoryCard = await sequelize.models[InventoryCardDTO.TABLE_NAME].findOne({
 			where: {
 				user_profile_id: userProfileId,
 				local_id: localId
@@ -97,7 +86,7 @@ module.exports = {
 
 	/** @param {string} channelId */
 	async findOngoingSpawnById(channelId) {
-		const ongoingSpawn = await sequelize.models[ONGOING_SPAWN].findOne({
+		const ongoingSpawn = await sequelize.models[OngoingSpawnDTO.TABLE_NAME].findOne({
 			where: {
 				channel_id: channelId
 			}
@@ -111,7 +100,7 @@ module.exports = {
 
 	/** @param {string} id */
 	async findGuildConfigById(id) {
-		const guildConfig = await sequelize.models[GUILD_CONFIG].findOne({
+		const guildConfig = await sequelize.models[GuildConfigDTO.TABLE_NAME].findOne({
 			where: { id }
 		});
 
@@ -122,22 +111,8 @@ module.exports = {
 	},
 
 	/** @param {string} messageId */
-	async findTemporaryCardSuggestionById(messageId) {
-		const cardSuggestion = await sequelize.models[TEMPORARY_CARD_SUGGESTION].findOne({
-			where: {
-				message_id: messageId
-			}
-		});
-
-		if (cardSuggestion === null) {
-			return null;
-		}
-		return TemporaryCardSuggestionDTO.modelToClass(cardSuggestion);
-	},
-
-	/** @param {string} messageId */
 	async findValidatedSuggestionById(messageId) {
-		const validatedSuggestion = await sequelize.models[VALIDATED_SUGGESTION].findOne({
+		const validatedSuggestion = await sequelize.models[CardSuggestionDTO.TABLE_NAME].findOne({
 			where: {
 				message_id: messageId
 			}
@@ -146,18 +121,18 @@ module.exports = {
 		if (validatedSuggestion === null) {
 			return null;
 		}
-		return ValidatedSuggestionDTO.modelToClass(validatedSuggestion);
+		return CardSuggestionDTO.modelToClass(validatedSuggestion);
 	},
 
 	/**
 	 * @param {string} userId
-	 * @param {number} validatedSuggestionId
+	 * @param {number} cardSuggestionId
 	 */
-	async findSuggestionVoteById(userId, validatedSuggestionId) {
-		const suggestionVote = await sequelize.models[SUGGESTION_VOTE].findOne({
+	async findSuggestionVoteById(userId, cardSuggestionId) {
+		const suggestionVote = await sequelize.models[SuggestionVoteDTO.TABLE_NAME].findOne({
 			where: {
 				user_id: userId,
-				validated_suggestion_id: validatedSuggestionId
+				card_suggestion_id: cardSuggestionId
 			}
 		});
 
@@ -171,7 +146,11 @@ module.exports = {
 	 * @param {number[]} cardTemplateIds
 	 */
 	async findCardTemplatesByIds(cardTemplateIds) {
-		const cardTemplates = await sequelize.models[CARD_TEMPLATE].findAll({
+		if (cardTemplateIds.length === 0) {
+			return [];
+		}
+
+		const cardTemplates = await sequelize.models[CardTemplateDTO.TABLE_NAME].findAll({
 			where: {
 				id: {
 					[Op.in]: cardTemplateIds
@@ -183,17 +162,17 @@ module.exports = {
 	},
 
 	async getGlobalConfigOrDefault() {
-		const globalConfig = await sequelize.models[GLOBAL_CONFIG].findOne();
+		const globalConfig = await sequelize.models[GlobalConfigDTO.TABLE_NAME].findOne();
 
 		if (globalConfig === null) {
-			return DEFAULT_GLOBAL_CONFIG;
+			return GlobalConfigDTO.DEFAULT_GLOBAL_CONFIG;
 		} else {
 			return GlobalConfigDTO.modelToClass(globalConfig);
 		}
 	},
 
 	async findRandomCardTemplate() {
-		const cardTemplate = await sequelize.models[CARD_TEMPLATE].findOne({
+		const cardTemplate = await sequelize.models[CardTemplateDTO.TABLE_NAME].findOne({
 			order: sequelize.random()
 		});
 
@@ -203,73 +182,44 @@ module.exports = {
 		return CardTemplateDTO.modelToClass(cardTemplate);
 	},
 
-	/** @param {CardTemplateDTO} cardTemplate */
-	async saveCardTemplate(cardTemplate) {
-		return sequelize.models[CARD_TEMPLATE].upsert({
-			id: cardTemplate.id,
-			image_url: cardTemplate.imageURL,
-			name: cardTemplate.name
-		});
-	},
-
 	/** @param {UserProfileDTO} userProfile */
 	async saveUserProfile(userProfile) {
-		return sequelize.models[USER_PROFILE].upsert({
-			id: userProfile.id
-		});
+		return sequelize.models[UserProfileDTO.TABLE_NAME].upsert(userProfile.toJSON());
 	},
 
 	/** @param {InventoryCardDTO} inventoryCard */
 	async saveInventoryCard(inventoryCard) {
-		return sequelize.models[INVENTORY_CARD].upsert({
-			user_profile_id: inventoryCard.userProfileId,
-			local_id: inventoryCard.localId,
-			card_template_id: inventoryCard.cardTemplateId
-		});
+		return sequelize.models[InventoryCardDTO.TABLE_NAME].upsert(inventoryCard.toJSON());
 	},
 
 	/** @param {OngoingSpawnDTO} ongoingSpawn */
 	async saveOngoingSpawn(ongoingSpawn) {
-		return sequelize.models[ONGOING_SPAWN].upsert({
-			channel_id: ongoingSpawn.channelId,
-			card_template_id: ongoingSpawn.cardTemplateId,
-			message_id: ongoingSpawn.messageId
-		});
+		return sequelize.models[OngoingSpawnDTO.TABLE_NAME].upsert(ongoingSpawn.toJSON());
 	},
 
 	/** @param {GuildConfigDTO} guildConfig */
 	async saveGuildConfig(guildConfig) {
-		await sequelize.models[GUILD_CONFIG].upsert({
-			id: guildConfig.id,
-			spawn_channel_id: guildConfig.spawnChannelId,
-			review_suggestion_channel_id: guildConfig.reviewSuggestionChannelId,
-			approved_cards_channel_id: guildConfig.approvedCardsChannelId
-		});
+		await sequelize.models[GuildConfigDTO.TABLE_NAME].upsert(guildConfig.toJSON());
 	},
 
 	/** @param {GlobalConfigDTO} guildConfig */
-	async saveGlobalConfig(guildConfig = DEFAULT_GLOBAL_CONFIG) {
-		await sequelize.models[GLOBAL_CONFIG].upsert({
+	async saveGlobalConfig(guildConfig = GlobalConfigDTO.DEFAULT_GLOBAL_CONFIG) {
+		await sequelize.models[GlobalConfigDTO.TABLE_NAME].upsert({
 			id: 0,
-			min_time_between_message: guildConfig.MIN_TIME_BETWEEN_MESSAGE,
-			max_time_between_message: guildConfig.MAX_TIME_BETWEEN_MESSAGE,
-			min_points_to_add: guildConfig.MIN_POINTS_TO_ADD,
-			max_points_to_add: guildConfig.MAX_POINTS_TO_ADD,
-			spawn_threshold: guildConfig.SPAWN_THRESHOLD,
-			cards_per_page: guildConfig.CARDS_PER_PAGE,
-			min_time_between_spawn: guildConfig.MIN_TIME_BETWEEN_SPAWN,
-			max_time_between_spawn: guildConfig.MAX_TIME_BETWEEN_SPAWN,
-			votes_required: guildConfig.VOTES_REQUIRED
+			...guildConfig.toJSON()
 		});
 	},
 
 	/** @param {SuggestionVoteDTO} suggestionVote */
 	async saveSuggestionVote(suggestionVote) {
-		await sequelize.models[SUGGESTION_VOTE].upsert({
-			user_id: suggestionVote.userId,
-			validated_suggestion_id: suggestionVote.validatedSuggestionId,
-			positive_vote: suggestionVote.positiveVote
-		});
+		console.log('suggestion vote before save');
+		console.log(suggestionVote.toJSON());
+		await sequelize.models[SuggestionVoteDTO.TABLE_NAME].upsert(suggestionVote.toJSON());
+	},
+
+	/** @param {CardSuggestionDTO} cardSuggestion */
+	async saveValidatedSuggestion(cardSuggestion) {
+		await sequelize.models[CardSuggestionDTO.TABLE_NAME].create(cardSuggestion.toJSON());
 	},
 
 	/**
@@ -281,15 +231,15 @@ module.exports = {
 		let positiveVotes = null;
 		/** @type {number?} */
 		let negativeVotes = null;
-		/** @type {import('../dto/ValidatedSuggestionDTO')}*/
-		let validatedSuggestion = null;
+		/** @type {import('../dto/CardSuggestionDTO')}*/
+		let cardSuggestion = null;
 
 		const transaction = await sequelize.transaction();
 		try {
 			// Récupérer les votes
-			const suggestionVoteModels = await sequelize.models[SUGGESTION_VOTE].findAll({
+			const suggestionVoteModels = await sequelize.models[SuggestionVoteDTO.TABLE_NAME].findAll({
 				where: {
-					validated_suggestion_id: suggestionVote.validatedSuggestionId
+					card_suggestion_id: suggestionVote.cardSuggestionId
 				}
 			}, { transaction });
 
@@ -303,35 +253,35 @@ module.exports = {
 				negativeVotes += (vote.positiveVote ? 0 : 1);
 			}
 
-			const validatedSuggestionModel = await sequelize.models[VALIDATED_SUGGESTION].findOne({
+			const validatedSuggestionModel = await sequelize.models[CardSuggestionDTO.TABLE_NAME].findOne({
 				where: {
-					message_id: suggestionVote.validatedSuggestionId
+					message_id: suggestionVote.cardSuggestionId
 				}
 			}, { transaction });
-			validatedSuggestion = ValidatedSuggestionDTO.modelToClass(validatedSuggestionModel);
+			cardSuggestion = CardSuggestionDTO.modelToClass(validatedSuggestionModel);
 
 			if (positiveVotes >= votesRequired || negativeVotes >= votesRequired) {
 				// Supprimer tous les votes
-				await sequelize.models[SUGGESTION_VOTE].destroy({
+				await sequelize.models[SuggestionVoteDTO.TABLE_NAME].destroy({
 					where: {
-						validated_suggestion_id: suggestionVote.validatedSuggestionId
+						card_suggestion_id: suggestionVote.cardSuggestionId
 					}
 				}, { transaction });
 
 				// Supprimer la suggestion
-				await sequelize.models[VALIDATED_SUGGESTION].destroy({
+				await sequelize.models[CardSuggestionDTO.TABLE_NAME].destroy({
 					where: {
-						message_id: validatedSuggestion.messageId
+						message_id: cardSuggestion.messageId
 					}
 				}, { transaction });
 			}
 
 			if (positiveVotes >= votesRequired) {
 				// Si le nombre de votes positif est suffisant, ajouter la carte aux templates
-				await sequelize.models[CARD_TEMPLATE].create({
-					name: validatedSuggestion.name,
-					image_url: validatedSuggestion.imageURL,
-					rarity: validatedSuggestion.rarity
+				await sequelize.models[CardTemplateDTO.TABLE_NAME].create({
+					name: cardSuggestion.name,
+					image_url: cardSuggestion.imageURL,
+					rarity: cardSuggestion.rarity
 				}, { transaction });
 			}
 
@@ -341,9 +291,10 @@ module.exports = {
 			await transaction.rollback();
 			positiveVotes = null;
 			negativeVotes = null;
+			cardSuggestion = null;
 		}
 
-		return { positiveVotes, negativeVotes, validatedSuggestion };
+		return { positiveVotes, negativeVotes, cardSuggestion };
 	},
 
 	/**
@@ -352,12 +303,12 @@ module.exports = {
 	 */
 	async claimCardAndAddItToInventory(ongoingSpawn, userId) {
 		/** @type {import('sequelize').Model} */
-		let createdCard = null;
+		let inventoryCard = null;
 
 		const transaction = await sequelize.transaction();
 		try {
 			// La carte est encore disponible, on la revendique ...
-			await sequelize.models[ONGOING_SPAWN].destroy({
+			await sequelize.models[OngoingSpawnDTO.TABLE_NAME].destroy({
 				where: {
 					channel_id: ongoingSpawn.channelId
 				}
@@ -367,7 +318,7 @@ module.exports = {
 			while (localId === null) {
 				const attemptedLocalId = Math.floor(Math.random() * (2 ** 20));
 
-				const existingCardModel = await sequelize.models[INVENTORY_CARD].findOne({
+				const existingCardModel = await sequelize.models[InventoryCardDTO.TABLE_NAME].findOne({
 					where: {
 						user_profile_id: userId,
 						local_id: attemptedLocalId
@@ -381,7 +332,7 @@ module.exports = {
 			}
 
 			// ... puis on l'ajoute à l'inventaire
-			createdCard = await sequelize.models[INVENTORY_CARD].create({
+			inventoryCard = await sequelize.models[InventoryCardDTO.TABLE_NAME].create({
 				card_template_id: ongoingSpawn.cardTemplateId,
 				user_profile_id: userId,
 				local_id: localId
@@ -392,13 +343,13 @@ module.exports = {
 			console.log('rollback');
 			await transaction.rollback();
 			console.error(error);
-			createdCard = null;
+			inventoryCard = null;
 		}
 
-		if (createdCard === null) {
+		if (inventoryCard === null) {
 			return null;
 		}
-		return InventoryCardDTO.modelToClass(createdCard);
+		return InventoryCardDTO.modelToClass(inventoryCard);
 	},
 
 	/**
@@ -409,7 +360,7 @@ module.exports = {
 
 		const transaction = await sequelize.transaction();
 		try {
-			const ongoingSpawnModel = await sequelize.models[ONGOING_SPAWN].findOne({
+			const ongoingSpawnModel = await sequelize.models[OngoingSpawnDTO.TABLE_NAME].findOne({
 				where: { channel_id: channelId }
 			}, { transaction });
 
@@ -418,8 +369,10 @@ module.exports = {
 				messageId = ongoinSpawn.messageId;
 
 				// S'il existe encore une carte dans ce channel, on la supprime
-				await sequelize.models[ONGOING_SPAWN].destroy({
-					where: { channel_id: channelId }
+				await sequelize.models[OngoingSpawnDTO.TABLE_NAME].destroy({
+					where: {
+						channel_id: channelId
+					}
 				}, { transaction });
 			}
 
@@ -435,81 +388,31 @@ module.exports = {
 	},
 
 	/**
-	 * @param {ValidatedSuggestionDTO} validatedSuggestion
-	 * @param {TemporaryCardSuggestionDTO} temporarySuggestion
-	 */
-	async createValidatedSuggestionAndDeleteTemporary(validatedSuggestion, temporarySuggestion) {
-		let inserted = true;
-
-		const transaction = await sequelize.transaction();
-		try {
-			console.log(`destroying temporary suggestion: ${temporarySuggestion.messageId}`);
-			await sequelize.models[TEMPORARY_CARD_SUGGESTION].destroy({
-				where: {
-					message_id: temporarySuggestion.messageId
-				}
-			}, { transaction });
-
-			console.log(`Creating new suggestion: ${validatedSuggestion}`);
-			await sequelize.models[VALIDATED_SUGGESTION].create({
-				message_id: validatedSuggestion.messageId,
-				name: validatedSuggestion.name,
-				image_url: validatedSuggestion.imageURL,
-				rarity: validatedSuggestion.rarity
-			}, { transaction });
-
-			await transaction.commit();
-		} catch (error) {
-			console.log('rollback');
-			inserted = false;
-			await transaction.rollback();
-			console.error(error);
-		}
-
-		return inserted;
-	},
-
-	/**
-	 * @param {string} messageId
-	 * @param {string} suggestedName
-	 * @param {string} suggestedURL
-	 * @param {number} suggestedRarity
-	 */
-	async createTemporaryCardSuggestion(messageId, suggestedName, suggestedURL, suggestedRarity) {
-		await sequelize.models[TEMPORARY_CARD_SUGGESTION].create({
-			message_id: messageId,
-			name: suggestedName,
-			image_url: suggestedURL,
-			rarity: suggestedRarity
-		});
-	},
-
-	/**
-	 * @param {ValidatedSuggestionDTO} validatedSuggestion
+	 * @param {CardSuggestionDTO} cardSuggestion
 	 * @param {boolean} approved
 	 */
-	async finishSuggestionAndDeleteVotes(validatedSuggestion, approved) {
+	async finishSuggestionAndDeleteVotes(cardSuggestion, approved) {
 		let inserted = true;
 
 		const transaction = await sequelize.transaction();
 		try {
-			await sequelize.models[VALIDATED_SUGGESTION].destroy({
+			await sequelize.models[CardSuggestionDTO.TABLE_NAME].destroy({
 				where: {
-					message_id: validatedSuggestion.messageId
+					message_id: cardSuggestion.messageId
 				}
 			}, { transaction });
 
-			await sequelize.models[SUGGESTION_VOTE].destroy({
+			await sequelize.models[SuggestionVoteDTO.TABLE_NAME].destroy({
 				where: {
-					validated_suggestion_id: validatedSuggestion.messageId
+					card_suggestion_id: cardSuggestion.messageId
 				}
 			}, { transaction });
 
 			if (approved) {
-				await sequelize.models[CARD_TEMPLATE].create({
-					name: validatedSuggestion.name,
-					image_url: validatedSuggestion.imageURL,
-					rarity: validatedSuggestion.rarity
+				await sequelize.models[CardTemplateDTO.TABLE_NAME].create({
+					name: cardSuggestion.name,
+					image_url: cardSuggestion.imageURL,
+					rarity: cardSuggestion.rarity
 				}, { transaction });
 			}
 
@@ -529,14 +432,18 @@ module.exports = {
 	 * @returns {Promise<number>}
 	 */
 	async getInventorySize(userId) {
-		return await sequelize.models[INVENTORY_CARD].count({
-			where: { user_profile_id: userId }
+		return await sequelize.models[InventoryCardDTO.TABLE_NAME].count({
+			where: {
+				user_profile_id: userId
+			}
 		});
 	},
 
 	async getInventoryPage(userId, page, cardsPerPage) {
-		const inventoryCards = await sequelize.models[INVENTORY_CARD].findAll({
-			where: { user_profile_id: userId },
+		const inventoryCards = await sequelize.models[InventoryCardDTO.TABLE_NAME].findAll({
+			where: {
+				user_profile_id: userId
+			},
 			limit: cardsPerPage,
 			offset: page * cardsPerPage
 		});
@@ -549,44 +456,32 @@ module.exports = {
 	},
 
 	async populateWithMacron() {
-		await sequelize.models[CARD_TEMPLATE].sync({ force: true });
-		await sequelize.models[CARD_TEMPLATE].create(CARD_MACRON);
-	},
-
-	/** @param {string} messageId */
-	async deleteTemporarySuggestion(messageId) {
-		await sequelize.models[TEMPORARY_CARD_SUGGESTION].destroy({
-			where: {
-				message_id: messageId
-			}
-		});
+		await sequelize.models[CardTemplateDTO.TABLE_NAME].sync({ force: true });
+		await sequelize.models[CardTemplateDTO.TABLE_NAME].create(CARD_MACRON);
 	},
 
 	/** @param {string[]} tables */
 	async resetDB(tables) {
-		if (tables.includes(INVENTORY_CARD) || tables.includes('all')) {
-			await sequelize.models[INVENTORY_CARD].sync({ force: true });
+		if (tables.includes(InventoryCardDTO.TABLE_NAME) || tables.includes('all')) {
+			await sequelize.models[InventoryCardDTO.TABLE_NAME].sync({ force: true });
 		}
-		if (tables.includes(USER_PROFILE) || tables.includes('all')) {
-			await sequelize.models[USER_PROFILE].sync({ force: true });
+		if (tables.includes(UserProfileDTO.TABLE_NAME) || tables.includes('all')) {
+			await sequelize.models[UserProfileDTO.TABLE_NAME].sync({ force: true });
 		}
-		if (tables.includes(GUILD_CONFIG) || tables.includes('all')) {
-			await sequelize.models[GUILD_CONFIG].sync({ force: true });
+		if (tables.includes(GuildConfigDTO.TABLE_NAME) || tables.includes('all')) {
+			await sequelize.models[GuildConfigDTO.TABLE_NAME].sync({ force: true });
 		}
-		if (tables.includes(ONGOING_SPAWN) || tables.includes('all')) {
-			await sequelize.models[ONGOING_SPAWN].sync({ force: true });
+		if (tables.includes(OngoingSpawnDTO.TABLE_NAME) || tables.includes('all')) {
+			await sequelize.models[OngoingSpawnDTO.TABLE_NAME].sync({ force: true });
 		}
-		if (tables.includes(CARD_TEMPLATE) || tables.includes('all')) {
-			await sequelize.models[CARD_TEMPLATE].sync({ force: true });
+		if (tables.includes(CardTemplateDTO.TABLE_NAME) || tables.includes('all')) {
+			await sequelize.models[CardTemplateDTO.TABLE_NAME].sync({ force: true });
 		}
-		if (tables.includes(SUGGESTION_VOTE) || tables.includes('all')) {
-			await sequelize.models[SUGGESTION_VOTE].sync({ force: true });
+		if (tables.includes(SuggestionVoteDTO.TABLE_NAME) || tables.includes('all')) {
+			await sequelize.models[SuggestionVoteDTO.TABLE_NAME].sync({ force: true });
 		}
-		if (tables.includes(VALIDATED_SUGGESTION) || tables.includes('all')) {
-			await sequelize.models[VALIDATED_SUGGESTION].sync({ force: true });
-		}
-		if (tables.includes(TEMPORARY_CARD_SUGGESTION) || tables.includes('all')) {
-			await sequelize.models[TEMPORARY_CARD_SUGGESTION].sync({ force: true });
+		if (tables.includes(CardSuggestionDTO.TABLE_NAME) || tables.includes('all')) {
+			await sequelize.models[CardSuggestionDTO.TABLE_NAME].sync({ force: true });
 		}
 	},
 
@@ -597,22 +492,34 @@ module.exports = {
 			throw new Error('Impossible de s\'autentifier plusieurs fois !');
 		}
 
-		sequelize = new Sequelize(process.env.DATABASE_URL, {
-			dialect: 'postgres',
-			logging: false,
-			dialectOptions: {
-				ssl: {
-					require: true,
-					rejectUnauthorized: false
+		switch (process.env.NODE_ENV) {
+		case 'development':
+			sequelize = new Sequelize(process.env.DATABASE_URL, {
+				dialect: 'postgres'
+			});
+			break;
+		case 'production':
+			sequelize = new Sequelize(process.env.DATABASE_URL, {
+				dialect: 'postgres',
+				logging: false,
+				dialectOptions: {
+					ssl: {
+						require: true,
+						rejectUnauthorized: false
+					}
 				}
-			}
-		});
+			});
+			break;
+		default:
+			throw new Error('La variable NODE_ENV doit être définie !');
+		}
+
 		await sequelize.authenticate();
 
 		console.info('Autentification réussie !');
 		console.info('Définition des tables...');
 
-		sequelize.define(CARD_TEMPLATE, {
+		sequelize.define(CardTemplateDTO.TABLE_NAME, {
 			id: {
 				type: DataTypes.INTEGER,
 				primaryKey: true,
@@ -621,20 +528,20 @@ module.exports = {
 			name: DataTypes.STRING,
 			image_url: DataTypes.STRING,
 			rarity: DataTypes.INTEGER
-		}, { tableName: CARD_TEMPLATE });
+		}, { tableName: CardTemplateDTO.TABLE_NAME });
 
-		sequelize.define(USER_PROFILE, {
+		sequelize.define(UserProfileDTO.TABLE_NAME, {
 			id: {
 				type: DataTypes.STRING,
 				primaryKey: true
 			}
-		}, { tableName: USER_PROFILE });
+		}, { tableName: UserProfileDTO.TABLE_NAME });
 
-		sequelize.define(INVENTORY_CARD, {
+		sequelize.define(InventoryCardDTO.TABLE_NAME, {
 			user_profile_id: {
 				type: DataTypes.STRING,
 				/* references: {
-					model: USER_PROFILE,
+					model: UserProfileDTO.TABLE_NAME,
 					key: 'id'
 				}*/
 				primaryKey: true
@@ -646,14 +553,14 @@ module.exports = {
 			card_template_id: {
 				type: DataTypes.INTEGER,
 				references: {
-					model: CARD_TEMPLATE,
+					model: CardTemplateDTO.TABLE_NAME,
 					key: 'id'
 				},
 				onDelete: 'CASCADE'
 			}
-		}, { tableName: INVENTORY_CARD });
+		}, { tableName: InventoryCardDTO.TABLE_NAME });
 
-		sequelize.define(ONGOING_SPAWN, {
+		sequelize.define(OngoingSpawnDTO.TABLE_NAME, {
 			channel_id: {
 				type: DataTypes.STRING,
 				primaryKey: true
@@ -661,15 +568,15 @@ module.exports = {
 			card_template_id: {
 				type: DataTypes.INTEGER,
 				references: {
-					model: CARD_TEMPLATE,
+					model: CardTemplateDTO.TABLE_NAME,
 					key: 'id'
 				},
 				onDelete: 'CASCADE'
 			},
 			message_id: DataTypes.STRING
-		}, { tableName: ONGOING_SPAWN });
+		}, { tableName: OngoingSpawnDTO.TABLE_NAME });
 
-		sequelize.define(GUILD_CONFIG, {
+		sequelize.define(GuildConfigDTO.TABLE_NAME, {
 			id: {
 				type: DataTypes.STRING,
 				primaryKey: true
@@ -677,45 +584,42 @@ module.exports = {
 			spawn_channel_id: DataTypes.STRING,
 			review_suggestion_channel_id: DataTypes.STRING,
 			approved_cards_channel_id: DataTypes.STRING
-		}, { tableName: GUILD_CONFIG });
+		}, { tableName: GuildConfigDTO.TABLE_NAME });
 
-		sequelize.define(TEMPORARY_CARD_SUGGESTION, {
+		sequelize.define(CardSuggestionDTO.TABLE_NAME, {
 			message_id: {
 				type: DataTypes.STRING,
 				primaryKey: true
 			},
-			name: DataTypes.STRING,
-			image_url: DataTypes.STRING,
-			rarity: DataTypes.INTEGER
-		}, { tableName: TEMPORARY_CARD_SUGGESTION });
-
-		sequelize.define(VALIDATED_SUGGESTION, {
-			message_id: {
-				type: DataTypes.STRING,
-				primaryKey: true
+			user_id: {
+				type: DataTypes.STRING/* ,
+				references: {
+					model: UserProfileDTO.TABLE_NAME,
+					key: id
+				}*/
 			},
 			name: DataTypes.STRING,
 			image_url: DataTypes.STRING,
 			rarity: DataTypes.INTEGER
-		}, { tableName: VALIDATED_SUGGESTION });
+		}, { tableName: CardSuggestionDTO.TABLE_NAME });
 
-		sequelize.define(SUGGESTION_VOTE, {
+		sequelize.define(SuggestionVoteDTO.TABLE_NAME, {
 			user_id: {
 				type: DataTypes.STRING,
 				primaryKey: true
 			},
-			validated_suggestion_id: {
+			card_suggestion_id: {
 				type: DataTypes.STRING,
 				references: {
-					model: VALIDATED_SUGGESTION,
+					model: CardSuggestionDTO.TABLE_NAME,
 					key: 'message_id'
 				},
 				primaryKey: true
 			},
 			positive_vote: DataTypes.BOOLEAN
-		}, { tableName: SUGGESTION_VOTE });
+		}, { tableName: SuggestionVoteDTO.TABLE_NAME });
 
-		sequelize.define(GLOBAL_CONFIG, {
+		sequelize.define(GlobalConfigDTO.TABLE_NAME, {
 			min_time_between_message: DataTypes.INTEGER,
 			max_time_between_message: DataTypes.INTEGER,
 			min_points_to_add: DataTypes.INTEGER,
@@ -725,7 +629,7 @@ module.exports = {
 			min_time_between_spawn: DataTypes.INTEGER,
 			max_time_between_spawn: DataTypes.INTEGER,
 			votes_required: DataTypes.INTEGER
-		}, { tableName: GLOBAL_CONFIG });
+		}, { tableName: GlobalConfigDTO.TABLE_NAME });
 
 		await sequelize.sync({
 			alter: true

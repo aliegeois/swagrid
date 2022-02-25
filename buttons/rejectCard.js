@@ -13,15 +13,15 @@ module.exports = {
 		await saveSuggestionVote(suggestionVote);
 
 		const votesRequired = await cache.get('VOTES_REQUIRED');
-		const { positiveVotes, negativeVotes, validatedSuggestion } = await countVotesAndValidateSuggestion(suggestionVote, votesRequired);
+		const { positiveVotes, negativeVotes, cardSuggestion } = await countVotesAndValidateSuggestion(suggestionVote, votesRequired);
 		const originalMessage = await interaction.channel.messages.fetch(interaction.message.id);
 
 		await interaction.reply({
-			content: `Votre vote a été pris en compte (vous avez ${bold('rejeté')} cette carte)`,
+			content: `Votre vote a été pris en compte, vous avez \u274c ${bold('rejeté')} cette carte`,
 			ephemeral: true
 		});
 
-		const editedMessage = generateSuggestionReviewMessageContent(validatedSuggestion, votesRequired, positiveVotes, negativeVotes);
+		const editedMessage = generateSuggestionReviewMessageContent(cardSuggestion, votesRequired, positiveVotes, negativeVotes);
 
 		if (negativeVotes >= votesRequired) {
 			await originalMessage.edit({

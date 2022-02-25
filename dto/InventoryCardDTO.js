@@ -14,6 +14,10 @@ module.exports = class InventoryCardDTO {
 		this.#cardTemplateId = cardTemplateId;
 	}
 
+	static get TABLE_NAME() {
+		return 'inventory_card';
+	}
+
 	/** @param {import('sequelize').Model} model */
 	static modelToClass(model) {
 		return new InventoryCardDTO(model.get('user_profile_id'), model.get('local_id'), model.get('card_template_id'));
@@ -38,5 +42,13 @@ module.exports = class InventoryCardDTO {
 
 	set cardTemplateId(cardTemplateId) {
 		this.#cardTemplateId = cardTemplateId;
+	}
+
+	toJSON() {
+		return {
+			user_profile_id: this.#userProfileId,
+			local_id: this.#localId,
+			card_template_id: this.#cardTemplateId
+		};
 	}
 };

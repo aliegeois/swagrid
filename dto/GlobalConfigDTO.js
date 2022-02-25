@@ -32,6 +32,14 @@ module.exports = class GlobalConfigDTO {
 		this.#votesRequired = votesRequired;
 	}
 
+	static get TABLE_NAME() {
+		return 'global_config';
+	}
+
+	static get DEFAULT_GLOBAL_CONFIG() {
+		return new GlobalConfigDTO(10 * 1000, 5 * 60 * 1000, 1, 20, 50, 2, 10 * 60 * 1000, 15 * 60 * 1000, 1);
+	}
+
 	/** @param {import('sequelize').Model} model */
 	static modelToClass(model) {
 		return new GlobalConfigDTO(model.get('min_time_between_message'), model.get('max_time_between_message'), model.get('min_points_to_add'), model.get('max_points_to_add'), model.get('spawn_threshold'), model.get('cards_per_page'), model.get('min_time_between_spawn'), model.get('max_time_between_spawn'), model.get('votes_required'));
@@ -107,5 +115,19 @@ module.exports = class GlobalConfigDTO {
 
 	set VOTES_REQUIRED(votesRequired) {
 		this.#votesRequired = votesRequired;
+	}
+
+	toJSON() {
+		return {
+			min_time_between_message: this.#minTimeBetweenMessage,
+			max_time_between_message: this.#maxTimeBetweenMessage,
+			min_points_to_add: this.#minPointsToAdd,
+			max_points_to_add: this.#maxPointsToAdd,
+			spawn_threshold: this.#spawnThreshold,
+			cards_per_page: this.#cardsPerPage,
+			min_time_between_spawn: this.#minTimeBetweenSpawn,
+			max_time_between_spawn: this.#maxTimeBetweenSpawn,
+			votes_required: this.#votesRequired
+		};
 	}
 };

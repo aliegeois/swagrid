@@ -1,22 +1,26 @@
 module.exports = class SuggestionVoteDTO {
 	#userId;
-	#validatedSuggestionId;
+	#cardSuggestionId;
 	#positiveVote;
 
 	/**
 	 * @param {string} userId
-	 * @param {string} validatedSuggestionId
+	 * @param {string} cardSuggestionId
 	 * @param {boolean} positiveVote
 	 */
-	constructor(userId, validatedSuggestionId, positiveVote) {
+	constructor(userId, cardSuggestionId, positiveVote) {
 		this.#userId = userId;
-		this.#validatedSuggestionId = validatedSuggestionId;
+		this.#cardSuggestionId = cardSuggestionId;
 		this.#positiveVote = positiveVote;
+	}
+
+	static get TABLE_NAME() {
+		return 'suggestion_vote';
 	}
 
 	/** @param {import('sequelize').Model} model */
 	static modelToClass(model) {
-		return new SuggestionVoteDTO(model.get('user_id'), model.get('validated_suggestion_id'), model.get('positive_vote'));
+		return new SuggestionVoteDTO(model.get('user_id'), model.get('card_suggestion_id'), model.get('positive_vote'));
 	}
 
 	/** @param {import('sequelize').Model[]} models */
@@ -28,8 +32,8 @@ module.exports = class SuggestionVoteDTO {
 		return this.#userId;
 	}
 
-	get validatedSuggestionId() {
-		return this.#validatedSuggestionId;
+	get cardSuggestionId() {
+		return this.#cardSuggestionId;
 	}
 
 	get positiveVote() {
@@ -41,11 +45,15 @@ module.exports = class SuggestionVoteDTO {
 		this.#positiveVote = positiveVote;
 	}
 
+	toJSON() {
+		return {
+			user_id: this.#userId,
+			card_suggestion_id: this.#cardSuggestionId,
+			positive_vote: this.#positiveVote
+		};
+	}
+
 	toString() {
-		return JSON.stringify({
-			userId: this.userId,
-			validatedSuggestionId: this.validatedSuggestionId,
-			positiveVote: this.positiveVote
-		});
+		return JSON.stringify(this.toJSON());
 	}
 };

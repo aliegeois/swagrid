@@ -17,6 +17,10 @@ module.exports = class GuildConfigDTO {
 		this.#approvedCardsChannelId = approvedCardsChannelId;
 	}
 
+	static get TABLE_NAME() {
+		return 'guild_config';
+	}
+
 	/** @param {import('sequelize').Model} model */
 	static modelToClass(model) {
 		return new GuildConfigDTO(model.get('id'), model.get('spawn_channel_id'), model.get('review_suggestion_channel_id'), model.get('approved_cards_channel_id'));
@@ -53,5 +57,14 @@ module.exports = class GuildConfigDTO {
 
 	set approvedCardsChannelId(approvedCardsChannelId) {
 		this.#approvedCardsChannelId = approvedCardsChannelId;
+	}
+
+	toJSON() {
+		return {
+			id: this.#id,
+			spawn_channel_id: this.#spawnChannelId,
+			review_suggestion_channel_id: this.#reviewSuggestionChannelId,
+			approved_cards_channel_id: this.#approvedCardsChannelId
+		};
 	}
 };

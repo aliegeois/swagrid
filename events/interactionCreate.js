@@ -17,7 +17,7 @@ async function executeCommand(client, interaction) {
 		await command.execute(interaction);
 	} catch (exception) {
 		console.error(exception);
-		await interaction.member.send({
+		await interaction.channel.send({
 			content: `Erreur lors de l'exécution de cette commande : (${inlineCode(exception.name)})`
 		});
 	}
@@ -46,18 +46,18 @@ async function executeButton(client, interaction) {
 	const button = client.buttons.get(interaction.customId);
 
 	if (!button) {
-		return interaction.reply(`Le bouton n'a pas été trouvé (${inlineCode(interaction.customId)})`);
+		return interaction.reply(`Le bouton n'a pas été trouvé [${inlineCode(interaction.customId)}]`);
 	}
 	if (!hasButttonPermission(button, interaction.member)) {
-		return interaction.reply('Vous n\'avez pas la permission pour utiliser ce bouton');
+		return interaction.reply(`Vous n'avez pas la permission pour utiliser ce bouton [${inlineCode(interaction.customId)}]`);
 	}
 
 	try {
 		await button.execute(interaction);
 	} catch (exception) {
 		console.error(exception);
-		await interaction.member.send({
-			content: `Erreur lors de l'activation de ce bouton (${inlineCode(exception.name)})`
+		await interaction.channel.send({
+			content: `Erreur lors de l'activation de ce bouton [${inlineCode(interaction.customId)}] (${inlineCode(exception.name)})`
 		});
 	}
 }
@@ -67,15 +67,15 @@ async function executeContextMenu(client, interaction) {
 	const contextMenu = client.contextMenus.get(interaction.commandName);
 
 	if (!contextMenu) {
-		return interaction.reply(`Le menu contextuel n'a pas été trouvé (${inlineCode(interaction.commandName)})`);
+		return interaction.reply(`Le menu contextuel n'a pas été trouvé [${inlineCode(interaction.commandName)}]`);
 	}
 
 	try {
 		await contextMenu.execute(interaction);
 	} catch (exception) {
 		console.error(exception);
-		await interaction.member.send({
-			content: `Erreur lors de l'activation de ce menu contextuel (${inlineCode(exception.name)})`
+		await interaction.channel.send({
+			content: `Erreur lors de l'activation de ce menu contextuel [${inlineCode(interaction.commandName)}] (${inlineCode(exception.name)})`
 		});
 	}
 }
