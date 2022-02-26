@@ -446,7 +446,7 @@ module.exports = {
 			},
 			limit: cardsPerPage,
 			offset: page * cardsPerPage,
-			order: ['createdAt', 'DESC']
+			order: [['createdAt', 'DESC']]
 		});
 
 		if (inventoryCards === null) {
