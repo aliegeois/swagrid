@@ -445,7 +445,8 @@ module.exports = {
 				user_profile_id: userId
 			},
 			limit: cardsPerPage,
-			offset: page * cardsPerPage
+			offset: page * cardsPerPage,
+			order: ['createdAt', 'DESC']
 		});
 
 		if (inventoryCards === null) {
