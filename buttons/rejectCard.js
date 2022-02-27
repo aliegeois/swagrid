@@ -2,7 +2,7 @@ const SuggestionVoteDTO = require('../dto/SuggestionVoteDTO');
 const { bold } = require('@discordjs/builders');
 const { saveSuggestionVote, countVotesAndValidateSuggestion } = require('../utils/database-utils');
 const { generateSuggestionReviewMessageContent, TEXT } = require('../utils/message-utils');
-const cache = require('../cache');
+const { getValueInt: getGlobalConfigValueInt } = require('../utils/global-config-cache');
 
 module.exports = {
 	name: 'rejectcard',
@@ -12,8 +12,8 @@ module.exports = {
 		const suggestionVote = new SuggestionVoteDTO(interaction.user.id, interaction.message.id, false);
 		await saveSuggestionVote(suggestionVote);
 
-		const votesRequired = await cache.get('VOTES_REQUIRED');
-		const { positiveVotes, negativeVotes, cardSuggestion } = await countVotesAndValidateSuggestion(suggestionVote, votesRequired);
+		const VOTES_REQUIRED = await getGlobalConfigValueInt('VOTES_REQUIRED');
+		const { positiveVotes, negativeVotes, cardSuggestion } = await countVotesAndValidateSuggestion(suggestionVote, VOTES_REQUIRED);
 		const originalMessage = await interaction.channel.messages.fetch(interaction.message.id);
 
 		await interaction.reply({
@@ -21,9 +21,9 @@ module.exports = {
 			ephemeral: true
 		});
 
-		const editedMessage = generateSuggestionReviewMessageContent(cardSuggestion, votesRequired, positiveVotes, negativeVotes);
+		const editedMessage = generateSuggestionReviewMessageContent(cardSuggestion, VOTES_REQUIRED, positiveVotes, negativeVotes);
 
-		if (negativeVotes >= votesRequired) {
+		if (negativeVotes >= VOTES_REQUIRED) {
 			await originalMessage.edit({
 				content: 'Carte rejetée !',
 				embeds: editedMessage.embeds,

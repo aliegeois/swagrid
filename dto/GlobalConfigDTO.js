@@ -1,133 +1,41 @@
 module.exports = class GlobalConfigDTO {
-	#minTimeBetweenMessage;
-	#maxTimeBetweenMessage;
-	#minPointsToAdd;
-	#maxPointsToAdd;
-	#spawnThreshold;
-	#cardsPerPage;
-	#minTimeBetweenSpawn;
-	#maxTimeBetweenSpawn;
-	#votesRequired;
+	#name;
+	#value;
 
 	/**
-	 * @param {number} minTimeBetweenMessage
-	 * @param {number} maxTimeBetweenMessage
-	 * @param {number} minPointsToAdd
-	 * @param {number} maxPointsToAdd
-	 * @param {number} spawnThreshold
-	 * @param {number} cardsPerPage
-	 * @param {number} minTimeBetweenSpawn
-	 * @param {number} maxTimeBetweenSpawn
-	 * @param {number} votesRequired
+	 * @param {string} name
+	 * @param {string} value
 	 */
-	constructor(minTimeBetweenMessage, maxTimeBetweenMessage, minPointsToAdd, maxPointsToAdd, spawnThreshold, cardsPerPage, minTimeBetweenSpawn, maxTimeBetweenSpawn, votesRequired) {
-		this.#minTimeBetweenMessage = minTimeBetweenMessage;
-		this.#maxTimeBetweenMessage = maxTimeBetweenMessage;
-		this.#minPointsToAdd = minPointsToAdd;
-		this.#maxPointsToAdd = maxPointsToAdd;
-		this.#spawnThreshold = spawnThreshold;
-		this.#cardsPerPage = cardsPerPage;
-		this.#minTimeBetweenSpawn = minTimeBetweenSpawn;
-		this.#maxTimeBetweenSpawn = maxTimeBetweenSpawn;
-		this.#votesRequired = votesRequired;
+	constructor(name, value) {
+		this.#name = name;
+		this.#value = value;
 	}
 
 	static get TABLE_NAME() {
 		return 'global_config';
 	}
 
-	static get DEFAULT_GLOBAL_CONFIG() {
-		return new GlobalConfigDTO(10 * 1000, 5 * 60 * 1000, 1, 20, 50, 2, 10 * 60 * 1000, 15 * 60 * 1000, 1);
-	}
-
 	/** @param {import('sequelize').Model} model */
 	static modelToClass(model) {
-		return new GlobalConfigDTO(model.get('min_time_between_message'), model.get('max_time_between_message'), model.get('min_points_to_add'), model.get('max_points_to_add'), model.get('spawn_threshold'), model.get('cards_per_page'), model.get('min_time_between_spawn'), model.get('max_time_between_spawn'), model.get('votes_required'));
+		return new GlobalConfigDTO(model.get('name'), model.get('value'));
 	}
 
-	get MIN_TIME_BETWEEN_MESSAGE() {
-		return this.#minTimeBetweenMessage;
+	get name() {
+		return this.#name;
 	}
 
-	set MIN_TIME_BETWEEN_MESSAGE(minTimeBetweenMessage) {
-		this.#minTimeBetweenMessage = minTimeBetweenMessage;
+	get value() {
+		return this.#value;
 	}
 
-	get MAX_TIME_BETWEEN_MESSAGE() {
-		return this.#maxTimeBetweenMessage;
-	}
-
-	set MAX_TIME_BETWEEN_MESSAGE(maxTimeBetweenMessage) {
-		this.#maxTimeBetweenMessage = maxTimeBetweenMessage;
-	}
-
-	get MIN_POINTS_TO_ADD() {
-		return this.#minPointsToAdd;
-	}
-
-	set MIN_POINTS_TO_ADD(minPointsToAdd) {
-		this.#minPointsToAdd = minPointsToAdd;
-	}
-
-	get MAX_POINTS_TO_ADD() {
-		return this.#maxPointsToAdd;
-	}
-
-	set MAX_POINTS_TO_ADD(maxPointsToAdd) {
-		this.#maxPointsToAdd = maxPointsToAdd;
-	}
-
-	get SPAWN_THRESHOLD() {
-		return this.#spawnThreshold;
-	}
-
-	set SPAWN_THRESHOLD(spawnThreshold) {
-		this.#spawnThreshold = spawnThreshold;
-	}
-
-	get CARDS_PER_PAGE() {
-		return this.#cardsPerPage;
-	}
-
-	set CARDS_PER_PAGE(cardsPerPage) {
-		this.#cardsPerPage = cardsPerPage;
-	}
-
-	get MIN_TIME_BETWEEN_SPAWN() {
-		return this.#minTimeBetweenSpawn;
-	}
-
-	set MIN_TIME_BETWEEN_SPAWN(minTimeBetweenSpawn) {
-		this.#minTimeBetweenSpawn = minTimeBetweenSpawn;
-	}
-
-	get MAX_TIME_BETWEEN_SPAWN() {
-		return this.#maxTimeBetweenSpawn;
-	}
-
-	set MAX_TIME_BETWEEN_SPAWN(maxTimeBetweenSpawn) {
-		this.#maxTimeBetweenSpawn = maxTimeBetweenSpawn;
-	}
-
-	get VOTES_REQUIRED() {
-		return this.#votesRequired;
-	}
-
-	set VOTES_REQUIRED(votesRequired) {
-		this.#votesRequired = votesRequired;
+	set value(value) {
+		this.#value = value;
 	}
 
 	toJSON() {
 		return {
-			min_time_between_message: this.#minTimeBetweenMessage,
-			max_time_between_message: this.#maxTimeBetweenMessage,
-			min_points_to_add: this.#minPointsToAdd,
-			max_points_to_add: this.#maxPointsToAdd,
-			spawn_threshold: this.#spawnThreshold,
-			cards_per_page: this.#cardsPerPage,
-			min_time_between_spawn: this.#minTimeBetweenSpawn,
-			max_time_between_spawn: this.#maxTimeBetweenSpawn,
-			votes_required: this.#votesRequired
+			name: this.#name,
+			value: this.#value
 		};
 	}
 };

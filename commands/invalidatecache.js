@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const cache = require('../cache');
+const { invalidate: invalidateGlobalConfigCache } = require('../utils/global-config-cache');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -9,7 +9,7 @@ module.exports = {
 
 	/** @param {import('discord.js').CommandInteraction} interaction */
 	async execute(interaction) {
-		cache.invalidate();
+		invalidateGlobalConfigCache();
 
 		interaction.reply('Cache invalidé');
 	}

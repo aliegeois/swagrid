@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { getGlobalConfigOrDefault, saveGlobalConfig } = require('../utils/database-utils');
+const { saveGlobalConfig } = require('../utils/database-utils');
+const { get: getGlobalConfig } = require('../utils/global-config-cache');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -14,14 +15,13 @@ module.exports = {
 
 	/** @param {import('discord.js').CommandInteraction} interaction */
 	async execute(interaction) {
-		const currentConfig = await getGlobalConfigOrDefault();
-
 		const commands = interaction.options.getString('config');
 		for (const command of commands.split(' ')) {
 			const [name, value] = command.split('=');
-			currentConfig[name.toUpperCase()] = value;
+			const globalConfig = await getGlobalConfig(name);
+			globalConfig.value = value;
+			await saveGlobalConfig(globalConfig);
 		}
-		saveGlobalConfig(currentConfig);
 
 		interaction.reply('Configuration sauvegardée');
 	}

@@ -1,7 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const cache = require('../cache');
 const { getInventorySize, getInventoryPage, findCardTemplatesByIds } = require('../utils/database-utils');
 const { generateInventoryMessageContent } = require('../utils/message-utils');
+const { getValueInt: getGlobalConfigValueInt } = require('../utils/global-config-cache');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -21,8 +21,8 @@ module.exports = {
 		if (interaction.options.getInteger('page') !== null) {
 			page = interaction.options.getInteger('page') - 1;
 		}
-		const cardsPerPage = await cache.get('CARDS_PER_PAGE');
-		const maxPage = Math.floor(inventorySize / cardsPerPage);
+		const CARDS_PER_PAGE = await getGlobalConfigValueInt('CARDS_PER_PAGE');
+		const maxPage = Math.floor(inventorySize / CARDS_PER_PAGE);
 		if (page < 0) {
 			page = 0;
 		} else if (page > maxPage) {
@@ -30,7 +30,7 @@ module.exports = {
 		}
 
 		// On récupère la page qui nous intéresse
-		const inventoryCards = await getInventoryPage(interaction.user.id, page, cardsPerPage);
+		const inventoryCards = await getInventoryPage(interaction.user.id, page, CARDS_PER_PAGE);
 		if (inventoryCards !== null) {
 			/** @type {number[]} */
 			const cardTemplateIds = [...new Set(inventoryCards.map(inventoryCard => inventoryCard.cardTemplateId))];
@@ -39,7 +39,7 @@ module.exports = {
 			const cardTemplates = await findCardTemplatesByIds(cardTemplateIds);
 			const mapCardTemplates = new Map(cardTemplates.map(cardTemplate => [cardTemplate.id, cardTemplate]));
 
-			await interaction.reply(generateInventoryMessageContent(interaction.user, inventoryCards, mapCardTemplates, page, maxPage, cardsPerPage));
+			await interaction.reply(generateInventoryMessageContent(interaction.user, inventoryCards, mapCardTemplates, page, maxPage, CARDS_PER_PAGE));
 		} else {
 			await interaction.reply('Impossible de trouver la liste de cet utilisateur');
 		}

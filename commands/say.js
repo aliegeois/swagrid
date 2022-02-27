@@ -13,6 +13,6 @@ module.exports = {
 
 	/** @param {import('discord.js').CommandInteraction} interaction */
 	async execute(interaction) {
-		await interaction.channel.send(interaction.options.getString('message'));
+		await interaction.reply(interaction.options.getString('message'));
 	}
 };

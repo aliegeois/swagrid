@@ -1,7 +1,7 @@
-const cache = require('../cache');
 const CardSuggestionDTO = require('../dto/CardSuggestionDTO');
 const { findGuildConfigById, saveValidatedSuggestion } = require('../utils/database-utils');
 const { generateSuggestionReviewMessageContent } = require('../utils/message-utils');
+const { getValueInt: getGlobalConfigValueInt } = require('../utils/global-config-cache');
 
 module.exports = {
 	name: 'validatesuggestion',
@@ -20,8 +20,8 @@ module.exports = {
 			const suggestionChannel = await interaction.client.channels.fetch(guildConfig.reviewSuggestionChannelId);
 			if (suggestionChannel !== null) {
 				if (interaction.client.temporaryCardSuggestions.has(interaction.message.id)) {
-					const votesRequired = await cache.get('VOTES_REQUIRED');
-					const previewMessage = await suggestionChannel.send(generateSuggestionReviewMessageContent(temporaryCardSuggestion, votesRequired));
+					const VOTES_REQUIRED = await getGlobalConfigValueInt('VOTES_REQUIRED');
+					const previewMessage = await suggestionChannel.send(generateSuggestionReviewMessageContent(temporaryCardSuggestion, VOTES_REQUIRED));
 					// Transformer la suggestion temporaire en suggestion permanente
 					await saveValidatedSuggestion(new CardSuggestionDTO(previewMessage.id, temporaryCardSuggestion.userId, temporaryCardSuggestion.name, temporaryCardSuggestion.imageURL, temporaryCardSuggestion.rarity));
 					interaction.client.temporaryCardSuggestions.delete(interaction.message.id);

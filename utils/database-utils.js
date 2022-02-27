@@ -7,7 +7,7 @@ const GuildConfigDTO = require('../dto/GuildConfigDTO');
 const CardSuggestionDTO = require('../dto/CardSuggestionDTO');
 const SuggestionVoteDTO = require('../dto/SuggestionVoteDTO');
 const GlobalConfigDTO = require('../dto/GlobalConfigDTO');
-const { CARD_MACRON } = require('../constants');
+const { CARD_MACRON, DEFAULT_GLOBAL_CONFIG } = require('../constants');
 
 /** @type {Sequelize} */
 let sequelize = null;
@@ -161,18 +161,48 @@ module.exports = {
 		return CardTemplateDTO.modelToClassArray(cardTemplates);
 	},
 
-	async getGlobalConfigOrDefault() {
-		const globalConfig = await sequelize.models[GlobalConfigDTO.TABLE_NAME].findOne();
+	/** @param {string} name  */
+	async getGlobalConfigOrDefault(name) {
+		const globalConfigValue = await sequelize.models[GlobalConfigDTO.TABLE_NAME].findOne({
+			where: { name }
+		});
 
-		if (globalConfig === null) {
-			return GlobalConfigDTO.DEFAULT_GLOBAL_CONFIG;
-		} else {
-			return GlobalConfigDTO.modelToClass(globalConfig);
+		if (globalConfigValue === null) {
+			if (name in DEFAULT_GLOBAL_CONFIG) {
+				return new GlobalConfigDTO(name, DEFAULT_GLOBAL_CONFIG[name]);
+			}
+			return null;
 		}
+
+		return GlobalConfigDTO.modelToClass(globalConfigValue);
 	},
 
-	async findRandomCardTemplate() {
+	/**
+	 * @param {number} spawnRate5Star
+	 * @param {number} spawnRate4Star
+	 * @param {number} spawnRate3Star
+	 * @param {number} spawnRate2Star
+	 * @param {number} spawnRate1Star
+	 */
+	async findPonderatedCardTemplate(spawnRate5Star, spawnRate4Star, spawnRate3Star, spawnRate2Star, spawnRate1Star) {
+		const random = Math.random();
+		/** @type {number} */
+		let rarity;
+
+		if (random <= spawnRate5Star) {
+			rarity = 5;
+		} else if (random <= spawnRate5Star + spawnRate4Star) {
+			rarity = 4;
+		} else if (random <= spawnRate5Star + spawnRate4Star + spawnRate3Star) {
+			rarity = 3;
+		} else if (random <= spawnRate5Star + spawnRate4Star + spawnRate3Star + spawnRate2Star) {
+			rarity = 2;
+		} else if (random <= spawnRate5Star + spawnRate4Star + spawnRate3Star + spawnRate2Star + spawnRate1Star) {
+			rarity = 1;
+		}
+
 		const cardTemplate = await sequelize.models[CardTemplateDTO.TABLE_NAME].findOne({
+			where: { rarity },
 			order: sequelize.random()
 		});
 
@@ -202,18 +232,13 @@ module.exports = {
 		await sequelize.models[GuildConfigDTO.TABLE_NAME].upsert(guildConfig.toJSON());
 	},
 
-	/** @param {GlobalConfigDTO} guildConfig */
-	async saveGlobalConfig(guildConfig = GlobalConfigDTO.DEFAULT_GLOBAL_CONFIG) {
-		await sequelize.models[GlobalConfigDTO.TABLE_NAME].upsert({
-			id: 0,
-			...guildConfig.toJSON()
-		});
+	/** @param {GlobalConfigDTO} globalConfig */
+	async saveGlobalConfig(globalConfig) {
+		await sequelize.models[GlobalConfigDTO.TABLE_NAME].upsert(globalConfig.toJSON());
 	},
 
 	/** @param {SuggestionVoteDTO} suggestionVote */
 	async saveSuggestionVote(suggestionVote) {
-		console.log('suggestion vote before save');
-		console.log(suggestionVote.toJSON());
 		await sequelize.models[SuggestionVoteDTO.TABLE_NAME].upsert(suggestionVote.toJSON());
 	},
 
@@ -231,7 +256,7 @@ module.exports = {
 		let positiveVotes = null;
 		/** @type {number?} */
 		let negativeVotes = null;
-		/** @type {import('../dto/CardSuggestionDTO')}*/
+		/** @type {import('../dto/CardSuggestionDTO')?}*/
 		let cardSuggestion = null;
 
 		const transaction = await sequelize.transaction();
@@ -621,15 +646,11 @@ module.exports = {
 		}, { tableName: SuggestionVoteDTO.TABLE_NAME });
 
 		sequelize.define(GlobalConfigDTO.TABLE_NAME, {
-			min_time_between_message: DataTypes.INTEGER,
-			max_time_between_message: DataTypes.INTEGER,
-			min_points_to_add: DataTypes.INTEGER,
-			max_points_to_add: DataTypes.INTEGER,
-			spawn_threshold: DataTypes.INTEGER,
-			cards_per_page: DataTypes.INTEGER,
-			min_time_between_spawn: DataTypes.INTEGER,
-			max_time_between_spawn: DataTypes.INTEGER,
-			votes_required: DataTypes.INTEGER
+			name: {
+				type: DataTypes.STRING,
+				primaryKey: true
+			},
+			value: DataTypes.STRING
 		}, { tableName: GlobalConfigDTO.TABLE_NAME });
 
 		await sequelize.sync({

@@ -18,12 +18,19 @@ const TEXT = {
 	}
 };
 
+/** @param {number} rarity */
 function generateRarityText(rarity) {
-	return '\u2b50'.repeat(rarity); // ⭐
+	// ⭐
+	return '\u2b50'.repeat(rarity);
 }
 
+/**
+ * @param {number} votesRequired
+ * @param {number} positiveVotes
+ * @param {number} negativeVotes
+ */
 function generateVotesText(votesRequired, positiveVotes, negativeVotes) {
-	// ⬛, ❌ & ✅
+	// ⬛ ❌ ✅ ⬛
 	return '|' + '\u2b1b'.repeat(votesRequired - negativeVotes) + '\u274c'.repeat(negativeVotes) + '|' + '\u2705'.repeat(positiveVotes) + '\u2b1b'.repeat(votesRequired - positiveVotes) + '|';
 }
 
