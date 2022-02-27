@@ -312,7 +312,7 @@ module.exports = {
 
 			await transaction.commit();
 		} catch (error) {
-			console.log('rollback', error);
+			console.error('rollback', error);
 			await transaction.rollback();
 			positiveVotes = null;
 			negativeVotes = null;
@@ -365,9 +365,8 @@ module.exports = {
 
 			await transaction.commit();
 		} catch (error) {
-			console.log('rollback');
+			console.error('rollback', error);
 			await transaction.rollback();
-			console.error(error);
 			inventoryCard = null;
 		}
 
@@ -403,9 +402,8 @@ module.exports = {
 
 			await transaction.commit();
 		} catch (error) {
-			console.log('rollback');
+			console.error('rollback', error);
 			await transaction.rollback();
-			console.error(error);
 			messageId = null;
 		}
 
@@ -443,9 +441,8 @@ module.exports = {
 
 			await transaction.commit();
 		} catch (error) {
-			console.log('rollback');
+			console.error('rollback', error);
 			await transaction.rollback();
-			console.log(error);
 			inserted = false;
 		}
 

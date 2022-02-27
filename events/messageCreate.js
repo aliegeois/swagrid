@@ -102,10 +102,8 @@ module.exports = {
 			}
 		}
 
-		console.log(message.client.messageCounter);
 		let guildCounter = message.client.messageCounter.has(message.guildId) ? message.client.messageCounter.get(message.guildId) : 0;
 		guildCounter += pointsToAdd;
-		console.log(`guildCounter: ${guildCounter} / ${SPAWN_THRESHOLD}`);
 
 		if (guildCounter >= SPAWN_THRESHOLD) {
 			// On récupère la config de guilde pour savoir où faire apparaître la carte
