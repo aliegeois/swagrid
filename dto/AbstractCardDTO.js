@@ -1,3 +1,5 @@
+const { MAX_RARITY } = require('../constants');
+
 module.exports = class AbstractCardDTO {
 	#name;
 	#imageURL;
@@ -42,8 +44,8 @@ module.exports = class AbstractCardDTO {
 
 	/** @param {number} rarity */
 	set rarity(rarity) {
-		if (rarity < 1 || rarity > 5) {
-			throw new Error(`La rareté ne peut pas être inférieure à 1 ou supérieure à 5 (valeur: ${rarity})`);
+		if (rarity < 1 || rarity > MAX_RARITY) {
+			throw new Error(`La rareté ne peut pas être inférieure à 1 ou supérieure à ${MAX_RARITY} (valeur: ${rarity})`);
 		}
 		this.#rarity = rarity;
 	}

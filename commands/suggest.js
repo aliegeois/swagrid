@@ -1,4 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
+const { MAX_RARITY } = require('../constants');
 const AbstractCardDTO = require('../dto/AbstractCardDTO');
 const CardSuggestionDTO = require('../dto/CardSuggestionDTO');
 const { generateSuggestionPrevisualisationMessageContent } = require('../utils/message-utils');
@@ -9,7 +10,7 @@ module.exports = {
 		.setDescription('Suggère une carte au gacha')
 		.addStringOption(option =>
 			option
-				.setName('name')
+				.setName('nom')
 				.setDescription('Le nom de la carte')
 				.setRequired(true))
 		.addStringOption(option =>
@@ -19,9 +20,9 @@ module.exports = {
 				.setRequired(true))
 		.addIntegerOption(option =>
 			option
-				.setName('rarity')
-				.setDescription('La rareté de la carte (1-5)')
-				.setRequired(false)),
+				.setName('rareté')
+				.setDescription(`La rareté de la carte (1-${MAX_RARITY})`)
+				.setRequired(true)),
 
 	/** @param {import('discord.js').CommandInteraction} interaction */
 	async execute(interaction) {
@@ -35,11 +36,9 @@ module.exports = {
 			return interaction.reply('L\'URL doit faire moins de 256 caractères !');
 		}
 
-		let suggestedRarity = interaction.options.getInteger('rarity');
-		if (suggestedRarity === null) {
-			suggestedRarity = Math.floor(Math.random() * 3) + 2; // [2 - 4]
-		} else if (suggestedRarity < 1 || suggestedRarity > 5) {
-			return await interaction.reply('La rareté doit être comprise entre 1 et 5');
+		const suggestedRarity = interaction.options.getInteger('rarity');
+		if (suggestedRarity < 1 || suggestedRarity > MAX_RARITY) {
+			return interaction.reply(`La rareté doit être comprise entre 1 et ${MAX_RARITY}`);
 		}
 
 		const temporaryCardSuggestion = new AbstractCardDTO(suggestedName, suggestedImageURL, suggestedRarity);

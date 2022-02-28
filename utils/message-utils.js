@@ -1,4 +1,5 @@
 const { bold, userMention, underscore, inlineCode } = require('@discordjs/builders');
+const { MAX_RARITY } = require('../constants');
 const { localIdToAlias } = require('./card-utils');
 
 const TEXT = {
@@ -22,6 +23,10 @@ const TEXT = {
 function generateRarityText(rarity) {
 	// ⭐
 	return '\u2b50'.repeat(rarity);
+}
+
+function generateRarityWithBlackSquaresText(rarity) {
+	return '\u2b50'.repeat(rarity) + '\u2b1b'.repeat(MAX_RARITY - rarity);
 }
 
 /**
@@ -82,7 +87,7 @@ module.exports = {
 	 */
 	generateInventoryMessageContent(user, inventoryCards, mapCardTemplates, page, maxPage, cardPerPage) {
 		const description = inventoryCards.map(inventoryCard =>
-			`${inlineCode(localIdToAlias(inventoryCard.localId))} | ${mapCardTemplates.get(inventoryCard.cardTemplateId).name}`
+			`${inlineCode(localIdToAlias(inventoryCard.localId))} | ${generateRarityWithBlackSquaresText(mapCardTemplates.get(inventoryCard.cardTemplateId).rarity)} | ${mapCardTemplates.get(inventoryCard.cardTemplateId).name}`
 		).join('\n');
 
 		return {
