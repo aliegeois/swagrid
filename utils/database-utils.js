@@ -41,11 +41,7 @@ module.exports = {
 	/** @param {string} name */
 	async findCardTemplateByName(name) {
 		const cardTemplate = await sequelize.models[CardTemplateDTO.TABLE_NAME].findOne({
-			where: {
-				name: {
-					[Op.substring]: name
-				}
-			}
+			where: sequelize.where(sequelize.fn('upper', sequelize.col('name')), Op.substring, name.toUpperCase()) // upper('name') like '%{name}%'
 		});
 
 		if (cardTemplate === null) {
