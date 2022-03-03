@@ -7,10 +7,13 @@ module.exports = {
 		.setName('list')
 		.setType(ApplicationCommandType.User),
 
-	/** @param {import('discord.js').ContextMenuInteraction} interaction */
-	async execute(interaction) {
-		const executingUser = await interaction.client.users.fetch(interaction.targetId);
+	/**
+	 * @param {import('discord.js').ContextMenuInteraction} interaction
+	 * @param {import('../SwagridClient')} client
+	 */
+	async execute(interaction, client) {
+		const executingUser = await client.users.fetch(interaction.targetId);
 		interaction.user = executingUser;
-		interaction.client.commands.get('list').execute(interaction);
+		client.commands.get('list').execute(interaction);
 	}
 };

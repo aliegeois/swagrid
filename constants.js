@@ -7,12 +7,6 @@ module.exports = {
 		permission: true
 	},
 
-	CARD_MACRON: {
-		name: 'Macron va t\'attraper',
-		image_url: 'https://i.imgur.com/eeSA4f6.png',
-		rarity: 3
-	},
-
 	DEFAULT_GLOBAL_CONFIG: {
 		MIN_TIME_BETWEEN_MESSAGE: 10 * 1000,
 		MAX_TIME_BETWEEN_MESSAGE: 5 * 60 * 1000,

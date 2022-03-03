@@ -1,7 +1,7 @@
 const OngoingSpawnDTO = require('../dto/OngoingSpawnDTO');
-const { findGuildConfigById, deletePreviousCardAndReturnMessageId, saveOngoingSpawn, findPonderatedCardTemplate } = require('../utils/database-utils');
-const { generateSpawnMessageContent } = require('../utils/message-utils');
-const { getValueFloat: getGlobalConfigValueFloat } = require('../utils/global-config-cache');
+const { findGuildConfigById, deletePreviousCardAndReturnMessageId, saveOngoingSpawn, findPonderatedCardTemplate } = require('../utils/databaseUtils');
+const { generateSpawnMessageContent } = require('../utils/messageUtils');
+const { getValueFloat: getGlobalConfigValueFloat } = require('../utils/globalConfigCache');
 
 /**
  * Supprime une éventuelle précédente carte toujours active du channel

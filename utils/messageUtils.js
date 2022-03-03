@@ -1,6 +1,6 @@
 const { bold, userMention, underscore, inlineCode } = require('@discordjs/builders');
 const { MAX_RARITY } = require('../constants');
-const { localIdToAlias } = require('./card-utils');
+const { localIdToAlias } = require('./cardUtils');
 
 const TEXT = {
 	SUGGESTION: {
@@ -85,7 +85,7 @@ module.exports = {
 	 * @param {number} cardPerPage
 	 * @returns {import('discord.js').MessageOptions}
 	 */
-	generateInventoryMessageContent(user, inventoryCards, mapCardTemplates, page, maxPage, cardPerPage) {
+	generateInventoryMessageContent(user, inventoryCards, mapCardTemplates, page, maxPage, cardPerPage) { // TODO: rajouter des boutons page précédent/suivante, première/dernière page
 		const description = inventoryCards.map(inventoryCard =>
 			`${inlineCode(localIdToAlias(inventoryCard.localId))} | ${generateRarityWithBlackSquaresText(mapCardTemplates.get(inventoryCard.cardTemplateId).rarity)} | ${mapCardTemplates.get(inventoryCard.cardTemplateId).name}`
 		).join('\n');
@@ -142,14 +142,15 @@ module.exports = {
 
 	/**
 	 * @param {import('../dto/AbstractCardDTO')} abstractCard
+	 * @param {import('discord.js').MessageAttachment} attachment
 	 * @returns {import('discord.js').MessageOptions}
 	 */
-	generateSuggestionPrevisualisationMessageContent(abstractCard) {
+	generateSuggestionPrevisualisationMessageContent(abstractCard, attachment) {
 		return {
 			content: `Aperçu de la carte, cliquez sur "${TEXT.SUGGESTION.VALIDATE}" pour lancer le processus de validation ou "${TEXT.SUGGESTION.CANCEL}" si cette carte ne vous convient pas`,
 			embeds: [{
 				image: {
-					url: abstractCard.imageURL
+					url: `attachment://${attachment.name}`
 				},
 				author: {
 					name: 'Suggestion',
@@ -176,7 +177,8 @@ module.exports = {
 					label: TEXT.SUGGESTION.CANCEL,
 					style: 'DANGER'
 				}]
-			}]
+			}],
+			files: [attachment]
 		};
 	},
 

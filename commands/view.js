@@ -1,7 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { findInventoryCardById: findInventoryCardByIds, findCardTemplateById } = require('../utils/database-utils');
-const { isAliasValid, aliasToLocalId } = require('../utils/card-utils');
-const { generateViewMessageContent } = require('../utils/message-utils');
+const { findInventoryCardById: findInventoryCardByIds, findCardTemplateById } = require('../utils/databaseUtils');
+const { isAliasValid, aliasToLocalId } = require('../utils/cardUtils');
+const { generateViewMessageContent } = require('../utils/messageUtils');
 
 module.exports = {
 	data: new SlashCommandBuilder()

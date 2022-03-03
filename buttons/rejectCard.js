@@ -1,8 +1,8 @@
 const SuggestionVoteDTO = require('../dto/SuggestionVoteDTO');
 const { bold } = require('@discordjs/builders');
-const { saveSuggestionVote, countVotesAndValidateSuggestion } = require('../utils/database-utils');
-const { generateSuggestionReviewMessageContent, TEXT } = require('../utils/message-utils');
-const { getValueInt: getGlobalConfigValueInt } = require('../utils/global-config-cache');
+const { saveSuggestionVote, countVotesAndValidateSuggestion } = require('../utils/databaseUtils');
+const { generateSuggestionReviewMessageContent, TEXT } = require('../utils/messageUtils');
+const { getValueInt: getGlobalConfigValueInt } = require('../utils/globalConfigCache');
 
 module.exports = {
 	name: 'rejectcard',

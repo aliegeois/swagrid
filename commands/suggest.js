@@ -1,8 +1,10 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
+const { MessageAttachment } = require('discord.js');
 const { MAX_RARITY } = require('../constants');
 const AbstractCardDTO = require('../dto/AbstractCardDTO');
 const CardSuggestionDTO = require('../dto/CardSuggestionDTO');
-const { generateSuggestionPrevisualisationMessageContent } = require('../utils/message-utils');
+const { createImage } = require('../utils/imageUtils');
+const { generateSuggestionPrevisualisationMessageContent } = require('../utils/messageUtils');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -24,9 +26,12 @@ module.exports = {
 				.setDescription(`La rareté de la carte (1-${MAX_RARITY})`)
 				.setRequired(true)),
 
-	/** @param {import('discord.js').CommandInteraction} interaction */
-	async execute(interaction) {
-		const suggestedName = interaction.options.getString('name');
+	/**
+	 * @param {import('discord.js').CommandInteraction} interaction
+	 * @param {import('../SwagridClient')} client
+	 */
+	async execute(interaction, client) {
+		const suggestedName = interaction.options.getString('nom');
 		if (suggestedName.length >= 256) {
 			return interaction.reply('Le nom de la carte doit faire moins de 256 caractères !');
 		}
@@ -36,17 +41,22 @@ module.exports = {
 			return interaction.reply('L\'URL doit faire moins de 256 caractères !');
 		}
 
-		const suggestedRarity = interaction.options.getInteger('rarity');
+		const suggestedRarity = interaction.options.getInteger('rareté');
 		if (suggestedRarity < 1 || suggestedRarity > MAX_RARITY) {
 			return interaction.reply(`La rareté doit être comprise entre 1 et ${MAX_RARITY}`);
 		}
 
-		const temporaryCardSuggestion = new AbstractCardDTO(suggestedName, suggestedImageURL, suggestedRarity);
-		const previewMessage = await interaction.reply({
-			...generateSuggestionPrevisualisationMessageContent(temporaryCardSuggestion),
+		await interaction.deferReply();
+
+		const { imageURL, imageName } = await createImage(suggestedImageURL, suggestedRarity);
+		const attachment = new MessageAttachment(imageURL, imageName);
+		const temporaryCardSuggestion = new AbstractCardDTO(suggestedName, imageURL, suggestedRarity);
+		const previewMessage = await interaction.editReply({
+			...generateSuggestionPrevisualisationMessageContent(temporaryCardSuggestion, attachment),
 			fetchReply: true
 		});
 
-		interaction.client.temporaryCardSuggestions.set(previewMessage.id, new CardSuggestionDTO(previewMessage.id, interaction.user.id, suggestedName, suggestedImageURL, suggestedRarity));
+		const cardSuggestion = new CardSuggestionDTO(previewMessage.id, interaction.user.id, suggestedName, imageURL, suggestedRarity);
+		client.temporaryCardSuggestions.set(previewMessage.id, { cardSuggestion, attachment });
 	}
 };

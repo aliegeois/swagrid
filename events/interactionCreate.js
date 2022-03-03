@@ -1,20 +1,22 @@
 const { inlineCode } = require('@discordjs/builders');
 
-/** @param {import('discord.js').CommandInteraction} interaction */
-async function executeCommand(client, interaction) {
-	/** @type {command} */
+/**
+ * @param {import('discord.js').CommandInteraction} interaction
+ * @param {import('../SwagridClient')} client
+ */
+async function executeCommand(interaction, client) {
 	const command = client.commands.get(interaction.commandName);
 
 	if (command === undefined) {
 		interaction.reply({
 			content: `La commande n'a pas été trouvée (${inlineCode(interaction.commandName)})`,
-			ephemeral: true }
-		);
+			ephemeral: true
+		});
 		return;
 	}
 
 	try {
-		await command.execute(interaction);
+		await command.execute(interaction, client);
 	} catch (exception) {
 		console.error(exception);
 		await interaction.channel.send({
@@ -41,8 +43,11 @@ function hasButttonPermission(button, member) {
 	}
 }
 
-/** @param {import('discord.js').ButtonInteraction} interaction */
-async function executeButton(client, interaction) {
+/**
+ * @param {import('discord.js').ButtonInteraction} interaction
+ * @param {import('../SwagridClient')} client
+ */
+async function executeButton(interaction, client) {
 	const button = client.buttons.get(interaction.customId);
 
 	if (!button) {
@@ -53,7 +58,7 @@ async function executeButton(client, interaction) {
 	}
 
 	try {
-		await button.execute(interaction);
+		await button.execute(interaction, client);
 	} catch (exception) {
 		console.error(exception);
 		await interaction.channel.send({
@@ -62,8 +67,11 @@ async function executeButton(client, interaction) {
 	}
 }
 
-/** @param {import('discord.js').ContextMenuInteraction} interaction */
-async function executeContextMenu(client, interaction) {
+/**
+ * @param {import('discord.js').ContextMenuInteraction} interaction
+ * @param {import('../SwagridClient')} client
+ */
+async function executeContextMenu(interaction, client) {
 	const contextMenu = client.contextMenus.get(interaction.commandName);
 
 	if (!contextMenu) {
@@ -71,7 +79,7 @@ async function executeContextMenu(client, interaction) {
 	}
 
 	try {
-		await contextMenu.execute(interaction);
+		await contextMenu.execute(interaction, client);
 	} catch (exception) {
 		console.error(exception);
 		await interaction.channel.send({
@@ -86,11 +94,11 @@ module.exports = {
 	/** @param {import('discord.js').Interaction} interaction */
 	async execute(interaction) {
 		if (interaction.isCommand()) {
-			await executeCommand(interaction.client, interaction);
+			await executeCommand(interaction, interaction.client);
 		} else if (interaction.isButton()) {
-			await executeButton(interaction.client, interaction);
+			await executeButton(interaction, interaction.client);
 		} else if (interaction.isContextMenu()) {
-			await executeContextMenu(interaction.client, interaction);
+			await executeContextMenu(interaction, interaction.client);
 		} else {
 			console.warn(`Type d'interaction inconnu (${interaction.type})`);
 		}

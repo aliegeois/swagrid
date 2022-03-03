@@ -1,17 +1,20 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { saveGlobalConfig } = require('../utils/database-utils');
-const { get: getGlobalConfig } = require('../utils/global-config-cache');
+const { MASTER_PERMISSION } = require('../constants');
+const { saveGlobalConfig } = require('../utils/databaseUtils');
+const { get: getGlobalConfig } = require('../utils/globalConfigCache');
 
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('updateconfig')
 		.setDescription('Met à jour la configuration globale')
+		.setDefaultPermission(false)
 		.addStringOption(option =>
 			option
 				.setName('config')
 				.setDescription('La configuration à changer')
-				.setRequired(true))
-		.setDefaultPermission(false),
+				.setRequired(true)),
+
+	permissions: [MASTER_PERMISSION],
 
 	/** @param {import('discord.js').CommandInteraction} interaction */
 	async execute(interaction) {

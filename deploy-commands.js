@@ -13,12 +13,12 @@ async function fetchCommands() {
 }
 
 async function fetchContextMenus() {
-	const contextMenuFiles = await readdir('./contextmenus');
+	const contextMenuFiles = await readdir('./context-menus');
 
 	return contextMenuFiles.filter(
 		file => file.endsWith('.js')
 	).map(file =>
-		require(`./contextmenus/${file}`).data.toJSON()
+		require(`./context-menus/${file}`).data.toJSON()
 	);
 }
 

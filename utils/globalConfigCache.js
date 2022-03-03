@@ -1,4 +1,4 @@
-const { getGlobalConfigOrDefault } = require('./database-utils');
+const { getGlobalConfigOrDefault } = require('./databaseUtils');
 
 /** @type {Map<string, import('../dto/GlobalConfigDTO')>} */
 const values = new Map();

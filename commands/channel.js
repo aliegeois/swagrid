@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, inlineCode, channelMention } = require('@discordjs/builders');
+const { MASTER_PERMISSION } = require('../constants');
 const GuildConfigDTO = require('../dto/GuildConfigDTO');
-const { findGuildConfigById, saveGuildConfig } = require('../utils/database-utils');
+const { findGuildConfigById, saveGuildConfig } = require('../utils/databaseUtils');
 
 /**
  * @param {import('../dto/GuildConfigDTO')} guildConfig
@@ -145,6 +146,8 @@ module.exports = {
 						)
 				)
 		),
+
+	permissions: [ MASTER_PERMISSION ],
 
 	/** @param {import('discord.js').CommandInteraction} interaction */
 	async execute(interaction) {

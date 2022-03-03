@@ -1,17 +1,20 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { resetDB } = require('../utils/database-utils');
+const { MASTER_PERMISSION } = require('../constants');
+const { resetDB } = require('../utils/databaseUtils');
 
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('resetdb')
 		.setDescription('Réinitialise les BDDs sélectionnées')
+		.setDefaultPermission(false)
 		.addStringOption(option =>
 			option
 				.setName('tables')
 				.setDescription('La liste des BDDs à réinitialiser')
 				.setRequired(true)
-		)
-		.setDefaultPermission(false),
+		),
+
+	permissions: [ MASTER_PERMISSION ],
 
 	/** @param {import('discord.js').CommandInteraction} interaction */
 	async execute(interaction) {

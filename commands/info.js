@@ -1,6 +1,6 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { findCardTemplateByName, findCardTemplateById } = require('../utils/database-utils');
-const { generateInfoMessage } = require('../utils/message-utils');
+const { findCardTemplateByName, findCardTemplateById } = require('../utils/databaseUtils');
+const { generateInfoMessage } = require('../utils/messageUtils');
 
 module.exports = {
 	data: new SlashCommandBuilder()

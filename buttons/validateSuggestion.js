@@ -1,39 +1,52 @@
 const CardSuggestionDTO = require('../dto/CardSuggestionDTO');
-const { findGuildConfigById, saveValidatedSuggestion } = require('../utils/database-utils');
-const { generateSuggestionReviewMessageContent } = require('../utils/message-utils');
-const { getValueInt: getGlobalConfigValueInt } = require('../utils/global-config-cache');
+const { findGuildConfigById, saveValidatedSuggestion } = require('../utils/databaseUtils');
+const { generateSuggestionReviewMessageContent } = require('../utils/messageUtils');
+const { getValueInt: getGlobalConfigValueInt } = require('../utils/globalConfigCache');
 
 module.exports = {
 	name: 'validatesuggestion',
 
-	/** @param {import('discord.js').ButtonInteraction} interaction */
-	async execute(interaction) {
-		/** @type {import('../dto/CardSuggestionDTO')} */
-		const temporaryCardSuggestion = interaction.client.temporaryCardSuggestions.get(interaction.message.id);
-		if (temporaryCardSuggestion.userId !== interaction.user.id) {
-			return;
-		}
+	/**
+	 * @param {import('discord.js').ButtonInteraction} interaction
+	 * @param {import('../SwagridClient')} client
+	 */
+	async execute(interaction, client) {
+		if (client.temporaryCardSuggestions.has(interaction.message.id)) {
+			const {
+				cardSuggestion,
+				attachment
+			} = client.temporaryCardSuggestions.get(interaction.message.id);
+			if (cardSuggestion.userId !== interaction.user.id) {
+				// Si ce n'est pas l'utilisateur qui a suggéré la carte qui la valide, on s'arrête ici
+				return;
+			}
+			console.log(attachment);
 
-		const guildConfig = await findGuildConfigById(interaction.guildId);
-		if (guildConfig !== null && guildConfig.reviewSuggestionChannelId !== null) {
+			const guildConfig = await findGuildConfigById(interaction.guildId);
 			/** @type {import('discord.js').GuildTextBasedChannel} */
-			const suggestionChannel = await interaction.client.channels.fetch(guildConfig.reviewSuggestionChannelId);
-			if (suggestionChannel !== null) {
-				if (interaction.client.temporaryCardSuggestions.has(interaction.message.id)) {
-					const VOTES_REQUIRED = await getGlobalConfigValueInt('VOTES_REQUIRED');
-					const previewMessage = await suggestionChannel.send(generateSuggestionReviewMessageContent(temporaryCardSuggestion, VOTES_REQUIRED));
-					// Transformer la suggestion temporaire en suggestion permanente
-					await saveValidatedSuggestion(new CardSuggestionDTO(previewMessage.id, temporaryCardSuggestion.userId, temporaryCardSuggestion.name, temporaryCardSuggestion.imageURL, temporaryCardSuggestion.rarity));
-					interaction.client.temporaryCardSuggestions.delete(interaction.message.id);
-					/** @type {import('discord.js').Message} */
-					const message = await interaction.channel.messages.fetch(interaction.message.id);
-					await message.delete();
-				}
+			let suggestionChannel;
+			if (guildConfig !== null && guildConfig.reviewSuggestionChannelId !== null) {
+				suggestionChannel = await client.channels.fetch(guildConfig.reviewSuggestionChannelId);
 			} else {
-				await interaction.reply('Le channel de review de suggestion n\'a pas été trouvé, peut-être est-t\'il supprimé');
+				suggestionChannel = interaction.channel;
+				// await interaction.reply('Aucun channel de review de suggestion n\'a été configuré, faites /channel suggest set #<channel>');
+			}
+
+			if (suggestionChannel !== null) {
+				const VOTES_REQUIRED = await getGlobalConfigValueInt('VOTES_REQUIRED');
+				const previewMessage = await suggestionChannel.send(generateSuggestionReviewMessageContent(cardSuggestion, VOTES_REQUIRED));
+
+				// Transformer la suggestion temporaire en suggestion permanente
+				await saveValidatedSuggestion(new CardSuggestionDTO(previewMessage.id, cardSuggestion.userId, cardSuggestion.name, cardSuggestion.imageURL, cardSuggestion.rarity));
+				client.temporaryCardSuggestions.delete(interaction.message.id);
+				/** @type {import('discord.js').Message} */
+				const message = await interaction.channel.messages.fetch(interaction.message.id);
+				await message.delete();
+			} else {
+				await interaction.reply('Le channel de review de suggestion n\'a pas été trouvé');
 			}
 		} else {
-			await interaction.reply('Aucun channel de review de suggestion n\'a été configuré, faites /channel suggest set #<channel>');
+			await interaction.reply('Cette suggestion n\'existe plus');
 		}
 	}
 };

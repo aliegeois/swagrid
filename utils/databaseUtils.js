@@ -7,7 +7,7 @@ const GuildConfigDTO = require('../dto/GuildConfigDTO');
 const CardSuggestionDTO = require('../dto/CardSuggestionDTO');
 const SuggestionVoteDTO = require('../dto/SuggestionVoteDTO');
 const GlobalConfigDTO = require('../dto/GlobalConfigDTO');
-const { CARD_MACRON, DEFAULT_GLOBAL_CONFIG } = require('../constants');
+const { DEFAULT_GLOBAL_CONFIG } = require('../constants');
 
 /** @type {Sequelize} */
 let sequelize = null;
@@ -26,14 +26,8 @@ module.exports = {
 	},
 
 	/** @param {string} name */
-	async findCardTemplatesByName(name) {
-		const cardTemplates = await sequelize.models[CardTemplateDTO.TABLE_NAME].findAll({
-			where: {
-				name: {
-					[Op.substring]: name
-				}
-			}
-		});
+	async findAllCardTemplates() {
+		const cardTemplates = await sequelize.models[CardTemplateDTO.TABLE_NAME].findAll();
 
 		return CardTemplateDTO.modelToClassArray(cardTemplates);
 	},
@@ -472,11 +466,6 @@ module.exports = {
 		}
 
 		return InventoryCardDTO.modelToClassArray(inventoryCards);
-	},
-
-	async populateWithMacron() {
-		await sequelize.models[CardTemplateDTO.TABLE_NAME].sync({ force: true });
-		await sequelize.models[CardTemplateDTO.TABLE_NAME].create(CARD_MACRON);
 	},
 
 	/** @param {string[]} tables */

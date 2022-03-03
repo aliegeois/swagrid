@@ -1,7 +1,8 @@
 {
 	"env": {
 		"es6": true,
-		"node": true
+		"node": true,
+		"browser": false
 	},
 	"extends": "eslint:recommended",
 	"parser": "@babel/eslint-parser",

@@ -1,6 +1,6 @@
-const { localIdToAlias } = require('../utils/card-utils');
-const { findOngoingSpawnById, claimCardAndAddItToInventory, findCardTemplateById } = require('../utils/database-utils');
-const { generateSpawnMessageContent } = require('../utils/message-utils');
+const { localIdToAlias } = require('../utils/cardUtils');
+const { findOngoingSpawnById, claimCardAndAddItToInventory, findCardTemplateById } = require('../utils/databaseUtils');
+const { generateSpawnMessageContent } = require('../utils/messageUtils');
 
 /**
  * Revendique la carte et l'ajoute à l'inventaire de l'utilisateur

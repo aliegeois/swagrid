@@ -1,7 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { getInventorySize, getInventoryPage, findCardTemplatesByIds } = require('../utils/database-utils');
-const { generateInventoryMessageContent } = require('../utils/message-utils');
-const { getValueInt: getGlobalConfigValueInt } = require('../utils/global-config-cache');
+const { getInventorySize, getInventoryPage, findCardTemplatesByIds } = require('../utils/databaseUtils');
+const { generateInventoryMessageContent } = require('../utils/messageUtils');
+const { getValueInt: getGlobalConfigValueInt } = require('../utils/globalConfigCache');
 
 module.exports = {
 	data: new SlashCommandBuilder()
