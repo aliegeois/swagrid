@@ -2,6 +2,7 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const { MASTER_PERMISSION } = require('../constants');
 const { invalidate: invalidateGlobalConfigCache } = require('../utils/globalConfigCache');
 
+/** @type {import('../SwagridClient').SwagridCommand} */
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('reloadcache')
@@ -10,10 +11,9 @@ module.exports = {
 
 	permissions: [ MASTER_PERMISSION ],
 
-	/** @param {import('discord.js').CommandInteraction} interaction */
 	async execute(interaction) {
 		invalidateGlobalConfigCache();
 
-		await interaction.reply('Cache rechargé');
+		return interaction.reply('Cache rechargé');
 	}
 };

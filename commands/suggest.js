@@ -5,6 +5,7 @@ const AbstractCardDTO = require('../dto/AbstractCardDTO');
 const CardSuggestionDTO = require('../dto/CardSuggestionDTO');
 const { MAX_RARITY } = require('../constants');
 
+/** @type {import('../SwagridClient').SwagridCommand} */
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('suggest')
@@ -25,10 +26,6 @@ module.exports = {
 				.setDescription(`La rareté de la carte (1-${MAX_RARITY})`)
 				.setRequired(true)),
 
-	/**
-	 * @param {import('discord.js').CommandInteraction} interaction
-	 * @param {import('../SwagridClient')} client
-	 */
 	async execute(interaction, client) {
 		const suggestedName = interaction.options.getString('nom');
 		if (suggestedName.length >= 256) {

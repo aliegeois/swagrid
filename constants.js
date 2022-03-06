@@ -1,6 +1,7 @@
 module.exports = {
 	MAX_RARITY: 5,
 
+	/** @type {import('discord.js').ApplicationCommandPermissionData} */
 	MASTER_PERMISSION: {
 		id: process.env.OWNER_ID,
 		type: 'USER',

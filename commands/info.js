@@ -2,6 +2,7 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const { findCardTemplateByName, findCardTemplateById } = require('../utils/databaseUtils');
 const { generateInfoMessage } = require('../utils/messageUtils');
 
+/** @type {import('../SwagridClient').SwagridCommand} */
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('info')
@@ -19,7 +20,6 @@ module.exports = {
 				.setRequired(false)
 		),
 
-	/** @param {import('discord.js').CommandInteraction} interaction */
 	async execute(interaction) {
 		const name = interaction.options.getString('nom');
 		const id = interaction.options.getInteger('id');
@@ -40,6 +40,6 @@ module.exports = {
 			return interaction.reply('La carte n\'a pas été trouvée');
 		}
 
-		await interaction.reply(generateInfoMessage(cardTemplate));
+		return interaction.reply(generateInfoMessage(cardTemplate));
 	}
 };

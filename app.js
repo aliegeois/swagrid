@@ -13,7 +13,7 @@ function initWebsite() {
 	if (process.env.NODE_ENV === 'production') {
 		// Force https en prod
 		app.use((req, res, next) => {
-			if (req.headers['x-forwarded-proto'] == 'https') {
+			if (req.headers['x-forwarded-proto'] === 'https') {
 				next();
 			} else {
 				res.redirect(`https://${req.headers.host}${req.url}`);

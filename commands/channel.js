@@ -81,6 +81,7 @@ async function generateMessageApprovedSet(guildConfig, channelId) {
 	}
 }
 
+/** @type {import('../SwagridClient').SwagridCommand} */
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('channel')
@@ -149,7 +150,6 @@ module.exports = {
 
 	permissions: [ MASTER_PERMISSION ],
 
-	/** @param {import('discord.js').CommandInteraction} interaction */
 	async execute(interaction) {
 		let guildConfig = await findGuildConfigById(interaction.guildId);
 		if (guildConfig === null) {
@@ -205,6 +205,6 @@ module.exports = {
 		}
 		}
 
-		interaction.reply({ content });
+		return interaction.reply({ content });
 	}
 };

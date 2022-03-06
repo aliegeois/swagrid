@@ -1,9 +1,9 @@
 const { readdirSync } = require('fs');
 const { Client, Collection, Intents } = require('discord.js');
 
-/** @typedef {{ data: import('@discordjs/builders').SlashCommandBuilder, permissions?: import('discord.js').ApplicationCommandPermissionData[], execute: (interaction: import('discord.js').CommandInteraction, client: SwagridClient) => Promise<void> }} SwagridCommand */
-/** @typedef {{ name: string, permissions?: import('discord.js').ApplicationCommandPermissionData[], execute: (interaction: import('discord.js').ButtonInteraction, client: SwagridClient) => Promise<void> }} SwagridButton */
-/** @typedef {{ data: import('@discordjs/builders').ContextMenuCommandBuilder, permissions?: import('discord.js').ApplicationCommandPermissionData[], execute: (interaction: import('discord.js').ContextMenuInteraction, client: SwagridClient) => Promise<void> }} SwagridContextMenu */
+/** @typedef {{ data: import('@discordjs/builders').SlashCommandBuilder, permissions?: import('discord.js').ApplicationCommandPermissionData[], execute: (interaction: import('discord.js').CommandInteraction, client: import('./SwagridClient')) => Promise<void> }} SwagridCommand */
+/** @typedef {{ name: string, permissions?: import('discord.js').ApplicationCommandPermissionData[], execute: (interaction: import('discord.js').ButtonInteraction, client: import('./SwagridClient')) => Promise<void> }} SwagridButton */
+/** @typedef {{ data: import('@discordjs/builders').ContextMenuCommandBuilder, permissions?: import('discord.js').ApplicationCommandPermissionData[], execute: (interaction: import('discord.js').ContextMenuInteraction, client: import('./SwagridClient')) => Promise<void> }} SwagridContextMenu */
 
 module.exports = class SwagridClient extends Client {
 	/** @type {{userId: string, guildId: string, createdTimestamp: number}[]} */
@@ -19,6 +19,7 @@ module.exports = class SwagridClient extends Client {
 	buttons = new Collection();
 	/** @type {Collection<string, SwagridContextMenu>} */
 	contextMenus = new Collection();
+
 	constructor() {
 		super({ intents: [ Intents.FLAGS.GUILD_MESSAGES ] });
 
@@ -28,16 +29,16 @@ module.exports = class SwagridClient extends Client {
 				name: 'Quidditch'
 			});
 
-			this.definePermissions();
+			this.#definePermissions();
 		});
 
-		this.loadCommands();
-		this.loadEvents();
-		this.loadButtons();
-		this.loadContextMenus();
+		this.#loadCommands();
+		this.#loadEvents();
+		this.#loadButtons();
+		this.#loadContextMenus();
 	}
 
-	loadCommands() {
+	#loadCommands() {
 		console.log('Récupération des commandes...');
 
 		const files = readdirSync('./commands');
@@ -52,7 +53,7 @@ module.exports = class SwagridClient extends Client {
 		console.log('Commandes récupérées !');
 	}
 
-	loadEvents() {
+	#loadEvents() {
 		console.log('Récupération des événements...');
 
 		const files = readdirSync('./events');
@@ -67,7 +68,7 @@ module.exports = class SwagridClient extends Client {
 		console.log('Événements récupérées !');
 	}
 
-	loadButtons() {
+	#loadButtons() {
 		console.log('Récupération des boutons...');
 
 		const files = readdirSync('./buttons');
@@ -82,7 +83,7 @@ module.exports = class SwagridClient extends Client {
 		console.log('Boutons récupérés !');
 	}
 
-	loadContextMenus() {
+	#loadContextMenus() {
 		console.log('Récupération des menus contextuel...');
 
 		const files = readdirSync('./context-menus');
@@ -97,13 +98,7 @@ module.exports = class SwagridClient extends Client {
 		console.log('Menus contextuel récupérés !');
 	}
 
-	async login() {
-		console.log('Connexion à Discord...');
-		await super.login(process.env.DISCORD_TOKEN);
-		console.log('Connecté à Discord !');
-	}
-
-	async definePermissions() {
+	async #definePermissions() {
 		console.log('Définition des permissions...');
 
 		const poudlard = await this.guilds.fetch(process.env.POUDLARD_ID);
@@ -112,11 +107,17 @@ module.exports = class SwagridClient extends Client {
 			if (this.commands.has(command.name)) {
 				const permissions = this.commands.get(command.name).permissions;
 				if (permissions !== undefined) {
-					command.permissions.set({ permissions });
+					await command.permissions.set({ permissions });
 				}
 			}
 		}
 
 		console.log('Permissions définies !');
+	}
+
+	async login() {
+		console.log('Connexion à Discord...');
+		await super.login(process.env.DISCORD_TOKEN);
+		console.log('Connecté à Discord !');
 	}
 };

@@ -3,6 +3,7 @@ const { getInventorySize, getInventoryPage, findCardTemplatesByIds } = require('
 const { generateInventoryMessageContent } = require('../utils/messageUtils');
 const { getValueInt: getGlobalConfigValueInt } = require('../utils/globalConfigCache');
 
+/** @type {import('../SwagridClient').SwagridCommand} */
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('list')
@@ -14,7 +15,6 @@ module.exports = {
 				.setRequired(false)
 		),
 
-	/** @param {import('discord.js').CommandInteraction} interaction */
 	async execute(interaction) {
 		const inventorySize = await getInventorySize(interaction.user.id);
 		let page = 0;
@@ -39,9 +39,9 @@ module.exports = {
 			const cardTemplates = await findCardTemplatesByIds(cardTemplateIds);
 			const mapCardTemplates = new Map(cardTemplates.map(cardTemplate => [cardTemplate.id, cardTemplate]));
 
-			await interaction.reply(generateInventoryMessageContent(interaction.user, inventoryCards, mapCardTemplates, page, maxPage, CARDS_PER_PAGE));
+			return interaction.reply(generateInventoryMessageContent(interaction.user, inventoryCards, mapCardTemplates, page, maxPage, CARDS_PER_PAGE));
 		} else {
-			await interaction.reply('Impossible de trouver la liste de cet utilisateur');
+			return interaction.reply('Impossible de trouver la liste de cet utilisateur');
 		}
 	}
 };

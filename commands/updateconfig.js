@@ -3,6 +3,7 @@ const { MASTER_PERMISSION } = require('../constants');
 const { saveGlobalConfig } = require('../utils/databaseUtils');
 const { get: getGlobalConfig } = require('../utils/globalConfigCache');
 
+/** @type {import('../SwagridClient').SwagridCommand} */
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('updateconfig')
@@ -16,7 +17,6 @@ module.exports = {
 
 	permissions: [MASTER_PERMISSION],
 
-	/** @param {import('discord.js').CommandInteraction} interaction */
 	async execute(interaction) {
 		const commands = interaction.options.getString('config');
 		for (const command of commands.split(' ')) {
@@ -26,6 +26,6 @@ module.exports = {
 			await saveGlobalConfig(globalConfig);
 		}
 
-		interaction.reply('Configuration sauvegardée');
+		return interaction.reply('Configuration sauvegardée');
 	}
 };

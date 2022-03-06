@@ -1,7 +1,8 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
+const { resetDBs } = require('../utils/databaseUtils');
 const { MASTER_PERMISSION } = require('../constants');
-const { resetDB } = require('../utils/databaseUtils');
 
+/** @type {import('../SwagridClient').SwagridCommand} */
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('resetdb')
@@ -16,15 +17,14 @@ module.exports = {
 
 	permissions: [ MASTER_PERMISSION ],
 
-	/** @param {import('discord.js').CommandInteraction} interaction */
 	async execute(interaction) {
 		const tables = interaction.options.getString('tables').split(' ');
-		resetDB(tables);
+		await resetDBs(tables);
 
-		if (tables.length == 1 && tables[0] !== 'all') {
-			interaction.reply('Table réinitialisée');
+		if (tables.length === 1 && tables[0] !== 'all') {
+			return interaction.reply('Table réinitialisée');
 		} else {
-			interaction.reply('Tables réinitialisées');
+			return interaction.reply('Tables réinitialisées');
 		}
 	}
 };

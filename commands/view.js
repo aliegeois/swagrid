@@ -3,6 +3,7 @@ const { findInventoryCardById: findInventoryCardByIds, findCardTemplateById } = 
 const { isAliasValid, aliasToLocalId } = require('../utils/cardUtils');
 const { generateViewMessageContent } = require('../utils/messageUtils');
 
+/** @type {import('../SwagridClient').SwagridCommand} */
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('view')
@@ -14,7 +15,6 @@ module.exports = {
 				.setRequired(true)
 		),
 
-	/** @param {import('discord.js').CommandInteraction} interaction */
 	async execute(interaction) {
 		const alias = interaction.options.getString('alias');
 		if (isAliasValid(alias)) {
@@ -23,12 +23,12 @@ module.exports = {
 
 			if (inventoryCard !== null) {
 				const cardTemplate = await findCardTemplateById(inventoryCard.cardTemplateId);
-				await interaction.reply(generateViewMessageContent(interaction.user, inventoryCard, cardTemplate));
+				return interaction.reply(generateViewMessageContent(interaction.user, inventoryCard, cardTemplate));
 			} else {
-				await interaction.reply('Cette carte n\'existe pas');
+				return interaction.reply('Cette carte n\'existe pas');
 			}
 		} else {
-			await interaction.reply('Alias invalide (doit faire 4 caractères alphanumérique)');
+			return interaction.reply('Alias invalide (doit faire 4 caractères alphanumérique)');
 		}
 	}
 };

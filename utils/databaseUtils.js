@@ -469,7 +469,7 @@ module.exports = {
 	},
 
 	/** @param {string[]} tables */
-	async resetDB(tables) {
+	async resetDBs(tables) {
 		if (tables.includes(InventoryCardDTO.TABLE_NAME) || tables.includes('all')) {
 			await sequelize.models[InventoryCardDTO.TABLE_NAME].sync({ force: true });
 		}
