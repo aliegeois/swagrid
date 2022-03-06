@@ -1,6 +1,6 @@
-const { createWriteStream } = require('fs');
 const path = require('path');
 const { createCanvas, loadImage } = require('canvas');
+const { get: getImage } = require('./imageCache');
 
 const canvas = createCanvas(174, 174);
 const ctx = canvas.getContext('2d');
@@ -66,15 +66,15 @@ module.exports = {
 	/**
 	 * @param {string} baseImageURL
 	 * @param {number} rarity
-	 * @returns {Promise<{ imageURL: string, imageName: string }>}
+	 * @returns {Promise<string>}
 	 */
 	async createImage(baseImageURL, rarity) {
 		return new Promise((resolve, reject) => {
 			Promise.all([
-				loadImage(getBackgroundUrl(rarity)),
+				getImage(getBackgroundUrl(rarity)),
 				loadImage(baseImageURL),
-				loadImage(getFrameUrl(rarity)),
-				loadImage(getStarUrl(rarity))
+				getImage(getFrameUrl(rarity)),
+				getImage(getStarUrl(rarity))
 			]).then(([background, image, frame, star]) => {
 				ctx.clearRect(0, 0, 174, 174);
 
@@ -83,16 +83,8 @@ module.exports = {
 				ctx.drawImage(frame, 0, 0);
 				ctx.drawImage(star, 10, 128);
 
-				const imageName = `${new Date().getTime()}.png`;
-				const imageURL = path.join(__dirname, '..', 'temporary-images', imageName);
-				const imageStream = createWriteStream(imageURL);
-				imageStream.on('finish', () => {
-					resolve({ imageURL, imageName });
-				});
-				imageStream.on('error', err => {
-					reject(err);
-				});
-				canvas.createPNGStream().pipe(imageStream);
+				const dataURL = canvas.toDataURL().split(',')[1];
+				resolve(dataURL);
 			}).catch(reject);
 		});
 	}

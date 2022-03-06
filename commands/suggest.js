@@ -1,10 +1,9 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageAttachment } = require('discord.js');
-const { MAX_RARITY } = require('../constants');
+const { generateSuggestionPreviewMessageContent } = require('../utils/messageUtils');
+const { createImage } = require('../utils/imageUtils');
 const AbstractCardDTO = require('../dto/AbstractCardDTO');
 const CardSuggestionDTO = require('../dto/CardSuggestionDTO');
-const { createImage } = require('../utils/imageUtils');
-const { generateSuggestionPrevisualisationMessageContent } = require('../utils/messageUtils');
+const { MAX_RARITY } = require('../constants');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -48,15 +47,12 @@ module.exports = {
 
 		await interaction.deferReply();
 
-		const { imageURL, imageName } = await createImage(suggestedImageURL, suggestedRarity);
-		const attachment = new MessageAttachment(imageURL, imageName);
-		const temporaryCardSuggestion = new AbstractCardDTO(suggestedName, imageURL, suggestedRarity);
+		const imageDataURL = await createImage(suggestedImageURL, suggestedRarity);
 		const previewMessage = await interaction.editReply({
-			...generateSuggestionPrevisualisationMessageContent(temporaryCardSuggestion, attachment),
+			...generateSuggestionPreviewMessageContent(new AbstractCardDTO(suggestedName, imageDataURL, suggestedRarity)),
 			fetchReply: true
 		});
 
-		const cardSuggestion = new CardSuggestionDTO(previewMessage.id, interaction.user.id, suggestedName, imageURL, suggestedRarity);
-		client.temporaryCardSuggestions.set(previewMessage.id, { cardSuggestion, attachment });
+		client.temporaryCardSuggestions.set(previewMessage.id, new CardSuggestionDTO(previewMessage.id, interaction.user.id, suggestedName, imageDataURL, suggestedRarity));
 	}
 };

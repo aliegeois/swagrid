@@ -19,7 +19,8 @@ async function executeCommand(interaction, client) {
 		await command.execute(interaction, client);
 	} catch (exception) {
 		console.error(exception);
-		await interaction.channel.send({
+		const interactionChannel = await client.channels.fetch(interaction.channelId);
+		await interactionChannel.send({
 			content: `Erreur lors de l'exécution de cette commande : (${inlineCode(exception.name)})`
 		});
 	}
@@ -61,7 +62,8 @@ async function executeButton(interaction, client) {
 		await button.execute(interaction, client);
 	} catch (exception) {
 		console.error(exception);
-		await interaction.channel.send({
+		const interactionChannel = await client.channels.fetch(interaction.channelId);
+		await interactionChannel.send({
 			content: `Erreur lors de l'activation de ce bouton [${inlineCode(interaction.customId)}] (${inlineCode(exception.name)})`
 		});
 	}
@@ -82,7 +84,8 @@ async function executeContextMenu(interaction, client) {
 		await contextMenu.execute(interaction, client);
 	} catch (exception) {
 		console.error(exception);
-		await interaction.channel.send({
+		const interactionChannel = await client.channels.fetch(interaction.channelId);
+		await interactionChannel.send({
 			content: `Erreur lors de l'activation de ce menu contextuel [${inlineCode(interaction.commandName)}] (${inlineCode(exception.name)})`
 		});
 	}

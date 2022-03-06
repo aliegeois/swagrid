@@ -21,8 +21,8 @@ module.exports = class AbstractCardDTO {
 	}
 
 	set name(name) {
-		if (name >= 256) {
-			throw new Error('Le nom de la carte doit faire moins de 256 caractères !');
+		if (name.length >= 256) {
+			throw new Error(`Le nom de la carte doit faire moins de 256 caractères ! (taille: ${name.length})`);
 		}
 		this.#name = name;
 	}
@@ -32,9 +32,9 @@ module.exports = class AbstractCardDTO {
 	}
 
 	set imageURL(imageURL) {
-		if (imageURL.length >= 256) {
+		/* if (imageURL.length >= 256) {
 			throw new Error('L\'URL doit faire moins de 256 caractères !');
-		}
+		}*/
 		this.#imageURL = imageURL;
 	}
 

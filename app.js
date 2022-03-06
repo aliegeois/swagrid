@@ -10,7 +10,18 @@ const app = express();
 function initWebsite() {
 	console.log('lancement du serveur HTTP...');
 
-	app.use(express.static(path.join(__dirname, '/public')));
+	if (process.env.NODE_ENV === 'production') {
+		// Force https en prod
+		app.use((req, res, next) => {
+			if (req.headers['x-forwarded-proto'] == 'https') {
+				next();
+			} else {
+				res.redirect(`https://${req.headers.host}${req.url}`);
+			}
+		});
+	}
+
+	app.use(express.static(path.join(__dirname, 'public')));
 
 	app.get('/cards', async (_, res) => {
 		const cardTemplates = await findAllCardTemplates();
@@ -23,27 +34,13 @@ function initWebsite() {
 	});
 }
 
-async function initClient() {
-	client.once('ready', () => {
-		client.user.setActivity({
-			type: 'COMPETING',
-			name: 'Quidditch'
-		});
-
-		client.definePermissions();
-	});
-
-	await Promise.all([client.loadCommands(), client.loadEvents(), client.loadButtons(), client.loadContextMenus()]);
-	await client.login();
-}
-
 process.on('SIGINT', () => {
 	client.destroy();
 	process.exit();
 });
 
-(() => {
-	initDatabase();
-	initClient();
+(async () => {
+	await initDatabase();
+	await client.login();
 	initWebsite();
 })();

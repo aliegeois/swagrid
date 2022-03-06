@@ -1,3 +1,4 @@
+const { userMention, bold } = require('@discordjs/builders');
 const { localIdToAlias } = require('../utils/cardUtils');
 const { findOngoingSpawnById, claimCardAndAddItToInventory, findCardTemplateById } = require('../utils/databaseUtils');
 const { generateSpawnMessageContent } = require('../utils/messageUtils');
@@ -26,7 +27,7 @@ async function retrieveAndClaimCard(channel, user) {
  * @param {import('discord.js').User} poorUser
  */
 async function notifyUserCardAlreadyClaimed(interaction, poorUser) {
-	await interaction.reply(`Désolé <@${poorUser.id}>, cette carte a déjà été revendiquée !`);
+	await interaction.reply(`Désolé ${userMention(poorUser.id)}, cette carte a déjà été attrapée !`);
 }
 
 /**
@@ -58,7 +59,7 @@ async function editSpawnMessageAfterClaim(message, claimingUser, createdCard, cr
  * @param {import('../dto/CardTemplateDTO')} createdCardTemplate
  */
 async function notifyUserAfterClaim(interaction, claimingUser, createdCardTemplate) {
-	await interaction.reply(`Bien joué ! <@${claimingUser.id}> a attrapé **${createdCardTemplate.name}** !`);
+	await interaction.reply(`Bien joué !  ${userMention(claimingUser.id)} a attrapé ${bold(createdCardTemplate.name)} !`);
 }
 
 module.exports = {

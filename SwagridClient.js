@@ -1,4 +1,4 @@
-const { readdir } = require('fs/promises');
+const { readdirSync } = require('fs');
 const { Client, Collection, Intents } = require('discord.js');
 
 /** @typedef {{ data: import('@discordjs/builders').SlashCommandBuilder, permissions?: import('discord.js').ApplicationCommandPermissionData[], execute: (interaction: import('discord.js').CommandInteraction, client: SwagridClient) => Promise<void> }} SwagridCommand */
@@ -10,7 +10,7 @@ module.exports = class SwagridClient extends Client {
 	lastMessageSent = [];
 	/** @type {Collection<string, number>} */
 	messageCounter = new Collection();
-	/** @type {Collection<string, { cardSuggestion: import('./dto/CardSuggestionDTO'), attachment: import('discord.js').MessageAttachment }} */
+	/** @type {Collection<string, import('./dto/CardSuggestionDTO')>} */
 	temporaryCardSuggestions = new Collection();
 
 	/** @type {Collection<string, SwagridCommand>} */
@@ -20,15 +20,27 @@ module.exports = class SwagridClient extends Client {
 	/** @type {Collection<string, SwagridContextMenu>} */
 	contextMenus = new Collection();
 	constructor() {
-		super({
-			intents: [ Intents.FLAGS.GUILD_MESSAGES ]
+		super({ intents: [ Intents.FLAGS.GUILD_MESSAGES ] });
+
+		this.once('ready', () => {
+			this.user.setActivity({
+				type: 'COMPETING',
+				name: 'Quidditch'
+			});
+
+			this.definePermissions();
 		});
+
+		this.loadCommands();
+		this.loadEvents();
+		this.loadButtons();
+		this.loadContextMenus();
 	}
 
-	async loadCommands() {
+	loadCommands() {
 		console.log('Récupération des commandes...');
 
-		const files = await readdir('./commands');
+		const files = readdirSync('./commands');
 		files.filter(file =>
 			file.endsWith('.js')
 		).map(file =>
@@ -40,10 +52,10 @@ module.exports = class SwagridClient extends Client {
 		console.log('Commandes récupérées !');
 	}
 
-	async loadEvents() {
+	loadEvents() {
 		console.log('Récupération des événements...');
 
-		const files = await readdir('./events');
+		const files = readdirSync('./events');
 		files.filter(file =>
 			file.endsWith('.js')
 		).map(file =>
@@ -55,10 +67,10 @@ module.exports = class SwagridClient extends Client {
 		console.log('Événements récupérées !');
 	}
 
-	async loadButtons() {
+	loadButtons() {
 		console.log('Récupération des boutons...');
 
-		const files = await readdir('./buttons');
+		const files = readdirSync('./buttons');
 		files.filter(file =>
 			file.endsWith('.js')
 		).map(file =>
@@ -70,10 +82,10 @@ module.exports = class SwagridClient extends Client {
 		console.log('Boutons récupérés !');
 	}
 
-	async loadContextMenus() {
+	loadContextMenus() {
 		console.log('Récupération des menus contextuel...');
 
-		const files = await readdir('./context-menus');
+		const files = readdirSync('./context-menus');
 		files.filter(file =>
 			file.endsWith('.js')
 		).map(file =>

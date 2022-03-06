@@ -1,4 +1,5 @@
 const { bold, userMention, underscore, inlineCode } = require('@discordjs/builders');
+const { MessageAttachment } = require('discord.js');
 const { MAX_RARITY } = require('../constants');
 const { localIdToAlias } = require('./cardUtils');
 
@@ -141,11 +142,13 @@ module.exports = {
 	},
 
 	/**
-	 * @param {import('../dto/AbstractCardDTO')} abstractCard
+	 * @param {import('../dto/AbstractCardDTO')} card
 	 * @param {import('discord.js').MessageAttachment} attachment
 	 * @returns {import('discord.js').MessageOptions}
 	 */
-	generateSuggestionPrevisualisationMessageContent(abstractCard, attachment) {
+	generateSuggestionPreviewMessageContent(card) {
+		const attachment = new MessageAttachment(Buffer.from(card.imageURL, 'base64'), `${card.name}.png`);
+
 		return {
 			content: `Aperçu de la carte, cliquez sur "${TEXT.SUGGESTION.VALIDATE}" pour lancer le processus de validation ou "${TEXT.SUGGESTION.CANCEL}" si cette carte ne vous convient pas`,
 			embeds: [{
@@ -158,10 +161,10 @@ module.exports = {
 				},
 				fields: [{
 					name: 'Nom:',
-					value: abstractCard.name
+					value: card.name
 				}, {
 					name: 'Rareté:',
-					value: generateRarityText(abstractCard.rarity)
+					value: generateRarityText(card.rarity)
 				}]
 			}],
 			components: [{
@@ -178,7 +181,7 @@ module.exports = {
 					style: 'DANGER'
 				}]
 			}],
-			files: [attachment]
+			files: [ attachment ]
 		};
 	},
 
@@ -316,6 +319,21 @@ module.exports = {
 					name: underscore('Informations générales'),
 					value: generalInformations.join('\n')
 				}]
+			}]
+		};
+	},
+
+	/**
+	 * @param {string[]} files
+	 * @returns {import('discord.js').MessageOptions}
+	 */
+	generateTemporaryImagesMessageContent(files) {
+		return {
+			embeds: [{
+				author: {
+					name: 'Liste de des images temporaires'
+				},
+				description: files.join('\n')
 			}]
 		};
 	}
