@@ -70,13 +70,16 @@ module.exports = {
 			return;
 		}
 
+		/** @type {import('../SwagridClient')} */
+		const client = message.client;
+
 		const MIN_POINTS_TO_ADD = await getGlobalConfigValueFloat('MIN_POINTS_TO_ADD');
 		const MAX_POINTS_TO_ADD = await getGlobalConfigValueFloat('MAX_POINTS_TO_ADD');
 		const MIN_TIME_BETWEEN_MESSAGE = await getGlobalConfigValueFloat('MIN_TIME_BETWEEN_MESSAGE');
 		const MAX_TIME_BETWEEN_MESSAGE = await getGlobalConfigValueFloat('MAX_TIME_BETWEEN_MESSAGE');
 		const SPAWN_THRESHOLD = await getGlobalConfigValueFloat('SPAWN_THRESHOLD');
 
-		let data = message.client.lastMessageSent.find(lms => lms.userId === message.author.id && lms.guildId === message.guildId);
+		let data = client.lastMessageSent.find(lms => lms.userId === message.author.id && lms.guildId === message.guildId);
 		/** @type {number} */
 		let pointsToAdd;
 		if (data === undefined) {
@@ -85,7 +88,7 @@ module.exports = {
 				guildId: message.guildId,
 				createdTimestamp: message.createdTimestamp
 			};
-			message.client.lastMessageSent.push(data);
+			client.lastMessageSent.push(data);
 			pointsToAdd = MAX_POINTS_TO_ADD;
 		} else {
 			const timeDifference = message.createdTimestamp - data.createdTimestamp;
@@ -102,7 +105,7 @@ module.exports = {
 			}
 		}
 
-		let guildCounter = message.client.messageCounter.has(message.guildId) ? message.client.messageCounter.get(message.guildId) : 0;
+		let guildCounter = client.messageCounter.has(message.guildId) ? client.messageCounter.get(message.guildId) : 0;
 		guildCounter += pointsToAdd;
 
 		if (guildCounter >= SPAWN_THRESHOLD) {
@@ -110,7 +113,7 @@ module.exports = {
 			const guildConfig = await findGuildConfigById(message.guildId);
 
 			if (guildConfig !== null && guildConfig.spawnChannelId !== null) {
-				const channel = await message.client.channels.fetch(guildConfig.spawnChannelId);
+				const channel = await client.channels.fetch(guildConfig.spawnChannelId);
 				if (channel !== null) {
 					// Si un channel de spawn est configuré, on fait apparaître une carte
 					await spawnCard(channel);
@@ -119,6 +122,6 @@ module.exports = {
 			guildCounter = 0;
 		}
 
-		message.client.messageCounter.set(message.guildId, guildCounter);
+		client.messageCounter.set(message.guildId, guildCounter);
 	}
 };

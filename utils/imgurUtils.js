@@ -23,8 +23,6 @@ module.exports = {
 			body,
 			redirect: 'follow'
 		}).then(res => res.json()).then(res => {
-			console.log('imgur response:');
-			console.log(res);
 			return res.data.link;
 		});
 	}
