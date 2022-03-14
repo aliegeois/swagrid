@@ -4,10 +4,10 @@ const { saveSuggestionVote, countVotesAndValidateSuggestion, findGuildConfigById
 const { generateSuggestionReviewMessageContent, TEXT, generateApprovedMessage } = require('../utils/messageUtils');
 const { getValueInt: getGlobalConfigValueInt } = require('../utils/globalConfigCache');
 
+/** @type {import('../SwagridClient').SwagridButton} */
 module.exports = {
 	name: 'approvecard',
 
-	/** @param {import('discord.js').ButtonInteraction} interaction */
 	async execute(interaction) {
 		const suggestionVote = new SuggestionVoteDTO(interaction.user.id, interaction.message.id, true);
 		await saveSuggestionVote(suggestionVote);

@@ -59,13 +59,13 @@ async function editSpawnMessageAfterClaim(message, claimingUser, createdCard, cr
  * @param {import('../dto/CardTemplateDTO')} createdCardTemplate
  */
 async function notifyUserAfterClaim(interaction, claimingUser, createdCardTemplate) {
-	await interaction.reply(`Bien joué !  ${userMention(claimingUser.id)} a attrapé ${bold(createdCardTemplate.name)} !`);
+	await interaction.reply(`Bien joué ! ${userMention(claimingUser.id)} a attrapé ${bold(createdCardTemplate.name)} !`);
 }
 
+/** @type {import('../SwagridClient').SwagridButton} */
 module.exports = {
 	name: 'claim',
 
-	/** @param {import('discord.js').ButtonInteraction} interaction */
 	async execute(interaction) {
 		const createdCard = await retrieveAndClaimCard(interaction.channel, interaction.user);
 		if (createdCard === null) {

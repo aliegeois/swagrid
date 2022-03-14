@@ -4,13 +4,10 @@ const { generateSuggestionReviewMessageContent } = require('../utils/messageUtil
 const { getValueInt: getGlobalConfigValueInt } = require('../utils/globalConfigCache');
 const { uploadImage } = require('../utils/imgurUtils');
 
+/** @type {import('../SwagridClient').SwagridButton} */
 module.exports = {
 	name: 'validatesuggestion',
 
-	/**
-	 * @param {import('discord.js').ButtonInteraction} interaction
-	 * @param {import('../SwagridClient')} client
-	 */
 	async execute(interaction, client) {
 		if (client.temporaryCardSuggestions.has(interaction.message.id)) {
 			const cardSuggestion = client.temporaryCardSuggestions.get(interaction.message.id);
