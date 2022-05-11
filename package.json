@@ -1,7 +1,10 @@
 {
 	"name": "swagrid",
-	"version": "1.0.0",
 	"description": "Swag + Hagrid = Swagrid",
+	"version": "1.0.0",
+	"engines": {
+		"node": "17.x"
+	},
 	"scripts": {
 		"swagrid": "node app.js",
 		"swagrid-local": "node -r dotenv/config app.js",
