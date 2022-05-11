@@ -2,6 +2,7 @@ const { bold, userMention, underscore, inlineCode } = require('@discordjs/builde
 const { MessageAttachment } = require('discord.js');
 const { MAX_RARITY } = require('../constants');
 const { localIdToAlias } = require('./cardUtils');
+const { secondsToFrequency } = require('./scheduleUtils');
 
 const TEXT = {
 	SUGGESTION: {
@@ -38,6 +39,15 @@ function generateRarityWithBlackSquaresText(rarity) {
 function generateVotesText(votesRequired, positiveVotes, negativeVotes) {
 	// ⬛ ❌ ✅ ⬛
 	return '|' + '\u2b1b'.repeat(votesRequired - negativeVotes) + '\u274c'.repeat(negativeVotes) + '|' + '\u2705'.repeat(positiveVotes) + '\u2b1b'.repeat(votesRequired - positiveVotes) + '|';
+}
+
+/** @param {string} text */
+function generatePostTitle(text) {
+	if (text.length > 256) {
+		return `${text.substring(0, 254)}...` ;
+	} else {
+		return text;
+	}
 }
 
 module.exports = {
@@ -91,6 +101,35 @@ module.exports = {
 			`${inlineCode(localIdToAlias(inventoryCard.localId))} | ${generateRarityWithBlackSquaresText(mapCardTemplates.get(inventoryCard.cardTemplateId).rarity)} | ${mapCardTemplates.get(inventoryCard.cardTemplateId).name}`
 		).join('\n');
 
+		/** @type {import('discord.js').MessageButton[]} */
+		const buttons = [];
+		if (page > 1) {
+			buttons.push({
+				type: 'BUTTON',
+				customId: 'listfirstpage',
+				emoji: { name: '⏮️' },
+				style: 'SECONDARY'
+			}, {
+				type: 'BUTTON',
+				customId: 'listpreviouspage',
+				emoji: { name: '⬅️' },
+				style: 'SECONDARY'
+			});
+		}
+		if (page < maxPage) {
+			buttons.push({
+				type: 'BUTTON',
+				customId: 'listnextpage',
+				emoji: { name: '➡️' },
+				style: 'SECONDARY'
+			}, {
+				type: 'BUTTON',
+				customId: 'listlastpage',
+				emoji: { name: '⏭️' },
+				style: 'SECONDARY'
+			});
+		}
+
 		return {
 			embeds: [{
 				author: {
@@ -99,8 +138,12 @@ module.exports = {
 				},
 				description,
 				footer: {
-					text: `Page ${page + 1}/${maxPage + 1} ; Jusqu'à ${cardPerPage} résultats par page`
+					text: `Page ${page}/${maxPage} ; Jusqu'à ${cardPerPage} résultats par page`
 				}
+			}],
+			components: [{
+				type: 'ACTION_ROW',
+				components: buttons
 			}]
 		};
 	},
@@ -334,6 +377,74 @@ module.exports = {
 					name: 'Liste de des images temporaires'
 				},
 				description: files.join('\n')
+			}]
+		};
+	},
+
+	/**
+	 * @param {import('discord.js').User} user
+	 * @param {ScheduleDTO} schedule
+	 * @returns {import('discord.js').MessageOptions}
+	 */
+	generateScheduleInfoMessageContent(user, schedule) {
+		return {
+			embeds: [{
+				author: {
+					name: `Programme ${schedule.name} de ${user.username}`,
+					icon_url: user.displayAvatarURL({ dynamic: true, size: 32 })
+				},
+				description: `${schedule.name} | ${secondsToFrequency(schedule.frequency)} | ${schedule.subreddit} ${schedule.category}`
+			}]
+		};
+	},
+
+	/**
+	 * @param {import('discord.js').User} user
+	 * @param {import('../dto/ScheduleDTO')[]} schedules
+	 * @returns {import('discord.js').MessageOptions}
+	 */
+	generateSchedulesListMessageContent(user, schedules) {
+		const description = schedules.map(schedule =>
+			`${schedule.name} | ${secondsToFrequency(schedule.frequency)} | ${schedule.subreddit} ${schedule.category}`
+		).join('\n');
+
+		return {
+			embeds: [{
+				author: {
+					name: `Programmes de ${user.username}`,
+					icon_url: user.displayAvatarURL({ dynamic: true, size: 32 })
+				},
+				description
+			}]
+		};
+	},
+
+	/**
+	 * @returns {import('discord.js').MessageOptions}
+	 */
+	generateSchedulePostMessageContent(post) {
+		return {
+			embeds: [{
+				title: generatePostTitle(post.title),
+				description: `r/${post.subreddit}`,
+				url: `https://www.reddit.com${post.permalink}`,
+				timestamp: (new Date(post.created * 1000)).toISOString(),
+				image: null,
+				footer: {
+					text: 'Posté le'
+				},
+				author: {
+					name: post.author
+				},
+				fields: [{
+					name: 'Score',
+					value: `${post.score}`,
+					inline: true
+				}, {
+					name: 'Commments',
+					value: `${post.num_comments}`,
+					inline: true
+				}]
 			}]
 		};
 	}

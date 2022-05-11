@@ -1,0 +1,11 @@
+.card {
+	display: inline-block;
+	width: 174px;
+	text-align: center;
+}
+
+.card-name {
+	display: inline-block;
+	font-weight: bold;
+	max-width: 100%;
+}

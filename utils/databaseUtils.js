@@ -1,13 +1,14 @@
-const { Sequelize, DataTypes, Op } = require('sequelize');
+const { Sequelize, DataTypes, Op, STRING } = require('sequelize');
 const CardTemplateDTO = require('../dto/CardTemplateDTO');
-const InventoryCardDTO = require('../dto/InventoryCardDTO');
 const UserProfileDTO = require('../dto/UserProfileDTO');
+const InventoryCardDTO = require('../dto/InventoryCardDTO');
 const OngoingSpawnDTO = require('../dto/OngoingSpawnDTO');
 const GuildConfigDTO = require('../dto/GuildConfigDTO');
 const CardSuggestionDTO = require('../dto/CardSuggestionDTO');
 const SuggestionVoteDTO = require('../dto/SuggestionVoteDTO');
 const GlobalConfigDTO = require('../dto/GlobalConfigDTO');
 const { DEFAULT_GLOBAL_CONFIG } = require('../constants');
+const ScheduleDTO = require('../dto/ScheduleDTO');
 
 /** @type {Sequelize} */
 let sequelize = null;
@@ -53,6 +54,15 @@ module.exports = {
 		if (userProfile === null) {
 			return null;
 		}
+		return UserProfileDTO.modelToClass(userProfile);
+	},
+
+	/** @param {string} id */
+	async findUserProfileIfNonExistent(id) {
+		const userProfile = await sequelize.models[UserProfileDTO.TABLE_NAME].findOrCreate({
+			where: { id }
+		});
+
 		return UserProfileDTO.modelToClass(userProfile);
 	},
 
@@ -202,6 +212,43 @@ module.exports = {
 		return CardTemplateDTO.modelToClass(cardTemplate);
 	},
 
+	/**
+	 * @param {string} userId
+	 * @param {string} name
+	 */
+	async findScheduleByUserIdAndName(userId, name) {
+		const schedule = await sequelize.models[ScheduleDTO.TABLE_NAME].findOne({
+			where: {
+				user_id: userId,
+				name: name
+			}
+		});
+
+		if (schedule === null) {
+			return null;
+		}
+		return ScheduleDTO.modelToClass(schedule);
+	},
+
+	/**
+	 * @param {string} userId
+	 */
+	async findSchedulesByUserId(userId) {
+		const schedules = await sequelize.models[ScheduleDTO.TABLE_NAME].findAll({
+			where: {
+				user_id: userId
+			}
+		});
+
+		return ScheduleDTO.modelToClassArray(schedules);
+	},
+
+	async findAllSchedules() {
+		const schedules = await sequelize.models[ScheduleDTO.TABLE_NAME].findAll();
+
+		return ScheduleDTO.modelToClassArray(schedules);
+	},
+
 	/** @param {UserProfileDTO} userProfile */
 	async saveUserProfile(userProfile) {
 		return sequelize.models[UserProfileDTO.TABLE_NAME].upsert(userProfile.toJSON());
@@ -235,6 +282,22 @@ module.exports = {
 	/** @param {CardSuggestionDTO} cardSuggestion */
 	async saveValidatedSuggestion(cardSuggestion) {
 		await sequelize.models[CardSuggestionDTO.TABLE_NAME].create(cardSuggestion.toJSON());
+	},
+
+	/** @param {ScheduleDTO} schedule */
+	async saveSchedule(schedule) {
+		console.log(schedule.toString());
+		await sequelize.models[ScheduleDTO.TABLE_NAME].create(schedule.toJSON());
+	},
+
+	/** @param {ScheduleDTO} schedule */
+	async deleteSchedule(schedule) {
+		await sequelize.models[ScheduleDTO.TABLE_NAME].destroy({
+			where: {
+				user_id: schedule.userId,
+				name: schedule.name
+			}
+		});
 	},
 
 	/**
@@ -451,15 +514,49 @@ module.exports = {
 		});
 	},
 
-	async getInventoryPage(userId, page, cardsPerPage) {
-		const inventoryCards = await sequelize.models[InventoryCardDTO.TABLE_NAME].findAll({
+	/**
+	 * @param {{userId: string, page: number?, rarity: number?, sort: ('alphabetical'|'rarity')?}} options
+	 * @param {number} cardsPerPage
+	 */
+	async getInventoryPage(options, cardsPerPage) {
+		if (options.page === null) {
+			options.page = 1;
+		}
+		const offset = (options.page - 1) * cardsPerPage;
+
+		const order = [];
+		switch (options.sort) {
+		case 'alphabetical':
+			order.push([`$${CardTemplateDTO.TABLE_NAME}.name$`, 'ASC']);
+			break;
+		case 'rarity':
+			order.push([`$${CardTemplateDTO.TABLE_NAME}.rarity$`, 'DESC']);
+			break;
+		}
+		order.push(['createdAt', 'DESC']);
+
+		/** @type {import('sequelize').FindOptions} */
+		const searchOptions = {
 			where: {
-				user_profile_id: userId
+				user_profile_id: options.userId
 			},
 			limit: cardsPerPage,
-			offset: page * cardsPerPage,
-			order: [['createdAt', 'DESC']]
-		});
+			offset,
+			order
+		};
+
+		if (options.rarity !== null || options.sort === 'rarity') {
+			searchOptions.include = {
+				model: CardTemplateDTO.TABLE_NAME
+			};
+			if (options.rarity) {
+				searchOptions.include.where = {
+					rarity: options.rarity
+				};
+			}
+		}
+
+		const inventoryCards = await sequelize.models[InventoryCardDTO.TABLE_NAME].findAll(searchOptions);
 
 		if (inventoryCards === null) {
 			return null;
@@ -527,7 +624,7 @@ module.exports = {
 		console.info('Autentification réussie !');
 		console.info('Définition des tables...');
 
-		sequelize.define(CardTemplateDTO.TABLE_NAME, {
+		const cardTemplateTable = sequelize.define(CardTemplateDTO.TABLE_NAME, {
 			id: {
 				type: DataTypes.INTEGER,
 				primaryKey: true,
@@ -538,20 +635,16 @@ module.exports = {
 			rarity: DataTypes.INTEGER
 		}, { tableName: CardTemplateDTO.TABLE_NAME });
 
-		sequelize.define(UserProfileDTO.TABLE_NAME, {
+		const userProfileTable = sequelize.define(UserProfileDTO.TABLE_NAME, {
 			id: {
 				type: DataTypes.STRING,
 				primaryKey: true
 			}
 		}, { tableName: UserProfileDTO.TABLE_NAME });
 
-		sequelize.define(InventoryCardDTO.TABLE_NAME, {
+		const inventoryCardTable = sequelize.define(InventoryCardDTO.TABLE_NAME, {
 			user_profile_id: {
 				type: DataTypes.STRING,
-				/* references: {
-					model: UserProfileDTO.TABLE_NAME,
-					key: 'id'
-				}*/
 				primaryKey: true
 			},
 			local_id: {
@@ -568,7 +661,7 @@ module.exports = {
 			}
 		}, { tableName: InventoryCardDTO.TABLE_NAME });
 
-		sequelize.define(OngoingSpawnDTO.TABLE_NAME, {
+		const ongoingSpawnTable = sequelize.define(OngoingSpawnDTO.TABLE_NAME, {
 			channel_id: {
 				type: DataTypes.STRING,
 				primaryKey: true
@@ -594,7 +687,7 @@ module.exports = {
 			approved_cards_channel_id: DataTypes.STRING
 		}, { tableName: GuildConfigDTO.TABLE_NAME });
 
-		sequelize.define(CardSuggestionDTO.TABLE_NAME, {
+		const cardSuggestionTable = sequelize.define(CardSuggestionDTO.TABLE_NAME, {
 			message_id: {
 				type: DataTypes.STRING,
 				primaryKey: true
@@ -611,7 +704,7 @@ module.exports = {
 			rarity: DataTypes.INTEGER
 		}, { tableName: CardSuggestionDTO.TABLE_NAME });
 
-		sequelize.define(SuggestionVoteDTO.TABLE_NAME, {
+		const suggestionVoteTable = sequelize.define(SuggestionVoteDTO.TABLE_NAME, {
 			user_id: {
 				type: DataTypes.STRING,
 				primaryKey: true
@@ -634,6 +727,52 @@ module.exports = {
 			},
 			value: DataTypes.STRING
 		}, { tableName: GlobalConfigDTO.TABLE_NAME });
+
+		sequelize.define(ScheduleDTO.TABLE_NAME, {
+			user_id: {
+				type: DataTypes.STRING,
+				primaryKey: true
+			},
+			name: {
+				type: DataTypes.STRING,
+				primaryKey: true
+			},
+			channel_id: DataTypes.STRING,
+			frequency: DataTypes.INTEGER,
+			subreddit: DataTypes.STRING(21),
+			category: DataTypes.STRING,
+			last_execution: DataTypes.DATE
+		}, { TABLE_NAME: ScheduleDTO.TABLE_NAME });
+
+		/* inventoryCardTable.belongsTo(userProfileTable, {
+			foreignKey: {
+				allowNull: false,
+				field: 'user_profile_id'
+			},
+			as: 'userProfile'
+		});
+		inventoryCardTable.belongsTo(cardTemplateTable, {
+			foreignKey: {
+				allowNull: false,
+				field: 'card_template_id'
+			},
+			as: 'cardTemplate'
+		});
+		ongoingSpawnTable.belongsTo(cardTemplateTable, {
+			foreignKey: {
+				allowNull: false,
+				field: 'card_template_id'
+			},
+			as: 'cardTemplate'
+		});
+		suggestionVoteTable.belongsTo(cardSuggestionTable, {
+			foreignKey: {
+				allowNull: false,
+				field: 'card_suggestion_id'
+			},
+			as: 'cardSuggestion'
+		});*/
+
 
 		await sequelize.sync({
 			alter: true

@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { findInventoryCardById: findInventoryCardByIds, findCardTemplateById } = require('../utils/databaseUtils');
+const { findInventoryCardById, findCardTemplateById, findUserProfileById } = require('../utils/databaseUtils');
 const { isAliasValid, aliasToLocalId } = require('../utils/cardUtils');
 const { generateViewMessageContent } = require('../utils/messageUtils');
 
@@ -16,10 +16,12 @@ module.exports = {
 		),
 
 	async execute(interaction) {
+		// await findUserProfileById(interaction.user.id);
+
 		const alias = interaction.options.getString('alias');
 		if (isAliasValid(alias)) {
 			const localId = aliasToLocalId(alias);
-			const inventoryCard = await findInventoryCardByIds(interaction.user.id, localId);
+			const inventoryCard = await findInventoryCardById(interaction.user.id, localId);
 
 			if (inventoryCard !== null) {
 				const cardTemplate = await findCardTemplateById(inventoryCard.cardTemplateId);

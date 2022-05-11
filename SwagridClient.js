@@ -1,11 +1,19 @@
 const { readdirSync } = require('fs');
 const { Client, Collection, Intents } = require('discord.js');
+const { findAllSchedules } = require('./utils/databaseUtils');
+const Reddit = require('reddit');
+const { generateSchedulePostMessageContent } = require('./utils/messageUtils');
 
 /** @typedef {{ data: import('@discordjs/builders').SlashCommandBuilder, permissions?: import('discord.js').ApplicationCommandPermissionData[], execute: (interaction: import('discord.js').CommandInteraction, client: import('./SwagridClient')) => Promise<void> }} SwagridCommand */
 /** @typedef {{ name: string, permissions?: import('discord.js').ApplicationCommandPermissionData[], execute: (interaction: import('discord.js').ButtonInteraction, client: import('./SwagridClient')) => Promise<void> }} SwagridButton */
 /** @typedef {{ data: import('@discordjs/builders').ContextMenuCommandBuilder, permissions?: import('discord.js').ApplicationCommandPermissionData[], execute: (interaction: import('discord.js').ContextMenuInteraction, client: import('./SwagridClient')) => Promise<void> }} SwagridContextMenu */
 
 module.exports = class SwagridClient extends Client {
+	/** @type {Reddit} */
+	#redditClient;
+	/** @type {Collection<string, Collection<string, NodeJS.Timer>>} */
+	#schedulesId = new Collection();
+
 	/** @type {{userId: string, guildId: string, createdTimestamp: number}[]} */
 	lastMessageSent = [];
 	/** @type {Collection<string, number>} */
@@ -29,13 +37,22 @@ module.exports = class SwagridClient extends Client {
 				name: 'Quidditch'
 			});
 
-			this.#definePermissions();
+			// this.#definePermissions();
+			this.#setupSchedules();
 		});
 
 		this.#loadCommands();
 		this.#loadEvents();
 		this.#loadButtons();
 		this.#loadContextMenus();
+
+		this.#redditClient = new Reddit({
+			username: process.env.REDDIT_USERNAME,
+			password: process.env.REDDIT_PASSWORD,
+			appId: process.env.REDDIT_APP_ID,
+			appSecret: process.env.REDDIT_APP_SECRET,
+			userAgent: 'Ultra-Swagrid/1.0.0 (https://www.swagrid.fr/)'
+		});
 	}
 
 	#loadCommands() {
@@ -113,6 +130,74 @@ module.exports = class SwagridClient extends Client {
 		}
 
 		console.log('Permissions définies !');
+	}
+
+	/** @param {import('./dto/ScheduleDTO')} schedule */
+	async #executeSchedule(schedule) {
+		/** @type {import('discord.js').TextChannel} */
+		const channel = await this.channels.fetch(schedule.channelId);
+
+		const infos = await this.#redditClient.get(`/r/${schedule.subreddit}/${schedule.category}`);
+		const posts = infos.data.children.filter(post => post.data.url.match(/^\/r\//) === null);
+		const post = posts[Math.floor(Math.random() * posts.length)];
+		const url = post.data.url;
+		if (typeof url === 'string' && url.length > 0) {
+			await channel.send(generateSchedulePostMessageContent(post.data));
+			await channel.send(post.data.url);
+		} else {
+			await channel.send(`Aucune donnée exploitable dans ce post (${post.data.id})`);
+		}
+	}
+
+	async #setupSchedules() {
+		console.log('Chargement des programmes...');
+
+		const now = Date.now();
+
+		const schedules = await findAllSchedules();
+		for (const schedule of schedules) {
+			const nextExecution = schedule.lastExecution.getTime() + schedule.frequency * 1000;
+			const timeBeforeNextExecution = nextExecution - now;
+
+			if (!this.#schedulesId.has(schedule.userId)) {
+				this.#schedulesId.set(schedule.userId, new Collection());
+			}
+			const userSchedules = this.#schedulesId.get(schedule.userId);
+
+			userSchedules.set(schedule.name, setTimeout(() => {
+				this.#executeSchedule(schedule);
+				this.addSchedule(schedule);
+			}, timeBeforeNextExecution < 0 ? 0 : timeBeforeNextExecution));
+		}
+
+		console.log('Programmes chargés !');
+	}
+
+	/** @param {import('./dto/ScheduleDTO')} schedule */
+	addSchedule(schedule) {
+		if (!this.#schedulesId.has(schedule.userId)) {
+			this.#schedulesId.set(schedule.userId, new Collection());
+		}
+		const userSchedules = this.#schedulesId.get(schedule.userId);
+
+		clearInterval(userSchedules.get(schedule.name));
+		userSchedules.set(schedule.name, setInterval(() => {
+			this.#executeSchedule(schedule);
+		}, schedule.frequency * 1000));
+	}
+
+	/** @param {import('./dto/ScheduleDTO')} schedule */
+	removeSchedule(schedule) {
+		const userSchedules = this.#schedulesId.get(schedule.userId);
+		if (userSchedules === undefined) {
+			throw new Error(`Il n'y a pas de programmes pour l'utilisateur '${schedule.userId}'`);
+		}
+		const scheduleTimer = userSchedules.get(schedule.name);
+		if (scheduleTimer === undefined) {
+			throw new Error(`Le programme '${schedule.name}' de l'utilisateur '${schedule.userId}' n'exsite pas`);
+		}
+
+		clearInterval(scheduleTimer);
 	}
 
 	async login() {
