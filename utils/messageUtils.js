@@ -44,7 +44,7 @@ function generateVotesText(votesRequired, positiveVotes, negativeVotes) {
 /** @param {string} text */
 function generatePostTitle(text) {
 	if (text.length > 256) {
-		return `${text.substring(0, 254)}...` ;
+		return `${text.substring(0, 253)}...` ;
 	} else {
 		return text;
 	}

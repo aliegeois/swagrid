@@ -1,7 +1,9 @@
+const frequencyRegexp = /^((?<years>\d+)y)?((?<months>\d+)M)?((?<days>\d+)d)?((?<hours>\d+)H)?((?<minutes>\d+)m)?((?<seconds>\d+)s)?$/;
+
 module.exports = {
 	/** @param {string} frequency */
 	frequencyToSeconds(frequency) {
-		const frequencyMatcher = frequency.match(/^((?<years>\d+)y)?((?<months>\d+)M)?((?<days>\d+)d)?((?<hours>\d+)H)?((?<minutes>\d+)m)?((?<seconds>\d+)s)?$/);
+		const frequencyMatcher = frequency.match(frequencyRegexp);
 
 		let frequencySeconds = 0;
 		if (frequencyMatcher.groups.years) {
@@ -28,16 +30,16 @@ module.exports = {
 
 	/** @param {number} frequencySeconds */
 	secondsToFrequency(frequencySeconds) {
-		const years = frequencySeconds % (60 * 60 * 24 * 365);
+		const years = Math.floor(frequencySeconds / (60 * 60 * 24 * 365));
 		frequencySeconds -= years * 60 * 60 * 24 * 365;
-		const months = frequencySeconds % (60 * 60 * 24 * 30);
+		const months = Math.floor(frequencySeconds / (60 * 60 * 24 * 30));
 		frequencySeconds -= months * 60 * 60 * 24 * 30;
-		const days = frequencySeconds % (60 * 60 * 24);
+		const days = Math.floor(frequencySeconds / (60 * 60 * 24));
 		frequencySeconds -= days * 60 * 60 * 24;
-		const hours = frequencySeconds % (60 * 60);
+		const hours = Math.floor(frequencySeconds / (60 * 60));
 		frequencySeconds -= hours * 60 * 60;
-		const minutes = frequencySeconds % 60;
-		frequencySeconds -= minutes;
+		const minutes = Math.floor(frequencySeconds / 60);
+		frequencySeconds -= minutes * 60;
 		const seconds = frequencySeconds;
 
 		let frequency = '';

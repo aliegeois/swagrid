@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="fr">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="description" content="Stream Battle">
+
+		<link rel="stylesheet" href="style.css" />
+		<title>Stream Battle</title>
+	</head>
+	<body>
+		<main>
+			<div id="main-top">
+				<div id="videos">
+					<div id="video-left" class="video-side">
+						<iframe width="720" height="480" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+						<button id="button-select-left-video">Sélectionner</button>
+					</div>
+					<div id="video-right" class="video-side">
+						<iframe width="720" height="480" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+						<button id="button-select-right-video">Sélectionner</button>
+					</div>
+				</div>
+			</div>
+			<div id="main-bottom">
+				<div id="round-count">
+					Round actuel : <span id="number-current-round">1</span> / <span id="number-total-rounds">0</span>
+				</div>
+				<div id="video-count">
+					Duel actuelle : <span id="number-current-duel">1</span> / <span id="number-total-duels">0</span>
+				</div>
+			</div>
+		</main>
+
+		<script src="main.js"></script>
+	</body>
+</html>

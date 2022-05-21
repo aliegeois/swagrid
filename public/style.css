@@ -8,4 +8,5 @@
 	display: inline-block;
 	font-weight: bold;
 	max-width: 100%;
+	word-break: break-word;
 }

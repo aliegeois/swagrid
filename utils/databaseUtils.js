@@ -1,4 +1,4 @@
-const { Sequelize, DataTypes, Op, STRING } = require('sequelize');
+const { Sequelize, DataTypes, Op } = require('sequelize');
 const CardTemplateDTO = require('../dto/CardTemplateDTO');
 const UserProfileDTO = require('../dto/UserProfileDTO');
 const InventoryCardDTO = require('../dto/InventoryCardDTO');
