@@ -14,7 +14,7 @@ document.getElementById('button-create-battle').addEventListener('click', () => 
 	const divBattles = document.getElementById('list-battles');
 
 	/** @type {battleInfos[]} */
-	const battles = Object.entries(localStorage).filter(([k]) => k.startsWith('battle/')).map(([, v]) => JSON.parse(v));
+	const battles = Object.entries(localStorage).filter(([k]) => k.startsWith('battle/')).map(([, v]) => JSON.parse(v)).sort((e1, e2) => e1.id - e2.id);
 	for (const battle of battles) {
 		const a = document.createElement('a');
 		a.href = `/streambattle/play-battle?id=${battle.id}`;

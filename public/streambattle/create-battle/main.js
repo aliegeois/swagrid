@@ -2,6 +2,7 @@
 function extractId(url) {
 	switch (url.hostname) {
 	case 'www.youtube.com':
+	case 'm.youtube.com':
 		if (url.pathname.startsWith('/embed')) {
 			return url.pathname.split('/').at(-1);
 		} else if (url.searchParams.has('v')) {
