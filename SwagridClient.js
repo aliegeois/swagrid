@@ -29,7 +29,7 @@ module.exports = class SwagridClient extends Client {
 	contextMenus = new Collection();
 
 	constructor() {
-		super({ intents: [ Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES ] });
+		super({ intents: [ Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MESSAGE_REACTIONS ] });
 
 		this.once('ready', () => {
 			this.user.setActivity({

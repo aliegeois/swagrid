@@ -123,5 +123,10 @@ module.exports = {
 		}
 
 		client.messageCounter.set(message.guildId, guildCounter);
+
+
+		if (message.author.id === '239844917311045639') {
+			message.react('986717518553026580');
+		}
 	}
 };
